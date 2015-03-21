@@ -1,4 +1,4 @@
-%% XXX frequency
+%% Exercise set frequency
 % Measures the period in a suspected set
 
 %% 
@@ -12,12 +12,21 @@ xs = M(rows,[1,5]);
 
 %%
 % Exercise activity is cyclical, and there is typically a major component
-% that falls in the range of 1 to 5 seconds or 100 - 500 cycles /
-% timestamp.
+% that falls in the range of 1 to 5 seconds.
+% The samples we have are noisy, we apply a moving average filter on the
+% windows of the given ``windowSize``.
 
 time = table2array(xs(:,1));
-relNums = table2array(xs(:,2));
+rawRelNums = table2array(xs(:,2));
+windowSize = 10;
+b = (1/windowSize)*ones(1,windowSize);
+a = 1;
+relNums = filter(b, a, rawRelNums);
+
+hold on;
 plot(time,relNums)
+plot(time,rawRelNums)
+hold off;
 title('X acceleration data from wrist')
 
 %%
@@ -78,5 +87,3 @@ plot(period(index),power(index),'r.', 'MarkerSize',25);
 text(period(index)+2,power(index),['Period = ',mainPeriodStr]);
 hold off;
 
-
-displayEndOfDemoMessage(mfilename)
