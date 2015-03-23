@@ -6,7 +6,7 @@
 % To see the effect of non-exercise, remove the filtering on the .timestamp
 
 M = readtable('all_4.csv');
-rows = strcmp(M.location, 'wrist.0') & M.timestamp < 800 ;%& M.timestamp < 1400;
+rows = strcmp(M.location, 'wrist.0') & M.timestamp > 800 & M.timestamp < 2000;
 
 time = table2array(M(rows,1));
 ads  = table2array(M(rows,[5, 6, 7]));
