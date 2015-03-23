@@ -21,8 +21,7 @@
 *.swp
 *.lock
 
-pebble/build
-aa/build
+build
 
 .vagrant
 
