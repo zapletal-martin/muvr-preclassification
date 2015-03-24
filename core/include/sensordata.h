@@ -62,15 +62,15 @@ namespace muvr {
 
         /// result of the evaluation is either yes, no or "file not found" :)
         enum nomovement_result {
-            yes, no, undecidable
+            no, yes, undecidable
         };
 
         ///
         /// Checks to see if there is no movement in the given ``source``.
         ///
-        virtual nomovement_result no_movement(const raw_sensor_data& source) const;
+        virtual nomovement_result has_movement(const raw_sensor_data &source) const;
     private:
-        nomovement_result no_movement(const cv::Mat &source, const int16_t threshold) const;
+        nomovement_result has_movement(const cv::Mat &source, const int16_t threshold) const;
     };
 
     ///
@@ -84,14 +84,14 @@ namespace muvr {
 
         /// result of the evaluation is either yes, no or "file not found" :)
         enum noexercise_result {
-            yes, no, undecidable
+            no, yes, undecidable
         };
 
         ///
         /// Checks to see if there is movement that is typical for exercise in the
         /// given ``source``.
         ///
-        virtual noexercise_result no_exercise(const raw_sensor_data& source) const;
+        virtual noexercise_result has_exercise(const raw_sensor_data &source) const;
     };
 
 

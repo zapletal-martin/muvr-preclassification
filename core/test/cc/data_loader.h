@@ -5,8 +5,6 @@
 
 namespace muvr {
 
-    using namespace cv;
-
     ///
     /// Loads the ``raw_sensor_data`` from a CSV file containing data in one of the following formats:
     ///
@@ -16,7 +14,29 @@ namespace muvr {
     /// 0,any.0,100,AccelerometerValue,-15,-11,-1012
     /// ```
     ///
-    raw_sensor_data loadFromCsv(const boost::filesystem::path csvFile, const std::vector<std::string> sensors, const bool dropZeros);
+    class data_loader {
+    private:
+        std::string m_sensor;
+        std::string m_file_name;
+        sensor_data_type m_type;
+        uint m_start_row;
+        uint m_row_count;
+        bool m_drop_zeros;
+
+        std::vector<std::string> tokenize(const std::string &line);
+        sensor_data_type parse_type(const std::string &type);
+        cv::Mat empty_raw_mat(sensor_data_type type);
+    public:
+        data_loader(const std::string &file_name);
+
+        data_loader& from_sensor(const std::string &sensor);
+        data_loader& from_type(const sensor_data_type type);
+        data_loader& drop_zeros();
+        data_loader& start_row(const uint start_row);
+        data_loader& row_count(const uint row_count);
+
+        raw_sensor_data load();
+    };
 
 }
 
