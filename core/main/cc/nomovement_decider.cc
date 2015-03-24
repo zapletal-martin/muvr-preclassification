@@ -6,15 +6,18 @@ nomovement_decider::nomovement_result nomovement_decider::no_movement(const raw_
     switch (source.type) {
         case accelerometer:
         case rotation:
-            return no_movement(source.data);
+            return no_movement(source.data, 50);
         default:
             return undecidable;
     }
 }
 
-nomovement_decider::nomovement_result nomovement_decider::no_movement(const cv::Mat& source) const {
-    if (source.rows != 3) return undecidable;
-    Mat sum;
-    auto mx = cv::mean(source.row(0), Mat());
-    return undecidable;
+nomovement_decider::nomovement_result nomovement_decider::no_movement(const cv::Mat& source, const int16_t threshold) const {
+    auto mx = cv::mean(source, Mat());
+    Mat diffs = source - mx;
+    for (int i = 0; i < diffs.rows; ++i) {
+        int16_t d = diffs.at<int16_t>(i, 0);
+        if (d > threshold) return yes;
+    }
+    return no;
 }

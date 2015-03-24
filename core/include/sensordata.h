@@ -70,7 +70,7 @@ namespace muvr {
         ///
         virtual nomovement_result no_movement(const raw_sensor_data& source) const;
     private:
-        nomovement_result no_movement(const cv::Mat &source) const;
+        nomovement_result no_movement(const cv::Mat &source, const int16_t threshold) const;
     };
 
     ///
