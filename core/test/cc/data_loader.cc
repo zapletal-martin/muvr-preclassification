@@ -4,7 +4,7 @@
 
 using namespace muvr;
 
-data_loader::data_loader(const std::string &file_name): m_file_name(file_name), m_start_row(0), m_row_count(UINT_MAX) {
+data_loader::data_loader(const std::string &file_name): m_file_name(file_name), m_first_value(0), m_max_values(UINT_MAX) {
 }
 
 data_loader& data_loader::drop_zeros() {
@@ -22,13 +22,13 @@ data_loader& data_loader::from_type(const sensor_data_type type) {
     return *this;
 }
 
-data_loader& data_loader::start_row(const uint start_row) {
-    m_start_row = start_row;
+data_loader& data_loader::first_value(const uint first_value) {
+    m_first_value = first_value;
     return *this;
 }
 
-data_loader& data_loader::row_count(const uint row_count) {
-    m_row_count = row_count;
+data_loader& data_loader::max_values(const uint max_values) {
+    m_max_values = max_values;
     return *this;
 }
 
@@ -60,22 +60,25 @@ raw_sensor_data data_loader::load() {
     std::string line;
     int version = -1;
     uint row = 0;
-    uint last_row = m_start_row + m_row_count;
+    uint read_rows = 0;
     Mat data = empty_raw_mat(m_type);
     while (std::getline(file, line)) {
         if (row == 0) {
             //             0             1            2        3        4     5     6
             if (line == "\"timestamp\",\"location\",\"rate\",\"type\",\"x\",\"y\",\"z\"") version = 1;
-        } else if (row > m_start_row && row < last_row) {
+        } else if (data.rows < m_max_values) {
+            auto tokens = tokenize(line);
             if (version == 1) {
-                auto tokens = tokenize(line);
                 if (m_sensor == tokens[1] && m_type == parse_type(tokens[3])) {
                     int16_t x = (int16_t) std::stoi(tokens[4]);
                     int16_t y = (int16_t) std::stoi(tokens[5]);
                     int16_t z = (int16_t) std::stoi(tokens[6]);
                     if (x != 0 || y != 0 || z != 0 || !m_drop_zeros) {
-                        Mat row_vector = (Mat_<int16_t>(1, 3, CV_16S) << x, y, z);
-                        data.push_back(row_vector);
+                        if (m_first_value > read_rows) {
+                            Mat row_vector = (Mat_<int16_t>(1, 3, CV_16S) << x, y, z);
+                            data.push_back(row_vector);
+                        }
+                        read_rows++;
                     }
                 }
             }

@@ -17,8 +17,9 @@ TEST_F(nomovement_decider_test, no_movement_hr) {
 }
 
 TEST_F(nomovement_decider_test, no_movement_accel) {
-    auto movement   = data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().row_count(600).load();
-    auto nomovement = data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().start_row(200).row_count(400).load();
+    auto movement   = data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().max_values(600).load();
+    auto nomovement = data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().first_value(200).max_values(10).load();
+    std::cout << nomovement.data << std::endl;
     auto result = decider.has_movement(nomovement);
     std::cout << result << std::endl;
 }

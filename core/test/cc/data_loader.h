@@ -19,8 +19,8 @@ namespace muvr {
         std::string m_sensor;
         std::string m_file_name;
         sensor_data_type m_type;
-        uint m_start_row;
-        uint m_row_count;
+        uint m_first_value;
+        uint m_max_values;
         bool m_drop_zeros;
 
         std::vector<std::string> tokenize(const std::string &line);
@@ -32,8 +32,8 @@ namespace muvr {
         data_loader& from_sensor(const std::string &sensor);
         data_loader& from_type(const sensor_data_type type);
         data_loader& drop_zeros();
-        data_loader& start_row(const uint start_row);
-        data_loader& row_count(const uint row_count);
+        data_loader&first_value(const uint first_value);
+        data_loader&max_values(const uint max_values);
 
         raw_sensor_data load();
     };
