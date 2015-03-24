@@ -58,19 +58,19 @@ namespace muvr {
     /// Implementations decide whether there is movement or not in the given source
     ///
     class nomovement_decider {
-    private:
-        result no_movement(const cv::Mat &source) const;
     public:
 
         /// result of the evaluation is either yes, no or "file not found" :)
-        static enum result {
+        enum nomovement_result {
             yes, no, undecidable
         };
 
         ///
         /// Checks to see if there is no movement in the given ``source``.
         ///
-        virtual result no_movement(const raw_sensor_data& source) const;
+        virtual nomovement_result no_movement(const raw_sensor_data& source) const;
+    private:
+        nomovement_result no_movement(const cv::Mat &source) const;
     };
 
     ///
@@ -83,7 +83,7 @@ namespace muvr {
     public:
 
         /// result of the evaluation is either yes, no or "file not found" :)
-        static enum result {
+        enum noexercise_result {
             yes, no, undecidable
         };
 
@@ -91,7 +91,7 @@ namespace muvr {
         /// Checks to see if there is movement that is typical for exercise in the
         /// given ``source``.
         ///
-        virtual result no_exercise(const raw_sensor_data& source) const;
+        virtual noexercise_result no_exercise(const raw_sensor_data& source) const;
     };
 
 
