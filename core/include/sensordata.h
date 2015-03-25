@@ -63,20 +63,20 @@ namespace muvr {
     ///
     /// Implementations decide whether there is movement or not in the given source
     ///
-    class nomovement_decider {
+    class movement_decider {
     public:
 
         /// result of the evaluation is either yes, no or "file not found" :)
-        enum nomovement_result {
+        enum movement_result {
             no, yes, undecidable
         };
 
         ///
         /// Checks to see if there is no movement in the given ``source``.
         ///
-        virtual nomovement_result has_movement(const raw_sensor_data &source) const;
+        virtual movement_result has_movement(const raw_sensor_data &source) const;
     private:
-        nomovement_result has_movement(const cv::Mat &source, const int16_t threshold) const;
+        movement_result has_movement(const cv::Mat &source, const int16_t threshold) const;
     };
 
     ///
@@ -85,11 +85,13 @@ namespace muvr {
     /// The call to ``no_exercise`` will typically only run iff ``movement_decider::no_movement()``
     /// returns ``false``.
     ///
-    class noexercise_decider {
+    class exercise_decider {
+    private:
+
     public:
 
         /// result of the evaluation is either yes, no or "file not found" :)
-        enum noexercise_result {
+        enum exercise_result {
             no, yes, undecidable
         };
 
@@ -97,7 +99,7 @@ namespace muvr {
         /// Checks to see if there is movement that is typical for exercise in the
         /// given ``source``.
         ///
-        virtual noexercise_result has_exercise(const raw_sensor_data &source) const;
+        virtual exercise_result has_exercise(const raw_sensor_data &source) const;
     };
 
 
@@ -106,8 +108,6 @@ namespace muvr {
     ///
     class sensor_data_fuser {
     private:
-        std::unique_ptr<noexercise_decider> noexercise_decider;
-        std::unique_ptr<nomovement_decider> nomovement_decider;
     public:
         std::vector<sensor_data> decode_and_fuse(const uint8_t *source);
     };

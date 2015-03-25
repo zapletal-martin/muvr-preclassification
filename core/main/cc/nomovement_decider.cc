@@ -2,7 +2,7 @@
 
 using namespace muvr;
 
-nomovement_decider::nomovement_result nomovement_decider::has_movement(const raw_sensor_data &source) const {
+movement_decider::movement_result movement_decider::has_movement(const raw_sensor_data &source) const {
     switch (source.type) {
         case accelerometer:
         case rotation:
@@ -12,7 +12,7 @@ nomovement_decider::nomovement_result nomovement_decider::has_movement(const raw
     }
 }
 
-nomovement_decider::nomovement_result nomovement_decider::has_movement(const cv::Mat &source, const int16_t threshold) const {
+movement_decider::movement_result movement_decider::has_movement(const cv::Mat &source, const int16_t threshold) const {
     for (int i = 0; i < source.cols; ++i) {
         Mat rawCol = source.col(i);
         Mat col;

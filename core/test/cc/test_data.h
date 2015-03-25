@@ -12,6 +12,7 @@ namespace muvr {
     private:
         sensor_data_type m_type;
         int m_noise;
+        void sin(const uint count, uint period, const double amplitude, Mat &mat);
     public:
         ///
         /// Constructs generator that will produce values of ``sensor_data_type``.

@@ -31,3 +31,32 @@ raw_sensor_data test_data_generator::constant(const uint count, const Scalar con
     }
     return raw_sensor_data(data, m_type);
 }
+
+void test_data_generator::sin(const uint count, uint period, const double amplitude, Mat &mat) {
+    for (int i = 0; i < count * period; ++i) {
+        double a = ((double)i / period) * M_PI;
+        double v = ::sin(a) * amplitude;
+        if (mat.type() == CV_16S) mat.at<int16_t>(i, 0) = v;
+        else if (mat.type() == CV_8U) mat.at<uint8_t>(i, 0) = v;
+    }
+}
+
+raw_sensor_data test_data_generator::sin(const uint count, const uint period, const cv::Scalar amplitude) {
+    Mat data;
+    switch (m_type) {
+        case accelerometer:
+        case rotation:
+            data = Mat(count * period, 3, CV_16S);
+            break;
+        case heart_rate:
+            data = Mat(count * period, 1, CV_8U);
+            break;
+    }
+
+    for (int i = 0; i < data.cols; ++i) {
+        Mat col = data.col(i);
+        sin(count, period, amplitude[i], col);
+    }
+
+    return raw_sensor_data(data, m_type);
+}
