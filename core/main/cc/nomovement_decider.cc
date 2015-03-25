@@ -19,9 +19,11 @@ nomovement_decider::nomovement_result nomovement_decider::has_movement(const cv:
         auto m = mean(col);
         Mat diff = col - m;
 
+#ifdef EYEBALL_DEBUG
         std::cout << rawCol << std::endl;
         std::cout << col << std::endl;
         std::cout << m[0] << std::endl;
+#endif
 
         for (int j = 0; j < diff.rows; ++j) {
             int16_t d = diff.at<int16_t>(j, 0);

@@ -1,5 +1,5 @@
 #include "sensordata.h"
-#include "data_loader.h"
+#include "test_data.h"
 #include <gtest/gtest.h>
 
 using namespace cv;
@@ -16,9 +16,16 @@ TEST_F(nomovement_decider_test, no_movement_hr) {
     EXPECT_EQ(r, nomovement_decider::nomovement_result::undecidable);
 }
 
-TEST_F(nomovement_decider_test, no_movement_accel) {
-    auto movement   = data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().max_values(600).load();
-    auto nomovement = data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().first_value(200).max_values(200).load();
+TEST_F(nomovement_decider_test, no_movement_real) {
+    auto movement   = test_data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().max_values(600).load();
+    auto nomovement = test_data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().first_value(200).max_values(200).load();
     auto result = decider.has_movement(nomovement);
     std::cout << result << std::endl;
+}
+
+TEST_F(nomovement_decider_test, no_movement_trivial) {
+    auto nomovement = test_data_generator(accelerometer).constant(1000, 500);
+    auto result = decider.has_movement(nomovement);
+
+    EXPECT_EQ(result, nomovement_decider::nomovement_result::no);
 }

@@ -12,7 +12,7 @@ Mat muvr::kalman_smooth(const cv::Mat &source) {
     Mat_<float> measurement(1, 1); measurement.setTo(Scalar(0));
 
     result.push_back(source.at<int16_t>(0, 0));
-    KF.statePre.at<float>(0) = source.at<int16_t>(0, 0);// mousePos.x;
+    KF.statePre.at<float>(0) = 0;
     KF.statePre.at<float>(1) = 0;
 
     setIdentity(KF.measurementMatrix);
