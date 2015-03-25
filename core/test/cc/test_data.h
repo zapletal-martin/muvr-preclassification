@@ -5,16 +5,35 @@
 
 namespace muvr {
 
+    ///
+    /// Generates test data
+    ///
     class test_data_generator {
     private:
         sensor_data_type m_type;
         int m_noise;
     public:
+        ///
+        /// Constructs generator that will produce values of ``sensor_data_type``.
+        ///
         test_data_generator(const sensor_data_type type);
 
+        ///
+        /// Sets the noise element of the generator; the ``noise`` should be within the values
+        /// for the given ``sensor_data_type``; that is ``int16_t / 2`` for accelerometer and rotation,
+        /// and ``uint8_t / 2`` for heart rate.
+        ///
         test_data_generator &with_noise(const int noise);
 
-        raw_sensor_data constant(const uint count, const int constant);
+        ///
+        /// Generates ``count`` number of elements containing the ``constant``.
+        ///
+        raw_sensor_data constant(const uint count, const cv::Scalar constant);
+
+        ///
+        /// Generates ``count`` number of sin Ts with ``period`` samples long, with maximum ``amplitude``
+        ///
+        raw_sensor_data sin(const uint count, const uint period, const cv::Scalar amplitude);
     };
 
     ///

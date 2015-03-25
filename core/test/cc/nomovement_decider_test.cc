@@ -17,15 +17,19 @@ TEST_F(nomovement_decider_test, no_movement_hr) {
 }
 
 TEST_F(nomovement_decider_test, no_movement_real) {
-    auto movement   = test_data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().max_values(600).load();
     auto nomovement = test_data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().first_value(200).max_values(200).load();
-    auto result = decider.has_movement(nomovement);
-    std::cout << result << std::endl;
-}
-
-TEST_F(nomovement_decider_test, no_movement_trivial) {
-    auto nomovement = test_data_generator(accelerometer).constant(1000, 500);
     auto result = decider.has_movement(nomovement);
 
     EXPECT_EQ(result, nomovement_decider::nomovement_result::no);
+}
+
+TEST_F(nomovement_decider_test, no_movement_trivial) {
+    auto nomovement = test_data_generator(accelerometer).with_noise(8).constant(10, Scalar(100, 200, 300));
+    auto result = decider.has_movement(nomovement);
+
+    EXPECT_EQ(result, nomovement_decider::nomovement_result::no);
+}
+
+TEST_F(nomovement_decider_test, movement_sin) {
+    //auto sin = test_data_generator(accelerometer).with_noise(8).sin(10, 100, Scalar(1000, 1000, 1000));
 }

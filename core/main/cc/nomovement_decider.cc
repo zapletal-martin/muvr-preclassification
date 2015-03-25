@@ -15,14 +15,15 @@ nomovement_decider::nomovement_result nomovement_decider::has_movement(const raw
 nomovement_decider::nomovement_result nomovement_decider::has_movement(const cv::Mat &source, const int16_t threshold) const {
     for (int i = 0; i < source.cols; ++i) {
         Mat rawCol = source.col(i);
-        Mat col = kalman_smooth(rawCol);
+        Mat col;
+        blur(rawCol, col, Size(50, 50));
         auto m = mean(col);
         Mat diff = col - m;
 
 #ifdef EYEBALL_DEBUG
-        std::cout << rawCol << std::endl;
-        std::cout << col << std::endl;
-        std::cout << m[0] << std::endl;
+        std::cout << "raw = " << rawCol << std::endl;
+        std::cout << "smooth = " << col << std::endl;
+        std::cout << "median = " << m[0] << std::endl;
 #endif
 
         for (int j = 0; j < diff.rows; ++j) {
