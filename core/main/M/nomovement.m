@@ -8,7 +8,6 @@ function [result, data] = nomovement(xs)
     %relNums = filter(b, a, xs);
     
     m = mean(xs);
-    m
     data = xs - m;
     result = max(data) - min(data) > 50;
 end

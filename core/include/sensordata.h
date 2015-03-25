@@ -55,6 +55,12 @@ namespace muvr {
     };
 
     ///
+    /// Applies the kalman filter to even out / smooth the values the
+    /// matrix ``source``, which must contain only a single column.
+    ///
+    cv::Mat kalman_smooth(const cv::Mat &source);
+
+    ///
     /// Implementations decide whether there is movement or not in the given source
     ///
     class nomovement_decider {
