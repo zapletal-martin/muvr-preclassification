@@ -20,12 +20,6 @@ movement_decider::movement_result movement_decider::has_movement(const cv::Mat &
         auto m = mean(col);
         Mat diff = col - m;
 
-#ifdef EYEBALL_DEBUG
-        std::cout << "raw = " << rawCol << std::endl;
-        std::cout << "smooth = " << col << std::endl;
-        std::cout << "median = " << m[0] << std::endl;
-#endif
-
         for (int j = 0; j < diff.rows; ++j) {
             int16_t d = diff.at<int16_t>(j, 0);
             if (abs(d) > threshold) return yes;

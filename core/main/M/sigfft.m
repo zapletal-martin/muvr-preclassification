@@ -39,5 +39,4 @@ function [freq, period, power] = sigfft(xs)
 
     freq = period(index);
 
-
 end

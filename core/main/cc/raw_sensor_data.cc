@@ -13,3 +13,4 @@ raw_sensor_data::raw_sensor_data(cv::Mat &adata, sensor_data_type atype): data(a
             break;
     }
 }
+

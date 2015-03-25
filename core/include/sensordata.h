@@ -1,7 +1,7 @@
 #ifndef _PRECLASSIFICATION_SENSORDATA_H_
 #define _PRECLASSIFICATION_SENSORDATA_H_
-#import <inttypes.h>
-#import <opencv2/opencv.hpp>
+#include <inttypes.h>
+#include <opencv2/opencv.hpp>
 
 using namespace cv;
 
@@ -74,7 +74,7 @@ namespace muvr {
         ///
         /// Checks to see if there is no movement in the given ``source``.
         ///
-        virtual movement_result has_movement(const raw_sensor_data &source) const;
+        virtual movement_result has_movement(const raw_sensor_data& source) const;
     private:
         movement_result has_movement(const cv::Mat &source, const int16_t threshold) const;
     };
@@ -87,6 +87,52 @@ namespace muvr {
     ///
     class exercise_decider {
     private:
+        uint m_min_heart_rate;
+
+        /// "tuple" for the frequency and power
+        struct freq_power {
+            /// the signal frequency (in 1/sample)
+            double frequency;
+            /// the signal power
+            double power;
+
+            /// ordering by power
+            bool operator < (const freq_power& that) const {
+                return (power > that.power);
+            }
+        };
+
+        /// container for the top ``n`` most powerful signals
+        struct freq_powers {
+        private:
+            uint m_max_count;
+            std::vector<freq_power> m_items;
+            double m_min_power;
+        public:
+            ///
+            /// Ctor, sets the maximum number items with the greatest power to record
+            ///
+            freq_powers(const uint max_count);
+
+            ///
+            /// Check for the item's power, if acceptable, add
+            ///
+            void push_back(const freq_power& item);
+
+            ///
+            /// Computes whether there is enough distiction between the powers of the first and other
+            /// frequencies by at least ``factor``.
+            ///
+            bool is_distinct(const double factor = 1000);
+
+            ///
+            /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
+            ///
+            bool is_roughly_equal(const freq_powers& that, const uint count = 3, const double freq_tolerance = 0.2);
+        };
+
+        /// compute the periodogram of the real numbers in the rows of first column in ``source``
+        exercise_decider::freq_powers fft(const Mat& source) const;
 
     public:
 
@@ -95,11 +141,13 @@ namespace muvr {
             no, yes, undecidable
         };
 
+        exercise_decider();
+
         ///
         /// Checks to see if there is movement that is typical for exercise in the
         /// given ``source``.
         ///
-        virtual exercise_result has_exercise(const raw_sensor_data &source) const;
+        virtual exercise_result has_exercise(const raw_sensor_data& source) const;
     };
 
 
@@ -109,7 +157,7 @@ namespace muvr {
     class sensor_data_fuser {
     private:
     public:
-        std::vector<sensor_data> decode_and_fuse(const uint8_t *source);
+        std::vector<sensor_data> decode_and_fuse(const uint8_t* source);
     };
 
 }
