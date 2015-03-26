@@ -1,5 +1,5 @@
 #include <Python/Python.h>
-#include "sensordata.h"
+#include "sensor_data.h"
 
 using namespace muvr;
 using namespace cv;

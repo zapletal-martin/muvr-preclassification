@@ -1,6 +1,6 @@
 #ifndef _PRECLASSIFICATION_TEST_DATA_H_
 #define _PRECLASSIFICATION_TEST_DATA_H_
-#include "sensordata.h"
+#include "sensor_data.h"
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
