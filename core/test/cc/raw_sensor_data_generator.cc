@@ -2,15 +2,15 @@
 
 using namespace muvr;
 
-test_data_generator::test_data_generator(const sensor_data_type type): m_type(type), m_noise(0) {
+raw_sensor_data_generator::raw_sensor_data_generator(const sensor_data_type type): m_type(type), m_noise(0) {
 }
 
-test_data_generator& test_data_generator::with_noise(const int noise) {
+raw_sensor_data_generator &raw_sensor_data_generator::with_noise(const int noise) {
     m_noise = noise;
     return *this;
 }
 
-raw_sensor_data test_data_generator::constant(const uint count, const Scalar constant) {
+raw_sensor_data raw_sensor_data_generator::constant(const uint count, const Scalar constant) {
     Mat data = mat(count, constant);
 
     if (m_noise > 0) {
@@ -21,7 +21,7 @@ raw_sensor_data test_data_generator::constant(const uint count, const Scalar con
     return raw_sensor_data(data, m_type);
 }
 
-void test_data_generator::sin(const uint count, uint period, const double amplitude, Mat &mat) {
+void raw_sensor_data_generator::sin(const uint count, uint period, const double amplitude, Mat &mat) {
     for (int i = 0; i < count * period; ++i) {
         double a = ((double)i / period) * M_PI;
         double v = ::sin(a) * amplitude;
@@ -30,7 +30,7 @@ void test_data_generator::sin(const uint count, uint period, const double amplit
     }
 }
 
-raw_sensor_data test_data_generator::sin(const uint count, const uint period, const cv::Scalar amplitude) {
+raw_sensor_data raw_sensor_data_generator::sin(const uint count, const uint period, const cv::Scalar amplitude) {
     Mat data = mat(count * period);
 
     for (int i = 0; i < data.cols; ++i) {
@@ -41,13 +41,13 @@ raw_sensor_data test_data_generator::sin(const uint count, const uint period, co
     return raw_sensor_data(data, m_type);
 }
 
-raw_sensor_data test_data_generator::gaussian_noise(const uint count, const int mean, const double stddev) {
+raw_sensor_data raw_sensor_data_generator::gaussian_noise(const uint count, const int mean, const double stddev) {
     Mat data = mat(count);
     randn(data, mean, stddev);
     return raw_sensor_data(data, m_type);
 }
 
-Mat test_data_generator::mat(const uint count, const boost::optional<Scalar> &constant) {
+Mat raw_sensor_data_generator::mat(const uint count, const boost::optional<Scalar> &constant) {
     switch (m_type) {
         case accelerometer:
         case rotation:
