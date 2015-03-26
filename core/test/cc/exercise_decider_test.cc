@@ -21,7 +21,6 @@ TEST_F(exercise_decider_test, trivial_noexercise) {
 
 TEST_F(exercise_decider_test, gaussian_noise) {
     auto sd = test_data_generator(accelerometer).gaussian_noise(1000, 0, 500);
-    std::cout << sd.data << std::endl;
     EXPECT_EQ(exercise_decider::exercise_result::no, decider.has_exercise(sd));
 }
 

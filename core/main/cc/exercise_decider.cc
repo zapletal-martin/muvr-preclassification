@@ -70,9 +70,6 @@ exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
 exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source) const {
     if (source.data.rows < m_min_samples) return undecidable;
 
-    if (source.type == heart_rate) {
-        return undecidable;
-    }
     if (source.type == accelerometer || source.type == rotation) {
         auto pfx = fft(source.data.col(0));
         auto pfy = fft(source.data.col(1));
