@@ -2,6 +2,7 @@
 #define _PRECLASSIFICATION_TEST_DATA_H_
 #include "sensordata.h"
 #include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
 
 namespace muvr {
 
@@ -13,6 +14,8 @@ namespace muvr {
         sensor_data_type m_type;
         int m_noise;
         void sin(const uint count, uint period, const double amplitude, Mat &mat);
+
+        Mat mat(const uint count, const boost::optional<Scalar> &constant = boost::none);
     public:
         ///
         /// Constructs generator that will produce values of ``sensor_data_type``.
@@ -35,6 +38,11 @@ namespace muvr {
         /// Generates ``count`` number of sin Ts with ``period`` samples long, with maximum ``amplitude``
         ///
         raw_sensor_data sin(const uint count, const uint period, const cv::Scalar amplitude);
+
+        ///
+        /// Generates ``count`` samples with gaussian noise with the given ``mean`` and ``variance``
+        ///
+        raw_sensor_data gaussian_noise(const uint count, const int mean, const double stddev);
     };
 
     ///

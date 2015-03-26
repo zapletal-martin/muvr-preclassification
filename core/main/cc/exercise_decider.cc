@@ -1,3 +1,4 @@
+#include <Python/Python.h>
 #include "sensordata.h"
 
 using namespace muvr;
@@ -19,8 +20,8 @@ void exercise_decider::freq_powers::push_back(const freq_power& item) {
 }
 
 bool exercise_decider::freq_powers::is_distinct(double const factor) {
-    // TODO: implement me!
-    return true;
+    if (m_items.size() < 2) return false;
+    return m_items[0].power > m_items[1].power * factor;
 }
 
 bool exercise_decider::freq_powers::is_roughly_equal(const freq_powers& that, const uint count, const double freq_tolerance) {

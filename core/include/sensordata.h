@@ -127,7 +127,7 @@ namespace muvr {
             /// Computes whether there is enough distiction between the powers of the first and other
             /// frequencies by at least ``factor``.
             ///
-            bool is_distinct(const double factor = 1000);
+            bool is_distinct(const double factor = 100);
 
             ///
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.

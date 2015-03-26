@@ -11,21 +11,10 @@ test_data_generator& test_data_generator::with_noise(const int noise) {
 }
 
 raw_sensor_data test_data_generator::constant(const uint count, const Scalar constant) {
-    Mat data;
-    Mat noise;
-    switch (m_type) {
-        case accelerometer:
-        case rotation:
-            data = Mat(count, 3, CV_16S, constant);
-            noise = Mat(count, 3, CV_16S);
-            break;
-        case heart_rate:
-            data = Mat(count, 1, CV_8U, constant);
-            noise = Mat(count, 1, CV_8U);
-            break;
-    }
+    Mat data = mat(count, constant);
 
     if (m_noise > 0) {
+        Mat noise = mat(count);
         randu(noise, Scalar::all(-m_noise), Scalar::all(m_noise));
         data = data + noise;
     }
@@ -36,22 +25,13 @@ void test_data_generator::sin(const uint count, uint period, const double amplit
     for (int i = 0; i < count * period; ++i) {
         double a = ((double)i / period) * M_PI;
         double v = ::sin(a) * amplitude;
-        if (mat.type() == CV_16S) mat.at<int16_t>(i, 0) = v;
-        else if (mat.type() == CV_8U) mat.at<uint8_t>(i, 0) = v;
+        if (mat.type() == CV_16S) mat.at<int16_t>(i, 0) = (int16_t)v;
+        else if (mat.type() == CV_8U) mat.at<uint8_t>(i, 0) = (uint8_t)v;
     }
 }
 
 raw_sensor_data test_data_generator::sin(const uint count, const uint period, const cv::Scalar amplitude) {
-    Mat data;
-    switch (m_type) {
-        case accelerometer:
-        case rotation:
-            data = Mat(count * period, 3, CV_16S);
-            break;
-        case heart_rate:
-            data = Mat(count * period, 1, CV_8U);
-            break;
-    }
+    Mat data = mat(count * period);
 
     for (int i = 0; i < data.cols; ++i) {
         Mat col = data.col(i);
@@ -59,4 +39,20 @@ raw_sensor_data test_data_generator::sin(const uint count, const uint period, co
     }
 
     return raw_sensor_data(data, m_type);
+}
+
+raw_sensor_data test_data_generator::gaussian_noise(const uint count, const int mean, const double stddev) {
+    Mat data = mat(count);
+    randn(data, mean, stddev);
+    return raw_sensor_data(data, m_type);
+}
+
+Mat test_data_generator::mat(const uint count, const boost::optional<Scalar> &constant) {
+    switch (m_type) {
+        case accelerometer:
+        case rotation:
+            if (constant) return Mat(count, 3, CV_16S, constant.get()); else return Mat(count, 3, CV_16S);
+        case heart_rate:
+            if (constant) return Mat(count, 1, CV_8U, constant.get()); else return Mat(count, 1, CV_8U);
+    }
 }
