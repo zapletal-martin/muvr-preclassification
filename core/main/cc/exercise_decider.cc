@@ -39,7 +39,7 @@ bool exercise_decider::freq_powers::is_roughly_equal(const freq_powers& that, co
     return true;
 }
 
-exercise_decider::exercise_decider(): m_min_heart_rate(110) {
+exercise_decider::exercise_decider(): m_min_samples(200) {
 
 }
 
@@ -59,7 +59,7 @@ exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
     exercise_decider::freq_powers result(10);
     for (int i = 1; i < tmp.rows / 2; ++i) {
         Complexf v = tmp.at<Complexf>(i, 0);
-        exercise_decider::freq_power x{.frequency = (double)tmp.rows / i, .power = pow(abs(v), 2)};
+        exercise_decider::freq_power x {.frequency = (double)tmp.rows / i, .power = pow(abs(v), 2)};
         result.push_back(x);
     }
 
@@ -67,9 +67,10 @@ exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
 }
 
 exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source) const {
+    if (source.data.rows < m_min_samples) return undecidable;
+
     if (source.type == heart_rate) {
-        auto m = mean(source.data);
-        if (m[0] > m_min_heart_rate) return yes; else return no;
+        return undecidable;
     }
     if (source.type == accelerometer || source.type == rotation) {
         auto pfx = fft(source.data.col(0));

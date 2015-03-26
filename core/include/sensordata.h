@@ -87,9 +87,11 @@ namespace muvr {
     ///
     class exercise_decider {
     private:
-        uint m_min_heart_rate;
+        uint m_min_samples;
 
+        ///
         /// "tuple" for the frequency and power
+        ///
         struct freq_power {
             /// the signal frequency (in 1/sample)
             double frequency;
@@ -102,7 +104,9 @@ namespace muvr {
             }
         };
 
+        ///
         /// container for the top ``n`` most powerful signals
+        ///
         struct freq_powers {
         private:
             uint m_max_count;
@@ -141,6 +145,9 @@ namespace muvr {
             no, yes, undecidable
         };
 
+        ///
+        /// Constructs an instance of exercise_decider
+        ///
         exercise_decider();
 
         ///
