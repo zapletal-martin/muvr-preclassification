@@ -8,7 +8,7 @@ namespace muvr {
     ///
     /// Decode the raw sensor data in a single packet from a device
     ///
-    raw_sensor_data decode_single_packet(uint8_t *buffer);
+    raw_sensor_data decode_single_packet(const uint8_t *buffer);
 
 }
 
