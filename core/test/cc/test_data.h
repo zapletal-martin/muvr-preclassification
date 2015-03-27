@@ -17,7 +17,8 @@ namespace muvr {
         uint8_t m_samples_per_second;
         uint8_t m_time_offset;
 
-        device_data_payload new_payload(const uint8_t count);
+        /// construct a buffer with header set;
+        device_data_payload new_buffer(const uint8_t count) const;
     public:
         device_data_generator(const sensor_data_type type);
 

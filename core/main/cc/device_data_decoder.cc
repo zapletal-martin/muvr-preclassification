@@ -1,4 +1,4 @@
-#include "device_data.h"
+#include <device_data.h>
 #include "device_data_decoder.h"
 
 namespace muvr {
@@ -29,7 +29,7 @@ namespace muvr {
                 break;
             }
             default:
-                throw std::runtime_error("Cannot decode");
+                throw std::runtime_error("Cannot decode type " + std::to_string(header->type));
         }
 
         return raw_sensor_data(data, static_cast<sensor_data_type>(header->type), header->samples_per_second, header->time_offset);

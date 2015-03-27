@@ -17,7 +17,7 @@ device_data_generator& device_data_generator::time_offset(uint8_t time_offset) {
     return *this;
 }
 
-device_data_payload device_data_generator::new_payload(const uint8_t count) {
+device_data_payload device_data_generator::new_buffer(const uint8_t count) const {
     uint8_t sample_size;
     switch (m_type) {
         case accelerometer:
@@ -42,7 +42,7 @@ device_data_payload device_data_generator::new_payload(const uint8_t count) {
 }
 
 device_data_payload device_data_generator::constant(const uint8_t count, const Scalar value) {
-    device_data_payload buf = new_payload(count);
+    device_data_payload buf = new_buffer(count);
     for (uint i = 0; i < count; ++i) {
         switch (m_type) {
             case accelerometer:

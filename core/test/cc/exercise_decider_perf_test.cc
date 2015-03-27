@@ -15,3 +15,4 @@ TEST_F(exercise_decider_perf_test, trivial_exercise) {
         EXPECT_EQ(exercise_decider::exercise_result::yes, decider.has_exercise(sd));
     }
 }
+
