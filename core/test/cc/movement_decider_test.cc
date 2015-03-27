@@ -1,4 +1,4 @@
-#include "sensor_data.h"
+#include "raw_sensor_data.h"
 #include "test_data.h"
 #include <gtest/gtest.h>
 
@@ -11,8 +11,8 @@ protected:
 };
 
 TEST_F(movement_decider_test, no_movement_hr) {
-    Mat hr = Mat::zeros(1, 2000, CV_8U);
-    EXPECT_EQ(movement_decider::movement_result::undecidable, decider.has_movement(raw_sensor_data(hr, heart_rate)));
+    auto hr = raw_sensor_data_generator(heart_rate).constant(100, Scalar(0));
+    EXPECT_EQ(movement_decider::movement_result::undecidable, decider.has_movement(hr));
 }
 
 TEST_F(movement_decider_test, no_movement_real) {

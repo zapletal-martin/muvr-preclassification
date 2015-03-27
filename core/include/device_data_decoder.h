@@ -1,7 +1,7 @@
 #ifndef PRECLASSIFICATION_SENSOR_FORMAT_DECODER_H
 #define PRECLASSIFICATION_SENSOR_FORMAT_DECODER_H
-#include "sensor_data.h"
-#include "sensor_formats.h"
+#include "raw_sensor_data.h"
+#include "device_data.h"
 
 namespace muvr {
 

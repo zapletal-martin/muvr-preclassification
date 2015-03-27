@@ -1,6 +1,6 @@
 #ifndef _PRECLASSIFICATION_TEST_DATA_H_
 #define _PRECLASSIFICATION_TEST_DATA_H_
-#include "sensor_data.h"
+#include "raw_sensor_data.h"
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
@@ -14,10 +14,15 @@ namespace muvr {
     class device_data_generator {
     private:
         sensor_data_type m_type;
+        uint8_t m_samples_per_second;
+        uint8_t m_time_offset;
 
         device_data_payload new_payload(const uint8_t count);
     public:
         device_data_generator(const sensor_data_type type);
+
+        device_data_generator &samples_per_second(uint8_t samples_per_second);
+        device_data_generator &time_offset(uint8_t time_offset);
 
         device_data_payload constant(const uint8_t count, const Scalar value);
 

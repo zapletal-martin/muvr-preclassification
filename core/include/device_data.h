@@ -17,7 +17,7 @@ typedef struct __attribute__((__packed__)) {
     uint8_t  sample_size;
     /// time offset *always into the past*
     uint8_t  time_offset;
-} sensor_packet_header;
+} device_data_header;
 
 ///
 /// Packed 5 B of 3D sensor values
@@ -27,7 +27,7 @@ typedef struct __attribute__((__packed__)) {
     int16_t y     : 13;
     int16_t z     : 13;
     int8_t  valid : 1;
-} sensor_packet_threed;
+} device_data_threed;
 
 
 #endif //_PRECLASSIFICATION_SENSOR_FORMATS_H_
