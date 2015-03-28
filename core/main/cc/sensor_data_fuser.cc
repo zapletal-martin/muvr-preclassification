@@ -47,8 +47,19 @@ sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_loc
     m_location(location), m_start_time(start_time), m_data(data) {
 }
 
+sensor_time_t sensor_data_fuser::raw_sensor_data_entry::end_time() const {
+    return m_start_time + (m_data.data.rows * 1000 / m_data.samples_per_second);
+}
+
 void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &data,
                                                          const sensor_time_t received_at) {
+    // We don't care up to 10ms; we're not on RT OSs, anyway.
+    static const sensor_time_t epsilon = 10;
+    if (received_at - end_time() < epsilon) {
+        // append directly
+        m_data.data.push_back(data.data);
+        return;
+    }
     // TODO: append, regression pad
     // TODO: OK to use OpenCV's fitLine for plain linear regression
     // http://docs.opencv.org/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=fitline#fitline

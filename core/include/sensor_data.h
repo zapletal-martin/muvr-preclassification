@@ -9,7 +9,10 @@ namespace muvr {
         wrist, chest, waist, foot, any
     } sensor_location;
 
+    /// sensor time is a synthetic, but monotonously increasing time in ms
     typedef uint32_t sensor_time_t;
+    /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
+    /// number of dependencies especially for mobile clients.
     const sensor_time_t EXERCISE_TIME_NAN = UINT32_MAX;
 
     ///
@@ -59,6 +62,8 @@ namespace muvr {
             sensor_time_t    m_start_time;
             /// the data (padded & continuous)
             raw_sensor_data  m_data;
+
+            sensor_time_t end_time() const;
         public:
             ///
             /// Construct entry, assign the fields
