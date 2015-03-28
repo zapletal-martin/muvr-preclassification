@@ -135,28 +135,4 @@ namespace muvr {
 
         return result;
     }
-
-    const std::vector<char> ALPHABET =
-        { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-        'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
-
-    char to_symbol(double value, const std::vector<double> &cuts) {
-        int count = 0;
-
-        while ((count < cuts.size()) && (cuts[count] <= value)) {
-            count++;
-        }
-
-        return ALPHABET[count];
-    }
-
-    std::vector<char> time_series_to_string(const std::vector<double> &source, const std::vector<double> &cuts) {
-        std::vector<char> result (source.size());
-
-        for (int i = 0; i < source.size(); i++) {
-            result[i] = to_symbol(source[i], cuts);
-        }
-
-        return result;
-    }
 }

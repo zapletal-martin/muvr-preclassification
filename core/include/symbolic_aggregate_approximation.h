@@ -10,8 +10,9 @@ namespace muvr {
     ///
     std::vector<char> symbolic_aggregate_approximation(
             const std::vector<double> &source,
-            const int paa_size,
-            const std::vector<double> &cuts);
+            int paa_size,
+            int symbols_size,
+            double normalization_threshold);
 }
 
 
