@@ -1,4 +1,5 @@
 #include <array>
+#include <math.h>
 #include "piecewise_aggregate_approximation.h"
 
 namespace muvr {
@@ -86,5 +87,76 @@ namespace muvr {
         }
     }
 
+    double time_series_mean(const std::vector<double> &source) {
+        double result = 0;
+        int count = 0;
 
+        for (int i = 0; i < source.size(); i++) {
+            result += source[i];
+            count += 1;
+
+        }
+        if (count > 0) {
+            return result / ((double) count);
+        }
+
+        return 0;
+    }
+
+    double time_series_standard_deviation(const std::vector<double> &source) {
+        double num0 = 0;
+        double sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < source.size(); i++) {
+            num0 = num0 + source[i] * source[i];
+            sum = sum + source[i];
+            count += 1;
+        }
+
+        double len = ((double) count);
+        return sqrt((len * num0 - sum * sum) / (len * (len - 1)));
+    }
+
+    std::vector<double> z_normalize(const std::vector<double> &source, double normalizationThreshold) {
+
+        std::vector<double> result (source.size());
+
+        double mean = time_series_mean(source);
+        double sd = time_series_standard_deviation(source);
+
+        if (sd < normalizationThreshold) {
+            return std::vector<double> (source);
+        }
+
+        for (int i = 0; i < result.size(); i++) {
+            result[i] = (source[i] - mean) / sd;
+        }
+
+        return result;
+    }
+
+    const std::vector<char> ALPHABET =
+        { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+        'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+
+    char to_symbol(double value, const std::vector<double> &cuts) {
+        int count = 0;
+
+        while ((count < cuts.size()) && (cuts[count] <= value)) {
+            count++;
+        }
+
+        return ALPHABET[count];
+    }
+
+    std::vector<char> time_series_to_string(const std::vector<double> &source, const std::vector<double> &cuts) {
+        std::vector<char> result (source.size());
+
+        for (int i = 0; i < source.size(); i++) {
+            result[i] = to_symbol(source[i], cuts);
+        }
+
+        return result;
+    }
 }
