@@ -13,10 +13,6 @@ sensor_data_fuser::sensor_data_fuser(movement_decider movement_decider,
     m_exercise_start(EXERCISE_TIME_NAN) {
 }
 
-std::vector<fused_sensor_data> sensor_data_fuser::fuse_until(const sensor_time_t end) {
-    return std::vector<fused_sensor_data>();
-}
-
 void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 
 }
@@ -27,15 +23,15 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
     m_table.push_back(decoded, location, received_at);
 }
 
-void sensor_data_fuser::exercise_block_end(const sensor_time_t now) {
+void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
     if (m_exercise_start == EXERCISE_TIME_NAN) return;
 
-    exercise_block_ended(fuse_until(now), fusion_stats());
-    erase_ending_before(now);
+    exercise_block_ended(m_table.range(m_exercise_start, end), fusion_stats());
+    erase_ending_before(end);
 }
 
 void sensor_data_fuser::exercise_block_start(const sensor_time_t now) {
-    m_exercise_start = EXERCISE_TIME_NAN;
+    m_exercise_start = now;
     exercise_block_started();
 }
 
@@ -71,17 +67,41 @@ bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location loc
             m_data.samples_per_second == data.samples_per_second;
 }
 
+sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entry::range(
+        const sensor_time_t start, const sensor_time_t end) const {
+    if (m_start_time == start && end_time() == end) return *this;
+
+    throw std::runtime_error("Implement me");
+}
+
+fused_sensor_data sensor_data_fuser::raw_sensor_data_entry::fused() {
+    return fused_sensor_data {
+            .samples_per_second = m_data.samples_per_second,
+            .data = m_data.data,
+            .location = m_location,
+            .type = m_data.type
+    };
+}
+
 // --
+
+std::vector<fused_sensor_data> sensor_data_fuser::raw_sensor_data_table::range(const sensor_time_t start,
+                                                                               const sensor_time_t end) const {
+    std::vector<fused_sensor_data> result;
+    for (auto &i : m_entries) {
+        result.push_back(i.range(start, end).fused());
+    }
+    return result;
+}
 
 void sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location location,
                                                          const sensor_time_t received_at) {
-    for (auto i = m_entries.begin(); i != m_entries.end(); ++i) {
-        if (i->matches(location, data)) {
-            i->push_back(data, received_at);
+    for (auto &i : m_entries) {
+        if (i.matches(location, data)) {
+            i.push_back(data, received_at);
             return;
         }
     }
 
     m_entries.push_back(raw_sensor_data_entry(location, received_at, data));
-
 }
