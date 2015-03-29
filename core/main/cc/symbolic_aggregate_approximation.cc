@@ -1,7 +1,3 @@
-//
-// Created by Martin Zapletal on 28/03/15.
-//
-
 #include "symbolic_aggregate_approximation.h"
 #include "piecewise_aggregate_approximation.h"
 #include "symbol_alphabet.h"
