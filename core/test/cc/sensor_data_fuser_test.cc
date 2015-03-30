@@ -94,8 +94,8 @@ TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
 }
 
 sensor_data_fuser_test::sdf::sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result)
-        : sensor_data_fuser(md(movement_result), ed(exercise_result)) {
-
+        : sensor_data_fuser(std::unique_ptr<movement_decider>(new md(movement_result)),
+                            std::unique_ptr<exercise_decider>(new ed(exercise_result))) {
 }
 
 void sensor_data_fuser_test::sdf::exercise_block_ended(const std::vector<fused_sensor_data> data,

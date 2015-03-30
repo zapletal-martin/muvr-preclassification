@@ -110,6 +110,11 @@ namespace muvr {
             /// Computes the end time of this entry
             ///
             sensor_time_t end_time() const;
+
+            ///
+            /// Computes the duration of this entry
+            ///
+            sensor_time_t duration() const;
         };
 
         ///
@@ -150,8 +155,8 @@ namespace muvr {
             sensor_time_t last_end() const;
         };
 
-        movement_decider m_movement_decider;
-        exercise_decider m_exercise_decider;
+        std::unique_ptr<movement_decider> m_movement_decider;
+        std::unique_ptr<exercise_decider> m_exercise_decider;
         sensor_time_t m_exercise_start;
         raw_sensor_data_table m_table;
 
@@ -165,7 +170,7 @@ namespace muvr {
         ///
         /// Construct new instance of the fuser
         ///
-        sensor_data_fuser(movement_decider movement_decider, exercise_decider exercise_decider);
+        sensor_data_fuser(std::unique_ptr<movement_decider> movement_decider, std::unique_ptr<exercise_decider> exercise_decider);
 
         ///
         /// Push back a block of data arriving from a given location at the specified time

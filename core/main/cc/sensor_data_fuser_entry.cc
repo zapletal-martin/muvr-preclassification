@@ -121,3 +121,7 @@ raw_sensor_data &sensor_data_fuser::raw_sensor_data_entry::raw() {
 sensor_time_t sensor_data_fuser::raw_sensor_data_entry::start_time() const {
     return m_start_time;
 }
+
+sensor_time_t sensor_data_fuser::raw_sensor_data_entry::duration() const {
+    return m_data.duration();
+}

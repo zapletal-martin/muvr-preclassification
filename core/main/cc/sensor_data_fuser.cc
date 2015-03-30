@@ -3,13 +3,14 @@
 
 using namespace muvr;
 
-sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(movement_decider(), exercise_decider()) {
+sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(std::unique_ptr<movement_decider>(new movement_decider()),
+                                                          std::unique_ptr<exercise_decider>(new exercise_decider())) {
 }
 
-sensor_data_fuser::sensor_data_fuser(movement_decider movement_decider,
-                                     exercise_decider exercise_decider):
-    m_movement_decider(movement_decider),
-    m_exercise_decider(exercise_decider),
+sensor_data_fuser::sensor_data_fuser(std::unique_ptr<movement_decider> movement_decider,
+                                     std::unique_ptr<exercise_decider> exercise_decider):
+    m_movement_decider(std::move(movement_decider)),
+    m_exercise_decider(std::move(exercise_decider)),
     m_exercise_start(EXERCISE_TIME_NAN) {
 }
 
@@ -27,8 +28,8 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
     if (m_exercise_start == EXERCISE_TIME_NAN) {
         // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
         // movement and exercise for us to start considering the exercise block.
-        if (m_movement_decider.has_movement(raw)) {
-            if (m_exercise_decider.has_exercise(raw)) {
+        if (m_movement_decider->has_movement(raw)) {
+            if (m_exercise_decider->has_exercise(raw)) {
                 // movement & exercise -> we are starting
                 m_exercise_start = entry.start_time();
             }
@@ -39,11 +40,12 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
         int no_movement = 0;
         int no_exercise = 0;
         for (auto &x : m_table.entries()) {
+            if (x.duration() < 1000) continue;
             auto last = x.from_end(1000).raw();
             // undecidable counts as no movement
-            if (m_movement_decider.has_movement(last) != movement_decider::movement_result::yes) no_movement++;
+            if (m_movement_decider->has_movement(last) != movement_decider::movement_result::yes) no_movement++;
             // undecidable counts as no exercise
-            if (m_exercise_decider.has_exercise(x.raw()) != exercise_decider::exercise_result::yes) no_exercise++;
+            if (m_exercise_decider->has_exercise(x.raw()) != exercise_decider::exercise_result::yes) no_exercise++;
         }
         if (no_movement == m_table.size() || no_exercise == m_table.size()) {
             // all sensors report no exercise or no movement => end exercise at end
