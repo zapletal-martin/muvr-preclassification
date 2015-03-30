@@ -53,13 +53,16 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
 
     // We don't care up to 10ms; we're not on RT OSs, anyway.
     static const sensor_time_t epsilon = 10;
+
+    // correct start time of the data, taking into account the offset.
     const sensor_time_t data_received_at = data.received_at(received_at);
+    // gap between the last data and this data in milliseconds
     const auto gap_length = data_received_at - end_time();
-    if (gap_length < epsilon) {
-        // append directly
+    if (gap_length >= 0 && gap_length < epsilon) {
+        // too small, but non-negative
         m_data.data.push_back(data.data);
-    } else if (gap_length > 0) {
-        // gap_length is in milliseconds
+    } else if (gap_length >= epsilon) {
+        // bigger than allowed epsilon
         int gap_samples = gap_length / (1000 / m_data.samples_per_second);
         Mat gap(gap_samples, m_data.data.cols, CV_16S);
         for (int i = 0; i < m_data.data.cols; ++i) {
@@ -78,6 +81,7 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
         m_data.data.push_back(gap);
         m_data.data.push_back(data.data);
     } else {
+        // negative gap
         throw std::runtime_error("raw_sensor_data_entry::push_back(): received data " + std::to_string(gap_length) + " ms into the past.");
     }
 }
