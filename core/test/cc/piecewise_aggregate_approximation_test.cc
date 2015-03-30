@@ -70,3 +70,19 @@ TEST_F(piecewise_aggregate_approximation_test, zero_input_length) {
 
     EXPECT_EQ(0, paa.size());
 }
+
+TEST_F(piecewise_aggregate_approximation_test, constant_scaling) {
+    std::vector<double> data { -5000, -1500, -1000, -10, 0, 10, 1000, 1500, 5000 };
+    auto c = linear_constant_normalize(data);
+
+    EXPECT_EQ(9, c.size());
+    EXPECT_EQ(roundToThreeDecimals(-3.8), roundToThreeDecimals(c[0]));
+    EXPECT_EQ(roundToThreeDecimals(-1.14), roundToThreeDecimals(c[1]));
+    EXPECT_EQ(roundToThreeDecimals(-0.76), roundToThreeDecimals(c[2]));
+    EXPECT_EQ(roundToThreeDecimals(-0.0076), roundToThreeDecimals(c[3]));
+    EXPECT_EQ(roundToThreeDecimals(0), roundToThreeDecimals(c[4]));
+    EXPECT_EQ(roundToThreeDecimals(0.0076), roundToThreeDecimals(c[5]));
+    EXPECT_EQ(roundToThreeDecimals(0.76), roundToThreeDecimals(c[6]));
+    EXPECT_EQ(roundToThreeDecimals(1.14), roundToThreeDecimals(c[7]));
+    EXPECT_EQ(roundToThreeDecimals(3.8), roundToThreeDecimals(c[8]));
+}

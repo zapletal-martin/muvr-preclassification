@@ -135,4 +135,22 @@ namespace muvr {
 
         return result;
     }
+
+    std::vector<double> linear_constant_normalize(const std::vector<double> &source) {
+        // output scale
+        double new_max = 1.9;
+
+        // input scale (e.g. value 2500 will become 1.9, linear scaling is applied)
+        double old_max = 2500;
+
+        double new_range = new_max * 2;
+        double old_range = old_max * 2;
+
+        std::vector<double> result (source.size());
+
+        for (int i = 0; i < result.size(); i++)
+            result[i] = (source[i] + old_max) / old_range * new_range - new_max;
+
+        return result;
+    }
 }

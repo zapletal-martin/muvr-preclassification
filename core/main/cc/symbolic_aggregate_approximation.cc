@@ -14,11 +14,13 @@ namespace muvr {
 
         std::vector<double> cuts = alphabet->get_cuts(symbols_size);
 
+        //TODO: normalization should be configurable
+        // Currently linear constant normalization is used, because we want the values
+        // to scale always the same regardless input value range
         return alphabet->time_series_to_string(
             piecewise_aggregate_approximation(
-                z_normalize(
-                    source,
-                    normalization_threshold),
+                linear_constant_normalize(
+                    source),
                 paa_size),
             cuts);
     }
