@@ -125,7 +125,7 @@ namespace muvr {
             ///
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
             ///
-            bool is_roughly_equal(const freq_powers& that, const uint count = 3, const double freq_tolerance = 0.2);
+            bool is_roughly_equal(const freq_powers& that, const uint count = 2, const double freq_tolerance = 0.2);
         };
 
         /// compute the periodogram of the real numbers in the rows of first column in ``source``

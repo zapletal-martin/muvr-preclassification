@@ -11,7 +11,8 @@ sensor_data_fuser::sensor_data_fuser(std::unique_ptr<movement_decider> movement_
                                      std::unique_ptr<exercise_decider> exercise_decider):
     m_movement_decider(std::move(movement_decider)),
     m_exercise_decider(std::move(exercise_decider)),
-    m_exercise_start(EXERCISE_TIME_NAN) {
+    m_exercise_start(EXERCISE_TIME_NAN),
+    m_movement_start(EXERCISE_TIME_NAN) {
 }
 
 void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
@@ -19,6 +20,9 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 }
 
 void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t received_at) {
+    // we say that exercise has to be at least 2 seconds after the first movement to be considered
+    static const sensor_time_t minimum_exercise_duration = 3000;
+
     auto decoded = decode_single_packet(buffer);
 
     auto end = m_table.last_end();
@@ -28,10 +32,22 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
     if (m_exercise_start == EXERCISE_TIME_NAN) {
         // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
         // movement and exercise for us to start considering the exercise block.
-        if (m_movement_decider->has_movement(raw)) {
-            if (m_exercise_decider->has_exercise(raw)) {
-                // movement & exercise -> we are starting
-                m_exercise_start = entry.start_time();
+        if (m_movement_decider->has_movement(raw) == movement_decider::movement_result::yes) {
+            // we have movement. remember the start of it; we might be scanning back towards it.
+            if (m_movement_start == EXERCISE_TIME_NAN) {
+                m_movement_start = entry.end_time();
+            }
+
+            if (m_movement_start != EXERCISE_TIME_NAN && entry.end_time() - m_movement_start >= minimum_exercise_duration) {
+                int blocks = (entry.end_time() - m_movement_start) / minimum_exercise_duration;
+                for (int i = 1; i <= blocks; ++i) {
+                    auto r = entry.range(m_movement_start, m_movement_start + i * minimum_exercise_duration);
+                    // scan backwards towards m_movement_start
+                    if (m_exercise_decider->has_exercise(r.raw()) == exercise_decider::exercise_result::yes) {
+                        // movement & exercise -> we are starting
+                        m_exercise_start = r.start_time();
+                    }
+                }
             }
         }
     } else {

@@ -83,8 +83,8 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entr
     int after_gap_length  = end_time() - end;          // negative -> pad, positive -> cut
 
     // sort out cuts first
-    int first_row = max(before_gap_length / 1000 / m_data.samples_per_second, 0);
-    int last_row  = min(m_data.data.rows - after_gap_length / 1000 / m_data.samples_per_second, m_data.data.rows);
+    int first_row = max(before_gap_length / (1000 / m_data.samples_per_second), 0);
+    int last_row  = min(m_data.data.rows - after_gap_length / (1000 / m_data.samples_per_second), m_data.data.rows);
     Mat data = Mat(m_data.data, Range(first_row, last_row));
 
     // now pad if needed

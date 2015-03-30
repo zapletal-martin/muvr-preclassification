@@ -19,6 +19,8 @@ namespace muvr {
 
         /// construct a buffer with header set;
         device_data_payload new_buffer(const uint8_t count) const;
+
+        void add_threed(std::vector<uint8_t> &buf, const int16_t x, const int16_t y, const int16_t z) const;
     public:
         device_data_generator(const sensor_data_type type);
 

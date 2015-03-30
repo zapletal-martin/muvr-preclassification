@@ -41,19 +41,24 @@ device_data_payload device_data_generator::new_buffer(const uint8_t count) const
     return memory;
 }
 
+void device_data_generator::add_threed(std::vector<uint8_t> &buf, const int16_t x, const int16_t y,
+                                       const int16_t z) const {
+    auto item = std::vector<uint8_t>(sizeof(device_data_threed));
+    device_data_threed *item_buf = reinterpret_cast<device_data_threed *>(item.data());
+    item_buf->x = (uint16_t) x;
+    item_buf->y = (uint16_t) y;
+    item_buf->z = (uint16_t) z;
+    item_buf->valid = 1;
+    buf.insert(buf.end(), item.begin(), item.end());
+}
+
 device_data_payload device_data_generator::constant(const uint8_t count, const Scalar value) {
     device_data_payload buf = new_buffer(count);
     for (uint i = 0; i < count; ++i) {
         switch (m_type) {
             case accelerometer:
             case rotation: {
-                auto item = std::vector<uint8_t>(sizeof(device_data_threed));
-                device_data_threed *item_buf = reinterpret_cast<device_data_threed *>(item.data());
-                item_buf->x = (uint16_t) value[0];
-                item_buf->y = (uint16_t) value[1];
-                item_buf->z = (uint16_t) value[2];
-                item_buf->valid = 1;
-                buf.insert(buf.end(), item.begin(), item.end());
+                add_threed(buf, value[0], value[1], value[2]);
                 break;
             }
             case heart_rate:
@@ -66,5 +71,21 @@ device_data_payload device_data_generator::constant(const uint8_t count, const S
 }
 
 device_data_payload device_data_generator::sin(const uint8_t count, const uint8_t period, const Scalar amplitude) {
-    throw std::bad_function_call();
+    assert(count * period < 256);
+
+    device_data_payload buf = new_buffer(count * period);
+    for (uint i = 0; i < count * period; ++i) {
+        double a = ((double)i / period) * M_PI;
+        switch (m_type) {
+            case accelerometer:
+            case rotation:
+                add_threed(buf, (int16_t)(::sin(a) * amplitude[0]), (int16_t)(::sin(a) * amplitude[1]), (int16_t)(::sin(a) * amplitude[2]));
+                break;
+            case heart_rate:
+                buf.push_back((uint8_t)(::sin(a) * amplitude[0]));
+                break;
+        }
+    }
+
+    return buf;
 }

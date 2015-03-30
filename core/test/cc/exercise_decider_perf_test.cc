@@ -10,8 +10,12 @@ protected:
 };
 
 TEST_F(exercise_decider_perf_test, trivial_exercise) {
+    int count = 10;
+#ifdef PERF_TEST
+    count = 100000;
+#endif
     auto sd = raw_sensor_data_generator(accelerometer).with_noise(10).sin(10, 100, Scalar(1000, 1000, 1000));
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < count; ++i) {
         EXPECT_EQ(exercise_decider::exercise_result::yes, decider.has_exercise(sd));
     }
 }
