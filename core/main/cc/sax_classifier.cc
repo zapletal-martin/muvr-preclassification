@@ -27,11 +27,10 @@ bool sax_classifier::classify(const raw_sensor_data &data) {
 
     std::string s (z_symbols.begin(), z_symbols.end());
     std::smatch m;
-    std::regex e ("[defgh]{1,5}[ijkl]{1,8}[mn]{1,10}[ijkl]{1,5}[defgh]{1,5}");
+    std::regex e ("[defgh]{1,5}[ijkl]{0,7}[mn]{1,10}[ijkl]{1,5}[defgh]{1,5}");
 
     while (std::regex_search(s, m, e)) {
-        for (auto x:m) std::cout << x << " ";
-        std::cout << std::endl;
+        /*for (auto x:m) std::cout << x << " ";*/
         s = m.suffix().str();
         curl = true;
     }
