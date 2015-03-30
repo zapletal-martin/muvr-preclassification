@@ -60,8 +60,6 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
         m_data.data.push_back(data.data);
     } else if (gap_length > 0) {
         // gap_length is in milliseconds
-
-        // 500 ms at 100 samples/s ~> 50 samples
         int gap_samples = gap_length / (1000 / m_data.samples_per_second);
         Mat gap(gap_samples, m_data.data.cols, CV_16S);
         for (int i = 0; i < m_data.data.cols; ++i) {
