@@ -35,7 +35,7 @@ protected:
 /// Test that sine data (patently exercise in our model) arriving without any gaps
 /// with explicit start & end markers is reported as exercise
 ///
-TEST_F(sensor_data_fuser_test, trivial) {
+TEST_F(sensor_data_fuser_test, perfectly_aligned) {
     auto fuser = sdf();
     auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 1000, 1000));
     auto rd = device_data_generator(rotation).samples_per_second(100).constant(100, Scalar(0, 0, 0));
@@ -57,7 +57,7 @@ TEST_F(sensor_data_fuser_test, trivial) {
     }
 }
 
-TEST_F(sensor_data_fuser_test, with_padding) {
+TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
     auto fuser = sdf();
     auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
 
