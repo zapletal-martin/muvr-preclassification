@@ -60,14 +60,15 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
 TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
     auto fuser = sdf();
     auto ad  = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
-    auto adp = device_data_generator(accelerometer).samples_per_second(100).time_offset(1).constant(200, Scalar(1000, -1000, 200));
+    auto adp = device_data_generator(accelerometer).samples_per_second(100).time_offset(1).constant(100, Scalar(1000, -1000, 200));
 
     // explicitly start
     fuser.exercise_block_start(0);
 
-    fuser.push_back(ad.data(),  wrist, 0);       //    0 - 1000
-    fuser.push_back(adp.data(), wrist, 2500);    // 1500 - 3500 (received at 2500, 1000 into the past, 2000 long)
-    fuser.push_back(ad.data(),  wrist, 4000);    // 4000 - 5000
+    fuser.push_back(ad.data(),  wrist, 0);       //    0 - 1000 (received at 0, 1000 long)
+    fuser.push_back(adp.data(), wrist, 2500);    // 1500 - 2500 (received at 2500, 1 * 1000 into the past, 1000 long)
+    fuser.push_back(ad.data(),  wrist, 2505);    // 2500 - 3500 (received at 2505, 1000 long)
+    fuser.push_back(ad.data(),  wrist, 4000);    // 4000 - 5000 (received at 4000, 1000 long)
 
     // explicitly end
     fuser.exercise_block_end(5000);
