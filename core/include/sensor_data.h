@@ -56,8 +56,6 @@ namespace muvr {
             sensor_time_t    m_start_time;
             /// the data (padded & continuous)
             raw_sensor_data  m_data;
-
-            sensor_time_t end_time() const;
         public:
             ///
             /// Construct entry, assign the fields
@@ -78,6 +76,11 @@ namespace muvr {
             raw_sensor_data_entry range(const sensor_time_t start, const sensor_time_t end) const;
 
             ///
+            /// Returns the last ``length`` worth of samples
+            ///
+            raw_sensor_data_entry from_end(const sensor_time_t length) const;
+
+            ///
             /// Appends a new block of ``data`` received at ``received_at``. If there is a gap between the
             /// end time of the last entry and ``received_at``, this method will pad the gap by attempting
             /// to reconstruct the values between the last block and the block being added.
@@ -92,6 +95,21 @@ namespace muvr {
             /// Returns a fused view if this entry
             ///
             fused_sensor_data fused();
+
+            ///
+            /// Returns the raw view of this data
+            ///
+            raw_sensor_data &raw();
+
+            ///
+            /// Returns the start time of this entry
+            ///
+            sensor_time_t start_time() const;
+
+            ///
+            /// Computes the end time of this entry
+            ///
+            sensor_time_t end_time() const;
         };
 
         ///
@@ -109,16 +127,31 @@ namespace muvr {
         private:
             std::vector<raw_sensor_data_entry> m_entries;
         public:
-            void push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t received_at);
+            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t received_at);
 
             ///
             /// Returns a subset of
             ///
             std::vector<fused_sensor_data> range(const sensor_time_t start, const sensor_time_t end) const;
+
+            ///
+            /// Returns the vector of entries
+            ///
+            std::vector<raw_sensor_data_entry> &entries();
+
+            ///
+            /// The size of this table
+            ///
+            size_t size() const;
+
+            ///
+            /// The end of the latest sensor entry
+            ///
+            sensor_time_t last_end() const;
         };
 
         movement_decider m_movement_decider;
-        exercise_decider m_exervise_decider;
+        exercise_decider m_exercise_decider;
         sensor_time_t m_exercise_start;
         raw_sensor_data_table m_table;
 

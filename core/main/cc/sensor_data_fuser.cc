@@ -1,34 +1,6 @@
 #include "sensor_data.h"
 #include "device_data_decoder.h"
 
-namespace muvr {
-
-    Mat linear_gap(const Mat &last, const Mat &next, const sensor_time_t gap_length, const uint samples_per_second) {
-        assert(last.cols == next.cols);
-        assert(gap_length > 0);
-
-        // bigger than allowed epsilon
-        int gap_samples = gap_length / (1000 / samples_per_second);
-        Mat gap(gap_samples, last.cols, CV_16S);
-        for (int i = 0; i < last.cols; ++i) {
-            Mat lcol = last.col(i);
-            Mat ncol = next.col(i);
-
-            int last_value = lcol.at<int16_t>(last.rows - 1);
-            int first_value = ncol.at<int16_t>(0);
-
-            double t = ((double)(first_value - last_value) / gap_samples);
-            for (int j = 0; j < gap_samples; ++j) {
-                int16_t v = (int16_t)(first_value + j * t);
-                gap.at<int16_t>(j, i) = v;
-            }
-        }
-
-        return gap;
-    }
-
-}
-
 using namespace muvr;
 
 sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(movement_decider(), exercise_decider()) {
@@ -37,7 +9,7 @@ sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(movement_decider(), ex
 sensor_data_fuser::sensor_data_fuser(movement_decider movement_decider,
                                      exercise_decider exercise_decider):
     m_movement_decider(movement_decider),
-    m_exervise_decider(exercise_decider),
+    m_exercise_decider(exercise_decider),
     m_exercise_start(EXERCISE_TIME_NAN) {
 }
 
@@ -48,7 +20,36 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t received_at) {
     auto decoded = decode_single_packet(buffer);
 
-    m_table.push_back(decoded, location, received_at);
+    auto end = m_table.last_end();
+    auto entry = m_table.push_back(decoded, location, received_at);
+    auto raw = entry.raw();
+
+    if (m_exercise_start == EXERCISE_TIME_NAN) {
+        // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
+        // movement and exercise for us to start considering the exercise block.
+        if (m_movement_decider.has_movement(raw)) {
+            if (m_exercise_decider.has_exercise(raw)) {
+                // movement & exercise -> we are starting
+                m_exercise_start = entry.start_time();
+            }
+        }
+    } else {
+        // We have already detected movement or exercise from at least one sensor. To stop, all sensors must report no
+        // movement in the last block, or must start reporting no exercise.
+        int no_movement = 0;
+        int no_exercise = 0;
+        for (auto &x : m_table.entries()) {
+            auto last = x.from_end(1000).raw();
+            // undecidable counts as no movement
+            if (m_movement_decider.has_movement(last) != movement_decider::movement_result::yes) no_movement++;
+            // undecidable counts as no exercise
+            if (m_exercise_decider.has_exercise(x.raw()) != exercise_decider::exercise_result::yes) no_exercise++;
+        }
+        if (no_movement == m_table.size() || no_exercise == m_table.size()) {
+            // all sensors report no exercise or no movement => end exercise at end
+            exercise_block_end(end);
+        }
+    }
 }
 
 void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
@@ -61,106 +62,4 @@ void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
 void sensor_data_fuser::exercise_block_start(const sensor_time_t now) {
     m_exercise_start = now;
     exercise_block_started();
-}
-
-//--
-
-sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_location location,
-                                                                const sensor_time_t start_time,
-                                                                const raw_sensor_data data):
-    m_location(location), m_start_time(start_time), m_data(data) {
-}
-
-sensor_time_t sensor_data_fuser::raw_sensor_data_entry::end_time() const {
-    return m_start_time + m_data.duration();
-}
-
-void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &data,
-                                                         const sensor_time_t received_at) {
-    assert(data.data.cols == m_data.data.cols);
-
-    // We don't care up to 10ms; we're not on RT OSs, anyway.
-    static const sensor_time_t epsilon = 10;
-
-    // correct start time of the data, taking into account the offset.
-    const sensor_time_t data_received_at = data.received_at(received_at);
-    // gap between the last data and this data in milliseconds
-    const auto gap_length = data_received_at - end_time();
-    if (gap_length >= 0 && gap_length < epsilon) {
-        // too small, but non-negative
-        m_data.data.push_back(data.data);
-    } else if (gap_length >= epsilon) {
-        // bigger than allowed epsilon
-        Mat gap = linear_gap(m_data.data, data.data, gap_length, m_data.samples_per_second);
-        m_data.data.push_back(gap);
-        m_data.data.push_back(data.data);
-    } else {
-        // negative gap
-        throw std::runtime_error("raw_sensor_data_entry::push_back(): received data " + std::to_string(gap_length) + " ms into the past.");
-    }
-}
-
-bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location location, const raw_sensor_data &data) {
-    return m_location == location &&
-            m_data.type == data.type &&
-            m_data.samples_per_second == data.samples_per_second;
-}
-
-sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entry::range(
-        const sensor_time_t start, const sensor_time_t end) const {
-    assert(end > start);
-
-    // we got lucky!
-    if (m_start_time == start && end_time() == end) return *this;
-
-    // we're not so lucky: we must cut and/or pad on both sides
-    int before_gap_length = start - m_start_time;      // negative -> pad, positive -> cut
-    int after_gap_length  = end_time() - end;          // negative -> pad, positive -> cut
-
-    // sort out cuts first
-    int first_row = max(before_gap_length / 1000 / m_data.samples_per_second, 0);
-    int last_row  = min(m_data.data.rows - after_gap_length / 1000 / m_data.samples_per_second, m_data.data.rows);
-    Mat data = Mat(m_data.data, Range(first_row, last_row));
-
-    // now pad if needed
-    if (before_gap_length < 0) {
-        data = linear_gap(m_data.data.row(0), m_data.data, -before_gap_length, m_data.samples_per_second) + data;
-    }
-    if (after_gap_length < 0) {
-        data = data + linear_gap(m_data.data, m_data.data.row(m_data.data.rows - 1), -after_gap_length, m_data.samples_per_second);
-    }
-
-    return raw_sensor_data_entry(m_location, start, raw_sensor_data(data, m_data.type, m_data.samples_per_second, 0));
-}
-
-fused_sensor_data sensor_data_fuser::raw_sensor_data_entry::fused() {
-    return fused_sensor_data {
-            .samples_per_second = m_data.samples_per_second,
-            .data = m_data.data,
-            .location = m_location,
-            .type = m_data.type
-    };
-}
-
-// --
-
-std::vector<fused_sensor_data> sensor_data_fuser::raw_sensor_data_table::range(const sensor_time_t start,
-                                                                               const sensor_time_t end) const {
-    std::vector<fused_sensor_data> result;
-    for (auto &i : m_entries) {
-        result.push_back(i.range(start, end).fused());
-    }
-    return result;
-}
-
-void sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location location,
-                                                         const sensor_time_t received_at) {
-    for (auto &i : m_entries) {
-        if (i.matches(location, data)) {
-            i.push_back(data, received_at);
-            return;
-        }
-    }
-
-    m_entries.push_back(raw_sensor_data_entry(location, received_at, data));
 }

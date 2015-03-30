@@ -6,15 +6,21 @@ using namespace muvr;
 
 class sensor_data_fuser_test : public testing::Test {
 protected:
-    /// always "yes" movement decider
+    /// always constant movement decider
     class md : public movement_decider {
+    private:
+        boost::optional<movement_result> m_value;
     public:
+        md(const boost::optional<movement_result> value);
         virtual movement_result has_movement(const raw_sensor_data &source) const override;
     };
 
-    /// always "yes" exercise decider
+    /// always constant exercise decider
     class ed : public exercise_decider {
+    private:
+        boost::optional<exercise_result> m_value;
     public:
+        ed(const boost::optional<exercise_result> value);
         virtual exercise_result has_exercise(const raw_sensor_data &source) const override;
     };
 
@@ -23,7 +29,7 @@ protected:
     private:
         std::vector<fused_sensor_data> m_data;
     public:
-        sdf();
+        sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result);
         virtual void exercise_block_ended(const std::vector<fused_sensor_data> data, const fusion_stats &fusion_stats);
         virtual void exercise_block_started();
 
@@ -36,7 +42,7 @@ protected:
 /// with explicit start & end markers is reported as exercise
 ///
 TEST_F(sensor_data_fuser_test, perfectly_aligned) {
-    auto fuser = sdf();
+    auto fuser = sdf(movement_decider::movement_result::yes, exercise_decider::exercise_result::yes);
     auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 1000, 1000));
     auto rd = device_data_generator(rotation).samples_per_second(100).constant(100, Scalar(0, 0, 0));
 
@@ -58,7 +64,7 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
 }
 
 TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
-    auto fuser = sdf();
+    auto fuser = sdf(movement_decider::movement_result::yes, exercise_decider::exercise_result::yes);
     auto ad  = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
     auto adp = device_data_generator(accelerometer).samples_per_second(100).time_offset(1).constant(100, Scalar(1000, -1000, 200));
 
@@ -87,7 +93,8 @@ TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
 
 }
 
-sensor_data_fuser_test::sdf::sdf() : sensor_data_fuser(md(), ed()) {
+sensor_data_fuser_test::sdf::sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result)
+        : sensor_data_fuser(md(movement_result), ed(exercise_result)) {
 
 }
 
@@ -104,10 +111,20 @@ vector<fused_sensor_data> &sensor_data_fuser_test::sdf::data() {
     return m_data;
 }
 
+sensor_data_fuser_test::md::md(const boost::optional<movement_result> value): m_value(value) {
+
+}
+
 movement_decider::movement_result sensor_data_fuser_test::md::has_movement(const raw_sensor_data &source) const {
+    if (m_value) return m_value.get();
     return movement_decider::has_movement(source);
 }
 
+sensor_data_fuser_test::ed::ed(const boost::optional<exercise_result> value): m_value(value) {
+
+}
+
 exercise_decider::exercise_result sensor_data_fuser_test::ed::has_exercise(const raw_sensor_data &source) const {
+    if (m_value) return m_value.get();
     return exercise_decider::has_exercise(source);
 }
