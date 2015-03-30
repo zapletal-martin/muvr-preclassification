@@ -9,7 +9,7 @@ namespace muvr {
     private:
         std::vector<double> extract_time_series(const raw_sensor_data &data, int column);
     public:
-        void classify(const raw_sensor_data &data);
+        bool classify(const raw_sensor_data &data);
     };
 }
 
