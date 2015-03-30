@@ -54,42 +54,34 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
     // We don't care up to 10ms; we're not on RT OSs, anyway.
     static const sensor_time_t epsilon = 10;
     const sensor_time_t data_received_at = data.received_at(received_at);
-    if (data_received_at - end_time() < epsilon) {
+    const auto gap_length = data_received_at - end_time();
+    if (gap_length < epsilon) {
         // append directly
         m_data.data.push_back(data.data);
-        return;
-    }
-    const auto gap = data_received_at - end_time();
-    if (gap > 0) {
-        // pad
+    } else if (gap_length > 0) {
+        // gap_length is in milliseconds
+
+        // 500 ms at 100 samples/s ~> 50 samples
+        int gap_samples = gap_length / (1000 / m_data.samples_per_second);
+        Mat gap(gap_samples, m_data.data.cols, CV_16S);
         for (int i = 0; i < m_data.data.cols; ++i) {
-            Mat col1 = m_data.data.col(i);
-            Mat col2 = data.data.col(i);
+            Mat lcol = m_data.data.col(i);
+            Mat fcol = data.data.col(i);
 
-            // construct the input points (at most 20 last and 20 first elements)
-            std::vector<Point2f> pts;
-            uint time = 0;
-            for (int j = col1.rows - min(20, col1.rows); j < col1.rows; ++j, ++time) {
-                // TODO: sensor_type discrimination: HR is uint8_t
-                pts.push_back(Point2f(time, col1.at<int16_t>(j)));
-            }
-            time += gap;
-            for (int j = 0; j < min(20, col2.rows); ++j, ++time) {
-                // TODO: sensor_type discrimination: HR is uint8_t
-                pts.push_back(Point2f(time, col2.at<int16_t>(j)));
-            }
-            Vec4f line;
-            fitLine(pts, line, CV_DIST_FAIR, 0, 0.01, 0.01);
+            int last = lcol.at<int16_t>(m_data.data.rows - 1);
+            int first = fcol.at<int16_t>(0);
 
-            std::cout << line << std::endl;
+            double t = ((double)(first - last) / gap_samples);
+            for (int j = 0; j < gap_samples; ++j) {
+                int16_t v = (int16_t)(first + j * t);
+                gap.at<int16_t>(j, i) = v;
+            }
         }
-        return;
+        m_data.data.push_back(gap);
+        m_data.data.push_back(data.data);
+    } else {
+        throw std::runtime_error("raw_sensor_data_entry::push_back(): received data " + std::to_string(gap_length) + " ms into the past.");
     }
-
-
-    // TODO: append, regression pad
-    // TODO: OK to use OpenCV's fitLine for plain linear regression
-    // http://docs.opencv.org/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=fitline#fitline
 }
 
 bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location location, const raw_sensor_data &data) {

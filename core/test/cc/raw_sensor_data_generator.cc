@@ -25,8 +25,7 @@ void raw_sensor_data_generator::sin(const uint count, uint period, const double 
     for (int i = 0; i < count * period; ++i) {
         double a = ((double)i / period) * M_PI;
         double v = ::sin(a) * amplitude;
-        if (mat.type() == CV_16S) mat.at<int16_t>(i, 0) = (int16_t)v;
-        else if (mat.type() == CV_8U) mat.at<uint8_t>(i, 0) = (uint8_t)v;
+        mat.at<int16_t>(i, 0) = (int16_t)v;
     }
 }
 
@@ -53,6 +52,6 @@ Mat raw_sensor_data_generator::mat(const uint count, const boost::optional<Scala
         case rotation:
             if (constant) return Mat(count, 3, CV_16S, constant.get()); else return Mat(count, 3, CV_16S);
         case heart_rate:
-            if (constant) return Mat(count, 1, CV_8U, constant.get()); else return Mat(count, 1, CV_8U);
+            if (constant) return Mat(count, 1, CV_16S, constant.get()); else return Mat(count, 1, CV_16S);
     }
 }

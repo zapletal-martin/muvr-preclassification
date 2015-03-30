@@ -59,7 +59,7 @@ TEST_F(sensor_data_fuser_test, trivial) {
 
 TEST_F(sensor_data_fuser_test, with_padding) {
     auto fuser = sdf();
-    auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 1000, 1000));
+    auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
 
     // explicitly start
     fuser.exercise_block_start(0);
@@ -72,9 +72,15 @@ TEST_F(sensor_data_fuser_test, with_padding) {
     fuser.exercise_block_end(4000);
 
     // should have 2 fused sensors
-    EXPECT_EQ(2, fuser.data().size());
+    EXPECT_EQ(1, fuser.data().size());
     for (auto &x : fuser.data()) {
         EXPECT_EQ(400, x.data.rows);
+        for (int i = 0; i < x.data.rows; ++i) {
+            Mat row = x.data.row(i);
+            EXPECT_EQ(1000,  row.at<int16_t>(0));
+            EXPECT_EQ(-1000, row.at<int16_t>(1));
+            EXPECT_EQ(200,   row.at<int16_t>(2));
+        }
     }
 
 }

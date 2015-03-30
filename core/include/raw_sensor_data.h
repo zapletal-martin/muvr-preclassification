@@ -15,10 +15,10 @@ namespace muvr {
     };
 
     /// sensor time is a synthetic, but monotonously increasing time in ms
-    typedef uint32_t sensor_time_t;
+    typedef int32_t sensor_time_t;
     /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
     /// number of dependencies especially for mobile clients.
-    const sensor_time_t EXERCISE_TIME_NAN = UINT32_MAX;
+    const sensor_time_t EXERCISE_TIME_NAN = INT32_MAX;
 
     ///
     /// Decoded, but still raw sensor data.

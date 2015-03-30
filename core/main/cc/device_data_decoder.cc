@@ -20,11 +20,11 @@ namespace muvr {
                 break;
             }
             case heart_rate: {
-                data = Mat(header->count, 1, CV_8U);
+                data = Mat(header->count, 1, CV_16S);
                 for (uint8_t i = 0; i < header->count; ++i) {
                     size_t offset = sizeof(device_data_header) + i;
                     const uint8_t* value = buffer + offset;
-                    data.at<uint8_t>(i, 0) = *value;
+                    data.at<int16_t>(i, 0) = *value;
                 }
                 break;
             }
