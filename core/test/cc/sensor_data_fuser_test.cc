@@ -59,22 +59,23 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
 
 TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
     auto fuser = sdf();
-    auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
+    auto ad  = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
+    auto adp = device_data_generator(accelerometer).samples_per_second(100).time_offset(1).constant(200, Scalar(1000, -1000, 200));
 
     // explicitly start
     fuser.exercise_block_start(0);
 
-    fuser.push_back(ad.data(), wrist, 0);       //    0 - 1000
-    fuser.push_back(ad.data(), wrist, 1500);    // 1500 - 2500
-    fuser.push_back(ad.data(), wrist, 3000);    // 3000 - 4000
+    fuser.push_back(ad.data(),  wrist, 0);       //    0 - 1000
+    fuser.push_back(adp.data(), wrist, 2500);    // 1500 - 3500 (received at 2500, 1000 into the past, 2000 long)
+    fuser.push_back(ad.data(),  wrist, 4000);    // 4000 - 5000
 
     // explicitly end
-    fuser.exercise_block_end(4000);
+    fuser.exercise_block_end(5000);
 
     // should have 2 fused sensors
     EXPECT_EQ(1, fuser.data().size());
     for (auto &x : fuser.data()) {
-        EXPECT_EQ(400, x.data.rows);
+        EXPECT_EQ(500, x.data.rows);
         for (int i = 0; i < x.data.rows; ++i) {
             Mat row = x.data.row(i);
             EXPECT_EQ(1000,  row.at<int16_t>(0));
