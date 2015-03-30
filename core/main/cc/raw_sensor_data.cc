@@ -15,3 +15,10 @@ raw_sensor_data::raw_sensor_data(const cv::Mat &adata, const sensor_data_type at
     }
 }
 
+sensor_time_t raw_sensor_data::received_at(const sensor_time_t received_at) const {
+    return (-time_offset * duration()) + received_at;
+}
+
+sensor_time_t raw_sensor_data::duration() const {
+    return (sensor_time_t) (data.rows * 1000 / samples_per_second);
+}

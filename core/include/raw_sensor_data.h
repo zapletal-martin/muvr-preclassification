@@ -14,6 +14,12 @@ namespace muvr {
         heart_rate = 0xed
     };
 
+    /// sensor time is a synthetic, but monotonously increasing time in ms
+    typedef uint32_t sensor_time_t;
+    /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
+    /// number of dependencies especially for mobile clients.
+    const sensor_time_t EXERCISE_TIME_NAN = UINT32_MAX;
+
     ///
     /// Decoded, but still raw sensor data.
     ///
@@ -26,6 +32,17 @@ namespace muvr {
         uint8_t time_offset;
         /// the decoded data
         cv::Mat data;
+
+        ///
+        /// Corrects the ``received_at`` by taking into account the ``time_offset``,
+        /// together with the number of samples and ``samples_per_second``.
+        ///
+        sensor_time_t received_at(const sensor_time_t received_at) const;
+
+        ///
+        /// Computes the duration in milliseconds
+        ///
+        sensor_time_t duration() const;
 
         raw_sensor_data(const cv::Mat &data, const sensor_data_type type, const uint8_t samples_per_second, const uint8_t time_offset);
     };

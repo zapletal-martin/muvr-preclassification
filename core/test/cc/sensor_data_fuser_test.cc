@@ -57,6 +57,28 @@ TEST_F(sensor_data_fuser_test, trivial) {
     }
 }
 
+TEST_F(sensor_data_fuser_test, with_padding) {
+    auto fuser = sdf();
+    auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 1000, 1000));
+
+    // explicitly start
+    fuser.exercise_block_start(0);
+
+    fuser.push_back(ad.data(), wrist, 0);       //    0 - 1000
+    fuser.push_back(ad.data(), wrist, 1500);    // 1500 - 2500
+    fuser.push_back(ad.data(), wrist, 3000);    // 3000 - 4000
+
+    // explicitly end
+    fuser.exercise_block_end(4000);
+
+    // should have 2 fused sensors
+    EXPECT_EQ(2, fuser.data().size());
+    for (auto &x : fuser.data()) {
+        EXPECT_EQ(400, x.data.rows);
+    }
+
+}
+
 sensor_data_fuser_test::sdf::sdf() : sensor_data_fuser(md(), ed()) {
 
 }
