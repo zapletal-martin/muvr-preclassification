@@ -159,6 +159,7 @@ namespace muvr {
         std::unique_ptr<exercise_decider> m_exercise_decider;
         sensor_time_t m_exercise_start;
         sensor_time_t m_movement_start;
+        exercise_decider::exercise_context m_exercise_context;
         raw_sensor_data_table m_table;
 
         void erase_ending_before(const sensor_time_t time);

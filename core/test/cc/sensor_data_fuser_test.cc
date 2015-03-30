@@ -21,7 +21,7 @@ protected:
         boost::optional<exercise_result> m_value;
     public:
         ed(const boost::optional<exercise_result> value);
-        virtual exercise_result has_exercise(const raw_sensor_data &source) const override;
+        virtual exercise_result has_exercise(const raw_sensor_data &source, exercise_context &context) const override;
     };
 
     /// sdf
@@ -98,13 +98,13 @@ TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
 
 ///
 /// Test that a very synthetic exercise from a single sensor is handled properly. To do so, we begin with
-/// no exercise: 10 constants of (1000, 0, 0), followed by 4 samples 200 data points long, containing exactly
-/// one period of sin(x), followed by 10 constants of (1000, 0, 0).
+/// no exercise: 10 constants of (1000, 0, 0), followed by 5 samples 100 data points long, containing exactly
+/// one period of sin(x), followed by a constant of (1000, 0, 0).
 ///
-/// This simulates no movement, exercise, no movement; we expect that only the 4 sinus samples will be identified
+/// This simulates no movement, exercise, no movement; we expect that only the 5 sinus samples will be identified
 /// as exercise.
 ///
-TEST_F(sensor_data_fuser_test, sin_pebble) {
+TEST_F(sensor_data_fuser_test, very_synthetic_sin_pebble) {
     auto fuser = sdf(boost::none, boost::none);
     auto c = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 0, 0));
     auto s = device_data_generator(accelerometer).samples_per_second(100).sin(2, 50, Scalar(1000, 1000, 1000));
@@ -112,17 +112,55 @@ TEST_F(sensor_data_fuser_test, sin_pebble) {
     int t = 0;
     for (int i = 0; i < 10; ++i) fuser.push_back(c.data(), wrist, t += 1000);
 
-    fuser.push_back(s.data(), wrist, t += 1000);        // 10000
-    fuser.push_back(s.data(), wrist, t += 1000);        // 11000
-    fuser.push_back(s.data(), wrist, t += 1000);        // 12000
-    fuser.push_back(s.data(), wrist, t += 1000);        // 13000
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+
     fuser.push_back(c.data(), wrist, t += 1000);
 
     // after first no-movement, we expect the exercise block to be here
     EXPECT_EQ(1, fuser.data().size());
+    EXPECT_EQ(500, fuser.data()[0].data.rows);
+}
 
-    std::cout << fuser.data()[0].data << std::endl;
-    std::cout << fuser.data()[0].data.rows << std::endl;
+
+///
+/// Test that a rather synthetic exercise from a single sensor is handled properly. To do so, we begin with
+/// no exercise: 10 constants of (1000, 0, 0), followed by 5 samples 100 data points long, containing exactly
+/// one period of sin(x), followed by slowly more degrading sines with more and more noise.
+///
+/// This simulates no movement, exercise, no movement; we expect that only the 5 sinus samples will be identified
+/// as exercise.
+///
+TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
+    auto fuser = sdf(boost::none, boost::none);
+    auto c = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 0, 0));
+    auto s1 = device_data_generator(accelerometer).samples_per_second(100).sin(2, 50, Scalar(1000, 1000, 1000));
+    auto s2 = device_data_generator(accelerometer).samples_per_second(100).with_noise(500).sin(1, 100, Scalar(1000, 1000, 1000));
+    auto s3 = device_data_generator(accelerometer).samples_per_second(100).with_noise(100).sin(4, 25, Scalar(500, 1000, 10));
+    auto s4 = device_data_generator(accelerometer).samples_per_second(100).with_noise(300).sin(5, 20, Scalar(400, 700, 200));
+
+    int t = 0;
+    for (int i = 0; i < 10; ++i) fuser.push_back(c.data(), wrist, t += 1000);
+
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+
+    fuser.push_back(s2.data(), wrist, t += 1000);
+    fuser.push_back(s3.data(), wrist, t += 1000);
+    fuser.push_back(s2.data(), wrist, t += 1000);
+    fuser.push_back(s3.data(), wrist, t += 1000);
+    fuser.push_back(s4.data(), wrist, t += 1000);
+    fuser.push_back(s3.data(), wrist, t += 1000);
+
+    // after first no-movement, we expect the exercise block to be here
+    EXPECT_EQ(1, fuser.data().size());
+    EXPECT_EQ(500, fuser.data()[0].data.rows);
 }
 
 sensor_data_fuser_test::sdf::sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result)
@@ -156,7 +194,7 @@ sensor_data_fuser_test::ed::ed(const boost::optional<exercise_result> value): m_
 
 }
 
-exercise_decider::exercise_result sensor_data_fuser_test::ed::has_exercise(const raw_sensor_data &source) const {
+exercise_decider::exercise_result sensor_data_fuser_test::ed::has_exercise(const raw_sensor_data &source, exercise_context &context) const {
     if (m_value) return m_value.get();
-    return exercise_decider::has_exercise(source);
+    return exercise_decider::has_exercise(source, context);
 }

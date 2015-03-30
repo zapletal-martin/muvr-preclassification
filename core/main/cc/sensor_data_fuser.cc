@@ -35,7 +35,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
         if (m_movement_decider->has_movement(raw) == movement_decider::movement_result::yes) {
             // we have movement. remember the start of it; we might be scanning back towards it.
             if (m_movement_start == EXERCISE_TIME_NAN) {
-                m_movement_start = entry.end_time();
+                m_movement_start = entry.end_time() - decoded.duration();
             }
 
             if (m_movement_start != EXERCISE_TIME_NAN && entry.end_time() - m_movement_start >= minimum_exercise_duration) {
@@ -43,7 +43,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
                 for (int i = 1; i <= blocks; ++i) {
                     auto r = entry.range(m_movement_start, m_movement_start + i * minimum_exercise_duration);
                     // scan backwards towards m_movement_start
-                    if (m_exercise_decider->has_exercise(r.raw()) == exercise_decider::exercise_result::yes) {
+                    if (m_exercise_decider->has_exercise(r.raw(), m_exercise_context) == exercise_decider::exercise_result::yes) {
                         // movement & exercise -> we are starting
                         m_exercise_start = r.start_time();
                     }
@@ -61,7 +61,10 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
             // undecidable counts as no movement
             if (m_movement_decider->has_movement(last) != movement_decider::movement_result::yes) no_movement++;
             // undecidable counts as no exercise
-            if (m_exercise_decider->has_exercise(x.raw()) != exercise_decider::exercise_result::yes) no_exercise++;
+            if (x.duration() >= minimum_exercise_duration) {
+                auto last_ex = x.from_end(minimum_exercise_duration).raw();
+                if (m_exercise_decider->has_exercise(last_ex, m_exercise_context) != exercise_decider::exercise_result::yes) no_exercise++;
+            }
         }
         if (no_movement == m_table.size() || no_exercise == m_table.size()) {
             // all sensors report no exercise or no movement => end exercise at end

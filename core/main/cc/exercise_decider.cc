@@ -18,12 +18,12 @@ void exercise_decider::freq_powers::push_back(const freq_power& item) {
     }
 }
 
-bool exercise_decider::freq_powers::is_distinct(double const factor) {
+bool exercise_decider::freq_powers::is_distinct(double const factor) const {
     if (m_items.size() < 2) return false;
     return m_items[0].power > m_items[1].power * factor;
 }
 
-bool exercise_decider::freq_powers::is_roughly_equal(const freq_powers& that, const uint count, const double freq_tolerance) {
+bool exercise_decider::freq_powers::is_roughly_equal(const freq_powers& that, const uint count, const double freq_tolerance) const {
     uint max_count = (uint)min(m_items.size(), that.m_items.size());
     if (max_count < count) return false;
 
@@ -66,7 +66,7 @@ exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
     return result;
 }
 
-exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source) const {
+exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, exercise_context &context) const {
     if (source.data.rows < m_min_samples) return undecidable;
 
     if (source.type == accelerometer || source.type == rotation) {
@@ -75,8 +75,12 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
         auto pfz = fft(source.data.col(2));
 
         if (!pfx.is_distinct() || !pfy.is_distinct() || !pfz.is_distinct()) return no;
-        if (pfx.is_roughly_equal(pfy) && pfy.is_roughly_equal(pfz)) return yes;
-        return no;
+        if (!pfx.is_roughly_equal(pfy) || !pfy.is_roughly_equal(pfz)) return no;
+
+        if (context.diverges(pfx, pfy, pfz)) return no;
+        context.update(pfx, pfy, pfz);
+
+        return yes;
     }
 
     return undecidable;

@@ -16,6 +16,7 @@ namespace muvr {
         sensor_data_type m_type;
         uint8_t m_samples_per_second;
         uint8_t m_time_offset;
+        int m_noise;
 
         /// construct a buffer with header set;
         device_data_payload new_buffer(const uint8_t count) const;
@@ -26,6 +27,7 @@ namespace muvr {
 
         device_data_generator &samples_per_second(uint8_t samples_per_second);
         device_data_generator &time_offset(uint8_t time_offset);
+        device_data_generator &with_noise(const int noise);
 
         device_data_payload constant(const uint8_t count, const Scalar value);
 

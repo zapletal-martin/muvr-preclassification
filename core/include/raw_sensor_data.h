@@ -120,18 +120,40 @@ namespace muvr {
             /// Computes whether there is enough distiction between the powers of the first and other
             /// frequencies by at least ``factor``.
             ///
-            bool is_distinct(const double factor = 100);
+            bool is_distinct(const double factor = 100) const;
 
             ///
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
             ///
-            bool is_roughly_equal(const freq_powers& that, const uint count = 2, const double freq_tolerance = 0.2);
+            bool is_roughly_equal(const freq_powers& that, const uint count = 2, const double freq_tolerance = 0.2) const;
         };
 
         /// compute the periodogram of the real numbers in the rows of first column in ``source``
         exercise_decider::freq_powers fft(const Mat& source) const;
 
     public:
+        ///
+        /// The opaque structure that the clients hold
+        ///
+        struct exercise_context {
+        private:
+            std::vector<freq_powers> m_freq_powers;
+        public:
+            bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
+                if (m_freq_powers.size() == 0) return false;
+
+                if (!m_freq_powers[0].is_roughly_equal(x)) return true;
+                if (!m_freq_powers[1].is_roughly_equal(y)) return true;
+                return !m_freq_powers[2].is_roughly_equal(z);
+            };
+
+            void update(const freq_powers &x, const freq_powers &y, const freq_powers &z) {
+                m_freq_powers.erase(m_freq_powers.begin(), m_freq_powers.end());
+                m_freq_powers.push_back(x);
+                m_freq_powers.push_back(y);
+                m_freq_powers.push_back(z);
+            }
+        };
 
         /// result of the evaluation is either yes, no or "file not found" :)
         enum exercise_result {
@@ -147,7 +169,7 @@ namespace muvr {
         /// Checks to see if there is movement that is typical for exercise in the
         /// given ``source``.
         ///
-        virtual exercise_result has_exercise(const raw_sensor_data& source) const;
+        virtual exercise_result has_exercise(const raw_sensor_data& source, exercise_context &context) const;
     };
 
 

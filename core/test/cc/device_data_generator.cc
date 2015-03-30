@@ -4,7 +4,7 @@
 using namespace muvr;
 
 device_data_generator::device_data_generator(const sensor_data_type type):
-        m_type(type), m_samples_per_second(100), m_time_offset(0) {
+        m_type(type), m_samples_per_second(100), m_time_offset(0), m_noise(0) {
 }
 
 device_data_generator& device_data_generator::samples_per_second(uint8_t samples_per_second) {
@@ -14,6 +14,11 @@ device_data_generator& device_data_generator::samples_per_second(uint8_t samples
 
 device_data_generator& device_data_generator::time_offset(uint8_t time_offset) {
     m_time_offset = time_offset;
+    return *this;
+}
+
+device_data_generator& device_data_generator::with_noise(const int noise) {
+    m_noise = noise;
     return *this;
 }
 
@@ -45,10 +50,11 @@ void device_data_generator::add_threed(std::vector<uint8_t> &buf, const int16_t 
                                        const int16_t z) const {
     auto item = std::vector<uint8_t>(sizeof(device_data_threed));
     device_data_threed *item_buf = reinterpret_cast<device_data_threed *>(item.data());
-    item_buf->x = (uint16_t) x;
-    item_buf->y = (uint16_t) y;
-    item_buf->z = (uint16_t) z;
+    item_buf->x = (uint16_t)(x);
+    item_buf->y = (uint16_t)(y);
+    item_buf->z = (uint16_t)(z);
     item_buf->valid = 1;
+
     buf.insert(buf.end(), item.begin(), item.end());
 }
 
@@ -62,7 +68,7 @@ device_data_payload device_data_generator::constant(const uint8_t count, const S
                 break;
             }
             case heart_rate:
-                buf.push_back((uint8_t)value[0]);
+                buf.push_back((uint8_t)(value[0] + random() % m_noise));
                 break;
         }
     }
