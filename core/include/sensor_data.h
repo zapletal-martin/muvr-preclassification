@@ -56,6 +56,8 @@ namespace muvr {
             sensor_time_t    m_start_time;
             /// the data (padded & continuous)
             raw_sensor_data  m_data;
+            /// exercise decider context
+            exercise_decider::exercise_context m_exercise_context;
         public:
             ///
             /// Construct entry, assign the fields
@@ -115,6 +117,11 @@ namespace muvr {
             /// Computes the duration of this entry
             ///
             sensor_time_t duration() const;
+
+            ///
+            /// Returns reference to the exercise_context
+            ///
+            exercise_decider::exercise_context &exercise_context();
         };
 
         ///
@@ -159,7 +166,6 @@ namespace muvr {
         std::unique_ptr<exercise_decider> m_exercise_decider;
         sensor_time_t m_exercise_start;
         sensor_time_t m_movement_start;
-        exercise_decider::exercise_context m_exercise_context;
         raw_sensor_data_table m_table;
 
         void erase_ending_before(const sensor_time_t time);

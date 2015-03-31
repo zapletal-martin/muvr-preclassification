@@ -95,6 +95,12 @@ namespace muvr {
             bool operator < (const freq_power& that) const {
                 return (power > that.power);
             }
+
+        public:
+            friend std::ostream& operator<<(std::ostream &stream, const freq_power &obj) {
+                stream << "frequency = " << obj.frequency << ", power = " << obj.power;
+                return stream;
+            }
         };
 
         ///
@@ -126,6 +132,12 @@ namespace muvr {
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
             ///
             bool is_roughly_equal(const freq_powers& that, const uint count = 2, const double freq_tolerance = 0.2) const;
+
+            friend std::ostream &operator<<(std::ostream &stream, const freq_powers &obj) {
+                for (auto &x : obj.m_items) stream << x << std::endl;
+                stream << std::endl;
+                return stream;
+            }
         };
 
         /// compute the periodogram of the real numbers in the rows of first column in ``source``
@@ -140,6 +152,12 @@ namespace muvr {
             std::vector<freq_powers> m_freq_powers;
         public:
             bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
+#ifdef EYEBALL_DEBUG
+                for (auto &i : m_freq_powers) std::cout << i << std::endl;
+                std::cout << std::endl;
+                std::cout << "x = " << x << ", y = " << y << ", z = " << z << std::endl;
+                std::cout << std::endl;
+#endif
                 if (m_freq_powers.size() == 0) return false;
 
                 if (!m_freq_powers[0].is_roughly_equal(x)) return true;

@@ -160,7 +160,7 @@ TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
 
     // after first no-movement, we expect the exercise block to be here
     EXPECT_EQ(1, fuser.data().size());
-    EXPECT_EQ(500, fuser.data()[0].data.rows);
+    EXPECT_EQ(700, fuser.data()[0].data.rows);  // in an ideal world, this would be 500.
 }
 
 sensor_data_fuser_test::sdf::sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result)

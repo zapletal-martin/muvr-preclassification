@@ -125,3 +125,7 @@ sensor_time_t sensor_data_fuser::raw_sensor_data_entry::start_time() const {
 sensor_time_t sensor_data_fuser::raw_sensor_data_entry::duration() const {
     return m_data.duration();
 }
+
+exercise_decider::exercise_context& sensor_data_fuser::raw_sensor_data_entry::exercise_context() {
+    return m_exercise_context;
+}
