@@ -9,12 +9,6 @@ namespace muvr {
         wrist, chest, waist, foot, any
     } sensor_location;
 
-    /// sensor time is a synthetic, but monotonously increasing time in ms
-    typedef uint32_t sensor_time_t;
-    /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
-    /// number of dependencies especially for mobile clients.
-    const sensor_time_t EXERCISE_TIME_NAN = UINT32_MAX;
-
     ///
     /// Fused exercise data
     ///
@@ -62,8 +56,8 @@ namespace muvr {
             sensor_time_t    m_start_time;
             /// the data (padded & continuous)
             raw_sensor_data  m_data;
-
-            sensor_time_t end_time() const;
+            /// exercise decider context
+            exercise_decider::exercise_context m_exercise_context;
         public:
             ///
             /// Construct entry, assign the fields
@@ -84,6 +78,11 @@ namespace muvr {
             raw_sensor_data_entry range(const sensor_time_t start, const sensor_time_t end) const;
 
             ///
+            /// Returns the last ``length`` worth of samples
+            ///
+            raw_sensor_data_entry from_end(const sensor_time_t length) const;
+
+            ///
             /// Appends a new block of ``data`` received at ``received_at``. If there is a gap between the
             /// end time of the last entry and ``received_at``, this method will pad the gap by attempting
             /// to reconstruct the values between the last block and the block being added.
@@ -98,6 +97,31 @@ namespace muvr {
             /// Returns a fused view if this entry
             ///
             fused_sensor_data fused();
+
+            ///
+            /// Returns the raw view of this data
+            ///
+            raw_sensor_data &raw();
+
+            ///
+            /// Returns the start time of this entry
+            ///
+            sensor_time_t start_time() const;
+
+            ///
+            /// Computes the end time of this entry
+            ///
+            sensor_time_t end_time() const;
+
+            ///
+            /// Computes the duration of this entry
+            ///
+            sensor_time_t duration() const;
+
+            ///
+            /// Returns reference to the exercise_context
+            ///
+            exercise_decider::exercise_context &exercise_context();
         };
 
         ///
@@ -115,17 +139,33 @@ namespace muvr {
         private:
             std::vector<raw_sensor_data_entry> m_entries;
         public:
-            void push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t received_at);
+            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t received_at);
 
             ///
             /// Returns a subset of
             ///
             std::vector<fused_sensor_data> range(const sensor_time_t start, const sensor_time_t end) const;
+
+            ///
+            /// Returns the vector of entries
+            ///
+            std::vector<raw_sensor_data_entry> &entries();
+
+            ///
+            /// The size of this table
+            ///
+            size_t size() const;
+
+            ///
+            /// The end of the latest sensor entry
+            ///
+            sensor_time_t last_end() const;
         };
 
-        movement_decider m_movement_decider;
-        exercise_decider m_exervise_decider;
+        std::unique_ptr<movement_decider> m_movement_decider;
+        std::unique_ptr<exercise_decider> m_exercise_decider;
         sensor_time_t m_exercise_start;
+        sensor_time_t m_movement_start;
         raw_sensor_data_table m_table;
 
         void erase_ending_before(const sensor_time_t time);
@@ -138,7 +178,7 @@ namespace muvr {
         ///
         /// Construct new instance of the fuser
         ///
-        sensor_data_fuser(movement_decider movement_decider, exercise_decider exercise_decider);
+        sensor_data_fuser(std::unique_ptr<movement_decider> movement_decider, std::unique_ptr<exercise_decider> exercise_decider);
 
         ///
         /// Push back a block of data arriving from a given location at the specified time

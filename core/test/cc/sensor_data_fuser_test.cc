@@ -6,16 +6,22 @@ using namespace muvr;
 
 class sensor_data_fuser_test : public testing::Test {
 protected:
-    /// always "yes" movement decider
+    /// always constant movement decider
     class md : public movement_decider {
+    private:
+        boost::optional<movement_result> m_value;
     public:
+        md(const boost::optional<movement_result> value);
         virtual movement_result has_movement(const raw_sensor_data &source) const override;
     };
 
-    /// always "yes" exercise decider
+    /// always constant exercise decider
     class ed : public exercise_decider {
+    private:
+        boost::optional<exercise_result> m_value;
     public:
-        virtual exercise_result has_exercise(const raw_sensor_data &source) const override;
+        ed(const boost::optional<exercise_result> value);
+        virtual exercise_result has_exercise(const raw_sensor_data &source, exercise_context &context) const override;
     };
 
     /// sdf
@@ -23,7 +29,7 @@ protected:
     private:
         std::vector<fused_sensor_data> m_data;
     public:
-        sdf();
+        sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result);
         virtual void exercise_block_ended(const std::vector<fused_sensor_data> data, const fusion_stats &fusion_stats);
         virtual void exercise_block_started();
 
@@ -32,11 +38,11 @@ protected:
 };
 
 ///
-/// Test that sine data (patently exercise in our model) arriving without any gaps
+/// Test that constant data (patently exercise in our model) arriving without any gaps
 /// with explicit start & end markers is reported as exercise
 ///
-TEST_F(sensor_data_fuser_test, trivial) {
-    auto fuser = sdf();
+TEST_F(sensor_data_fuser_test, perfectly_aligned) {
+    auto fuser = sdf(movement_decider::movement_result::yes, exercise_decider::exercise_result::yes);
     auto ad = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 1000, 1000));
     auto rd = device_data_generator(rotation).samples_per_second(100).constant(100, Scalar(0, 0, 0));
 
@@ -57,8 +63,109 @@ TEST_F(sensor_data_fuser_test, trivial) {
     }
 }
 
-sensor_data_fuser_test::sdf::sdf() : sensor_data_fuser(md(), ed()) {
+///
+/// Test that the constant data arriving with gaps is aligned as expected
+///
+TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
+    auto fuser = sdf(movement_decider::movement_result::yes, exercise_decider::exercise_result::yes);
+    auto ad  = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
+    auto adp = device_data_generator(accelerometer).samples_per_second(100).time_offset(1).constant(100, Scalar(1000, -1000, 200));
 
+    // explicitly start
+    fuser.exercise_block_start(0);
+
+    fuser.push_back(ad.data(),  wrist, 0);       //    0 - 1000 (received at 0, 1000 long)
+    fuser.push_back(adp.data(), wrist, 2500);    // 1500 - 2500 (received at 2500, 1 * 1000 into the past, 1000 long)
+    fuser.push_back(ad.data(),  wrist, 2505);    // 2500 - 3500 (received at 2505, 1000 long)
+    fuser.push_back(ad.data(),  wrist, 4000);    // 4000 - 5000 (received at 4000, 1000 long)
+
+    // explicitly end
+    fuser.exercise_block_end(5000);
+
+    // should have 1 fused sensor
+    EXPECT_EQ(1, fuser.data().size());
+    for (auto &x : fuser.data()) {
+        EXPECT_EQ(500, x.data.rows);
+        for (int i = 0; i < x.data.rows; ++i) {
+            Mat row = x.data.row(i);
+            EXPECT_EQ(1000,  row.at<int16_t>(0));
+            EXPECT_EQ(-1000, row.at<int16_t>(1));
+            EXPECT_EQ(200,   row.at<int16_t>(2));
+        }
+    }
+
+}
+
+///
+/// Test that a very synthetic exercise from a single sensor is handled properly. To do so, we begin with
+/// no exercise: 10 constants of (1000, 0, 0), followed by 5 samples 100 data points long, containing exactly
+/// one period of sin(x), followed by a constant of (1000, 0, 0).
+///
+/// This simulates no movement, exercise, no movement; we expect that only the 5 sinus samples will be identified
+/// as exercise.
+///
+TEST_F(sensor_data_fuser_test, very_synthetic_sin_pebble) {
+    auto fuser = sdf(boost::none, boost::none);
+    auto c = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 0, 0));
+    auto s = device_data_generator(accelerometer).samples_per_second(100).sin(2, 50, Scalar(1000, 1000, 1000));
+
+    int t = 0;
+    for (int i = 0; i < 10; ++i) fuser.push_back(c.data(), wrist, t += 1000);
+
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
+
+    fuser.push_back(c.data(), wrist, t += 1000);
+
+    // after first no-movement, we expect the exercise block to be here
+    EXPECT_EQ(1, fuser.data().size());
+    EXPECT_EQ(500, fuser.data()[0].data.rows);
+}
+
+
+///
+/// Test that a rather synthetic exercise from a single sensor is handled properly. To do so, we begin with
+/// no exercise: 10 constants of (1000, 0, 0), followed by 5 samples 100 data points long, containing exactly
+/// one period of sin(x), followed by slowly more degrading sines with more and more noise.
+///
+/// This simulates no movement, exercise, no movement; we expect that only the 5 sinus samples will be identified
+/// as exercise.
+///
+TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
+    auto fuser = sdf(boost::none, boost::none);
+    auto c = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 0, 0));
+    auto s1 = device_data_generator(accelerometer).samples_per_second(100).sin(2, 50, Scalar(1000, 1000, 1000));
+    auto s2 = device_data_generator(accelerometer).samples_per_second(100).with_noise(500).sin(1, 100, Scalar(1000, 1000, 1000));
+    auto s3 = device_data_generator(accelerometer).samples_per_second(100).with_noise(100).sin(4, 25, Scalar(500, 1000, 10));
+    auto s4 = device_data_generator(accelerometer).samples_per_second(100).with_noise(300).sin(5, 20, Scalar(400, 700, 200));
+
+    int t = 0;
+    for (int i = 0; i < 10; ++i) fuser.push_back(c.data(), wrist, t += 1000);
+
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+    fuser.push_back(s1.data(), wrist, t += 1000);
+
+    fuser.push_back(s2.data(), wrist, t += 1000);
+    fuser.push_back(s3.data(), wrist, t += 1000);
+    fuser.push_back(s2.data(), wrist, t += 1000);
+    fuser.push_back(s3.data(), wrist, t += 1000);
+    fuser.push_back(s4.data(), wrist, t += 1000);
+    fuser.push_back(s3.data(), wrist, t += 1000);
+
+    // after first no-movement, we expect the exercise block to be here
+    EXPECT_EQ(1, fuser.data().size());
+    EXPECT_EQ(700, fuser.data()[0].data.rows);  // in an ideal world, this would be 500.
+}
+
+sensor_data_fuser_test::sdf::sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result)
+        : sensor_data_fuser(std::unique_ptr<movement_decider>(new md(movement_result)),
+                            std::unique_ptr<exercise_decider>(new ed(exercise_result))) {
 }
 
 void sensor_data_fuser_test::sdf::exercise_block_ended(const std::vector<fused_sensor_data> data,
@@ -74,10 +181,20 @@ vector<fused_sensor_data> &sensor_data_fuser_test::sdf::data() {
     return m_data;
 }
 
+sensor_data_fuser_test::md::md(const boost::optional<movement_result> value): m_value(value) {
+
+}
+
 movement_decider::movement_result sensor_data_fuser_test::md::has_movement(const raw_sensor_data &source) const {
+    if (m_value) return m_value.get();
     return movement_decider::has_movement(source);
 }
 
-exercise_decider::exercise_result sensor_data_fuser_test::ed::has_exercise(const raw_sensor_data &source) const {
-    return exercise_decider::has_exercise(source);
+sensor_data_fuser_test::ed::ed(const boost::optional<exercise_result> value): m_value(value) {
+
+}
+
+exercise_decider::exercise_result sensor_data_fuser_test::ed::has_exercise(const raw_sensor_data &source, exercise_context &context) const {
+    if (m_value) return m_value.get();
+    return exercise_decider::has_exercise(source, context);
 }

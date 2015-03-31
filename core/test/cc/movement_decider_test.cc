@@ -15,13 +15,13 @@ TEST_F(movement_decider_test, no_movement_hr) {
     EXPECT_EQ(movement_decider::movement_result::undecidable, decider.has_movement(hr));
 }
 
-TEST_F(movement_decider_test, no_movement_real) {
-    auto nomovement = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).from_sensor("wrist.0").drop_zeros().first_value(200).max_values(200).load();
+TEST_F(movement_decider_test, no_movement_trivial) {
+    auto nomovement = raw_sensor_data_generator(accelerometer).with_noise(8).constant(10, Scalar(100, 200, 300));
     EXPECT_EQ(movement_decider::movement_result::no, decider.has_movement(nomovement));
 }
 
-TEST_F(movement_decider_test, no_movement_trivial) {
-    auto nomovement = raw_sensor_data_generator(accelerometer).with_noise(8).constant(10, Scalar(100, 200, 300));
+TEST_F(movement_decider_test, no_movement_trivial_2) {
+    auto nomovement = raw_sensor_data_generator(accelerometer).constant(10, Scalar(1000, 0, 0));
     EXPECT_EQ(movement_decider::movement_result::no, decider.has_movement(nomovement));
 }
 

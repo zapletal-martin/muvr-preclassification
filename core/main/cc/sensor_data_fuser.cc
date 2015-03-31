@@ -3,14 +3,16 @@
 
 using namespace muvr;
 
-sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(movement_decider(), exercise_decider()) {
+sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(std::unique_ptr<movement_decider>(new movement_decider()),
+                                                          std::unique_ptr<exercise_decider>(new exercise_decider())) {
 }
 
-sensor_data_fuser::sensor_data_fuser(movement_decider movement_decider,
-                                     exercise_decider exercise_decider):
-    m_movement_decider(movement_decider),
-    m_exervise_decider(exercise_decider),
-    m_exercise_start(EXERCISE_TIME_NAN) {
+sensor_data_fuser::sensor_data_fuser(std::unique_ptr<movement_decider> movement_decider,
+                                     std::unique_ptr<exercise_decider> exercise_decider):
+    m_movement_decider(std::move(movement_decider)),
+    m_exercise_decider(std::move(exercise_decider)),
+    m_exercise_start(EXERCISE_TIME_NAN),
+    m_movement_start(EXERCISE_TIME_NAN) {
 }
 
 void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
@@ -18,9 +20,62 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 }
 
 void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t received_at) {
+    // we say that exercise has to be at least 2 seconds after the first movement to be considered
+    static const sensor_time_t minimum_exercise_duration = 3000;
+
     auto decoded = decode_single_packet(buffer);
 
-    m_table.push_back(decoded, location, received_at);
+    auto end = m_table.last_end();
+    auto entry = m_table.push_back(decoded, location, received_at);
+    auto raw = entry.raw();
+
+    if (m_exercise_start == EXERCISE_TIME_NAN) {
+        // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
+        // movement and exercise for us to start considering the exercise block.
+        if (m_movement_decider->has_movement(raw) == movement_decider::movement_result::yes) {
+            // we have movement. remember the start of it; we might be scanning back towards it.
+            if (m_movement_start == EXERCISE_TIME_NAN) {
+                m_movement_start = entry.end_time() - decoded.duration();
+            }
+
+            if (m_movement_start != EXERCISE_TIME_NAN && entry.end_time() - m_movement_start >= minimum_exercise_duration) {
+                int blocks = (entry.end_time() - m_movement_start) / minimum_exercise_duration;
+                for (int i = 1; i <= blocks; ++i) {
+                    auto r = entry.range(m_movement_start, m_movement_start + i * minimum_exercise_duration);
+                    // scan backwards towards m_movement_start
+                    if (m_exercise_decider->has_exercise(r.raw(), entry.exercise_context()) == exercise_decider::exercise_result::yes) {
+                        // movement & exercise -> we are starting
+                        m_exercise_start = r.start_time();
+                    }
+                }
+            }
+        }
+    } else {
+        // We have already detected movement or exercise from at least one sensor. To stop, all sensors must report no
+        // movement in the last block, or must start reporting no exercise.
+        int no_movement = 0;
+        int no_exercise = 0;
+        sensor_time_t window = minimum_exercise_duration;
+
+        for (auto &x : m_table.entries()) {
+            if (x.duration() < 1000) continue;
+            auto last = x.from_end(1000).raw();
+            // undecidable counts as no movement
+            if (m_movement_decider->has_movement(last) != movement_decider::movement_result::yes) no_movement++;
+            // undecidable counts as no exercise
+            if (x.duration() >= window) {
+                auto last_ex = x.from_end(window).raw();
+                if (m_exercise_decider->has_exercise(last_ex, x.exercise_context()) != exercise_decider::exercise_result::yes) no_exercise++;
+            }
+        }
+        // TODO: reset exercise contexts in the table
+        if (no_movement == m_table.size()) {
+            exercise_block_end(end);
+        } else if (no_exercise == m_table.size()) {
+            // all sensors report no exercise or no movement => end exercise at end
+            exercise_block_end(end - window);
+        }
+    }
 }
 
 void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
@@ -33,75 +88,4 @@ void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
 void sensor_data_fuser::exercise_block_start(const sensor_time_t now) {
     m_exercise_start = now;
     exercise_block_started();
-}
-
-//--
-
-sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_location location,
-                                                                const sensor_time_t start_time,
-                                                                const raw_sensor_data data):
-    m_location(location), m_start_time(start_time), m_data(data) {
-}
-
-sensor_time_t sensor_data_fuser::raw_sensor_data_entry::end_time() const {
-    return m_start_time + (m_data.data.rows * 1000 / m_data.samples_per_second);
-}
-
-void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &data,
-                                                         const sensor_time_t received_at) {
-    // We don't care up to 10ms; we're not on RT OSs, anyway.
-    static const sensor_time_t epsilon = 10;
-    if (received_at - end_time() < epsilon) {
-        // append directly
-        m_data.data.push_back(data.data);
-        return;
-    }
-    // TODO: append, regression pad
-    // TODO: OK to use OpenCV's fitLine for plain linear regression
-    // http://docs.opencv.org/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=fitline#fitline
-}
-
-bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location location, const raw_sensor_data &data) {
-    return m_location == location &&
-            m_data.type == data.type &&
-            m_data.samples_per_second == data.samples_per_second;
-}
-
-sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entry::range(
-        const sensor_time_t start, const sensor_time_t end) const {
-    if (m_start_time == start && end_time() == end) return *this;
-
-    throw std::runtime_error("Implement me");
-}
-
-fused_sensor_data sensor_data_fuser::raw_sensor_data_entry::fused() {
-    return fused_sensor_data {
-            .samples_per_second = m_data.samples_per_second,
-            .data = m_data.data,
-            .location = m_location,
-            .type = m_data.type
-    };
-}
-
-// --
-
-std::vector<fused_sensor_data> sensor_data_fuser::raw_sensor_data_table::range(const sensor_time_t start,
-                                                                               const sensor_time_t end) const {
-    std::vector<fused_sensor_data> result;
-    for (auto &i : m_entries) {
-        result.push_back(i.range(start, end).fused());
-    }
-    return result;
-}
-
-void sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location location,
-                                                         const sensor_time_t received_at) {
-    for (auto &i : m_entries) {
-        if (i.matches(location, data)) {
-            i.push_back(data, received_at);
-            return;
-        }
-    }
-
-    m_entries.push_back(raw_sensor_data_entry(location, received_at, data));
 }
