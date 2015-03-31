@@ -74,7 +74,7 @@ raw_sensor_data raw_sensor_data_loader::load() {
                     int16_t y = (int16_t) std::stoi(tokens[5]);
                     int16_t z = (int16_t) std::stoi(tokens[6]);
                     if (x != 0 || y != 0 || z != 0 || !m_drop_zeros) {
-                        if (m_first_value > read_rows) {
+                        if (m_first_value <= read_rows) {
                             Mat row_vector = (Mat_<int16_t>(1, 3, CV_16S) << x, y, z);
                             data.push_back(row_vector);
                         }
