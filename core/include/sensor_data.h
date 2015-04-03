@@ -201,7 +201,7 @@ namespace muvr {
         /// exercise block; the ``fusion_stats`` parameter will have the details of the fusion
         /// steps taken.
         ///
-        virtual void exercise_block_ended(const std::vector<fused_sensor_data> data, const fusion_stats &fusion_stats) = 0;
+        virtual void exercise_block_ended(const std::vector<fused_sensor_data> &data, const fusion_stats &fusion_stats) = 0;
 
         ///
         /// Implementations will have this method called when the exercise block has started:

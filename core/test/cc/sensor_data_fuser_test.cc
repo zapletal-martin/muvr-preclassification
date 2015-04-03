@@ -30,7 +30,7 @@ protected:
         std::vector<fused_sensor_data> m_data;
     public:
         sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result);
-        virtual void exercise_block_ended(const std::vector<fused_sensor_data> data, const fusion_stats &fusion_stats);
+        virtual void exercise_block_ended(const std::vector<fused_sensor_data> &data, const fusion_stats &fusion_stats);
         virtual void exercise_block_started();
 
         std::vector<fused_sensor_data> &data();
@@ -168,7 +168,7 @@ sensor_data_fuser_test::sdf::sdf(const boost::optional<movement_decider::movemen
                             std::unique_ptr<exercise_decider>(new ed(exercise_result))) {
 }
 
-void sensor_data_fuser_test::sdf::exercise_block_ended(const std::vector<fused_sensor_data> data,
+void sensor_data_fuser_test::sdf::exercise_block_ended(const std::vector<fused_sensor_data> &data,
                                                        const fusion_stats &fusion_stats) {
     m_data = data;
 }
