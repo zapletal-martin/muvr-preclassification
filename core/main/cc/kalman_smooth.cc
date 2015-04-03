@@ -11,7 +11,7 @@ Mat muvr::kalman_smooth(const cv::Mat &source) {
     KF.transitionMatrix = (Mat_<float>(2, 2) << 1, 1, 0, 1);
     Mat_<float> measurement(1, 1); measurement.setTo(Scalar(0));
 
-    int16_t zero = source.at<int16_t>(0, 0);
+    //size_tint16_t zero = source.at<int16_t>(0, 0);
     KF.statePre.at<float>(0) = 0;
     KF.statePre.at<float>(1) = 0;
 

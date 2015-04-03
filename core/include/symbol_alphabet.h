@@ -24,7 +24,7 @@ namespace muvr {
         ///
         /// Get intervals for alphabet
         ///
-        std::vector<double> get_cuts(int intervals);
+        std::vector<double> get_cuts(size_t intervals);
     };
 }
 

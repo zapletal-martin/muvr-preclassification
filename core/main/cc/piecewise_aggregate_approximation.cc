@@ -38,18 +38,18 @@ namespace muvr {
         return res;
     }
 
-    std::vector<std::vector<double>> reshape(std::vector<std::vector<double>> a, int n, int m) {
+    std::vector<std::vector<double>> reshape(std::vector<std::vector<double>> a, size_t n, size_t m) {
         int currentElement = 0;
-        int aRows = a.size();
+        size_t aRows = a.size();
 
         std::vector<std::vector<double>> result(n);
 
-        for(int i = 0; i < n; i ++) {
+        for (size_t i = 0; i < n; i ++) {
             result[i] = std::vector<double> (m);
         }
 
-        for (int j = 0; j < m; j++) {
-            for (int i = 0; i < n; i++) {
+        for (size_t j = 0; j < m; j++) {
+            for (size_t i = 0; i < n; i++) {
                 result[i][j] = a[currentElement % aRows][currentElement / aRows];
                 currentElement++;
             }
@@ -58,8 +58,8 @@ namespace muvr {
         return result;
     }
 
-    std::vector<double> piecewise_aggregate_approximation(const std::vector<double> &source, int size) {
-        int len = source.size();
+    std::vector<double> piecewise_aggregate_approximation(const std::vector<double> &source, size_t size) {
+        size_t len = source.size();
 
         //Size the same as input so no dimensionality reduction occurs
         if (len == size || source.size() == 0) {

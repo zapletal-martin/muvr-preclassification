@@ -80,7 +80,7 @@ char symbol_alphabet::to_symbol(double value, const std::vector<double> &cuts) {
     return ALPHABET[count];
 }
 
-std::vector<double> symbol_alphabet::get_cuts(int intervals) {
+std::vector<double> symbol_alphabet::get_cuts(size_t intervals) {
     if(intervals < 2 || intervals > MAX_ALPHABET_SIZE) {
         return std::vector<double> (0);
     } else {

@@ -5,8 +5,8 @@
 namespace muvr {
     std::vector<char> symbolic_aggregate_approximation(
             const std::vector<double> &source,
-            int paa_size,
-            int symbols_size,
+            size_t paa_size,
+            size_t symbols_size,
             double normalization_threshold) {
 
         //TODO: Symbol aphabet should be configurable and injected?

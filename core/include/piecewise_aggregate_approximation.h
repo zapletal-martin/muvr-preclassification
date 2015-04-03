@@ -8,7 +8,7 @@ namespace muvr {
     ///
     /// Calculate piecewise mean constant function from input time series
     ///
-    std::vector<double> piecewise_aggregate_approximation(const std::vector<double> &source, int size);
+    std::vector<double> piecewise_aggregate_approximation(const std::vector<double> &source, size_t size);
 
     ///
     /// Performs z score normalization on a time series
