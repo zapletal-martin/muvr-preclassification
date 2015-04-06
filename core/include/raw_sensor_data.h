@@ -44,7 +44,18 @@ namespace muvr {
         ///
         sensor_time_t duration() const;
 
+        ///
+        /// Constructs the raw_sensor_data, assigns the given fields.
+        ///
         raw_sensor_data(const cv::Mat &data, const sensor_data_type type, const uint8_t samples_per_second, const uint8_t time_offset);
+
+        ///
+        /// Writes the ``obj`` to the given ``stream``
+        ///
+        friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
+            stream << "raw_sensor_data { type=" << obj.type << ", time_offset=" << obj.time_offset << ", samples_per_second=" << obj.samples_per_second << "}";
+            return stream;
+        }
     };
 
     ///

@@ -136,6 +136,41 @@ namespace muvr {
         raw_sensor_data load();
     };
 
+    ///
+    /// Loads data (formatted as ``NSString *`` representation of ``NSData *``)
+    ///
+    class device_data_loader {
+    private:
+        const std::string &m_file_name;
+
+        /// converts char ``c`` to its hex uint8_t representation
+        uint8_t ctoi(const char c) const;
+        /// parses the time printed out by calling ``NSLog("...")``
+        sensor_time_t parse_time(const std::string &time) const;
+        /// parses the data printed out by calling ``NSLog("%@", x)``, where ``x`` is ``NSData *``
+        std::vector<uint8_t> parse_data(const std::string &data) const;
+    public:
+        ///
+        /// The loaded device data
+        ///
+        struct device_data {
+            /// received at
+            sensor_time_t received_at;
+            /// the data
+            std::vector<uint8_t> data;
+        };
+
+        ///
+        /// Constructs the device data loader with the given file name
+        ///
+        device_data_loader(const std::string &file_name);
+
+        ///
+        /// Loads the data
+        ///
+        std::vector<device_data> load();
+    };
+
 }
 
 #endif //_PRECLASSIFICATION_TEST_DATA_H_
