@@ -25,7 +25,6 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
 
     auto decoded = decode_single_packet(buffer);
 
-#define EYEBALL_DEBUG
 #ifdef EYEBALL_DEBUG
     std::cout << decoded << std::endl;
 #endif
@@ -33,6 +32,10 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
     auto end = m_table.last_end();
     auto entry = m_table.push_back(decoded, location, received_at);
     auto raw = entry.raw();
+
+#ifdef EYEBALL_DEBUG
+    std::cout << entry << std::endl;
+#endif
 
     if (m_exercise_start == EXERCISE_TIME_NAN) {
         // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting

@@ -122,6 +122,16 @@ namespace muvr {
             /// Returns reference to the exercise_context
             ///
             exercise_decider::exercise_context &exercise_context();
+
+            friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data_entry &obj) {
+                stream << "raw_sensor_data_entry "
+                       << "{ start_time=" << obj.m_start_time
+                       << ", end_time=" << obj.end_time()
+                       << ", duration=" << obj.duration()
+                       << "}";
+
+                return stream;
+            }
         };
 
         ///

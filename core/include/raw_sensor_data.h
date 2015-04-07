@@ -53,7 +53,11 @@ namespace muvr {
         /// Writes the ``obj`` to the given ``stream``
         ///
         friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
-            stream << "raw_sensor_data { type=" << obj.type << ", time_offset=" << obj.time_offset << ", samples_per_second=" << obj.samples_per_second << "}";
+            stream << "raw_sensor_data { "
+                   << "type=" << obj.type
+                   << ", time_offset=" << static_cast<int>(obj.time_offset)
+                   << ", samples_per_second=" << static_cast<int>(obj.samples_per_second)
+                   << "}";
             return stream;
         }
     };
