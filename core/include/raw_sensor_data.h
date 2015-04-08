@@ -167,6 +167,7 @@ namespace muvr {
         private:
             std::vector<freq_powers> m_freq_powers;
         public:
+            /// tests whether this instance diverges from the x, y, z
             bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
 #ifdef EYEBALL_DEBUG
                 for (auto &i : m_freq_powers) std::cout << i << std::endl;
@@ -180,6 +181,11 @@ namespace muvr {
                 if (!m_freq_powers[1].is_roughly_equal(y)) return true;
                 return !m_freq_powers[2].is_roughly_equal(z);
             };
+
+            /// update this instance after divergence
+            void diverged() {
+                m_freq_powers.erase(m_freq_powers.begin(), m_freq_powers.end());
+            }
 
             void update(const freq_powers &x, const freq_powers &y, const freq_powers &z) {
                 m_freq_powers.erase(m_freq_powers.begin(), m_freq_powers.end());

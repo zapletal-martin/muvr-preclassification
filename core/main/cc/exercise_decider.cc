@@ -77,7 +77,10 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
         if (!pfx.is_distinct() || !pfy.is_distinct() || !pfz.is_distinct()) return no;
         if (!pfx.is_roughly_equal(pfy) || !pfy.is_roughly_equal(pfz)) return no;
 
-        if (context.diverges(pfx, pfy, pfz)) return no;
+        if (context.diverges(pfx, pfy, pfz)) {
+            context.diverged();
+            return no;
+        }
         context.update(pfx, pfy, pfz);
 
         return yes;
