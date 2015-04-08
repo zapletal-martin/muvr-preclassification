@@ -57,6 +57,7 @@ namespace muvr {
                    << "type=" << obj.type
                    << ", time_offset=" << static_cast<int>(obj.time_offset)
                    << ", samples_per_second=" << static_cast<int>(obj.samples_per_second)
+                   << ", duration=" << obj.duration()
                    << "}";
             return stream;
         }

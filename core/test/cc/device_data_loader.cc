@@ -11,22 +11,20 @@ device_data_loader::device_data_loader(const std::string &file_name):
 uint8_t device_data_loader::ctoi(const char c) const {
     if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
     if (c >= 'a' && c <= 'f') return static_cast<uint8_t>(c - 'a' + 10);
-    return 0;
+    throw std::runtime_error("Not a digit " + std::to_string(c));
 }
 
 std::vector<uint8_t> device_data_loader::parse_data(const std::string &data) const {
-    auto it = data.begin();
-    std::vector<uint8_t> result;
-    while (it != data.end()) {
-        char v0 = *it;
-        it++;
-        if (v0 == ' ') continue;
-        char v1 = *it;
-        it++;
+    std::string x(data);
 
+    x.erase(std::remove_if(x.begin(), x.end(), isspace), x.end());
+    std::vector<uint8_t> result;
+    auto it = x.begin();
+    while (it != x.end()) {
+        char v0 = *it; it++;
+        char v1 = *it; it++;
         result.push_back(static_cast<uint8_t>(16 * ctoi(v0) + ctoi(v1)));
     }
-
     return result;
 }
 
@@ -52,6 +50,8 @@ std::vector<device_data_loader::device_data> device_data_loader::load() {
         //            ^          ^                  ^
         //            |11     +12|                  |idx
         //
+        std::cout << line << std::endl;
+
         size_t idx = line.find("] <", 0);
         if (idx == 0) continue;
 

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "test_data.h"
+#include "device_data_decoder.h"
 #include "sensor_data.h"
 
 using namespace muvr;
@@ -171,7 +172,9 @@ TEST_F(sensor_data_fuser_test, pebble_real_ad_no_movement) {
     auto fuser = sdf(boost::none, boost::none);
     auto no_movement_data = device_data_loader("pebble_ad.dat").load();
     for (auto &i : no_movement_data) {
-        fuser.push_back(i.data.data(), wrist, i.received_at);
+        auto x = decode_single_packet(i.data.data());
+        std::cout << x << " at " << i.received_at << std::endl;
+        //fuser.push_back(i.data.data(), wrist, i.received_at);
     }
 }
 
