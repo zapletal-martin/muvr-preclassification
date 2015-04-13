@@ -33,7 +33,7 @@ bool exercise_decider::freq_powers::is_roughly_equal(const freq_powers& that, co
 
         double freq_eps = thisi.frequency * freq_tolerance;
 
-        if (abs(thisi.frequency - thati.frequency) > freq_eps) return false;
+        if (std::abs(thisi.frequency - thati.frequency) > freq_eps) return false;
     }
 
     return true;
