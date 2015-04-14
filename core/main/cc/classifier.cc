@@ -1,11 +1,10 @@
-#include "raw_sensor_data.h"
-#include "sax_classifier.h"
+#include "classifier.h"
 #include "symbolic_aggregate_approximation.h"
 #include <regex>
 
 using namespace muvr;
 
-std::vector<double> sax_classifier::extract_time_series(const raw_sensor_data &data, int column) {
+std::vector<double> classifier::extract_time_series(const fused_sensor_data &data, int column) {
     std::vector<double> x;
 
     for(int i = 0; i < data.data.col(column).rows; i++)
@@ -14,7 +13,7 @@ std::vector<double> sax_classifier::extract_time_series(const raw_sensor_data &d
     return x;
 }
 
-bool sax_classifier::classify(const raw_sensor_data &data) {
+int classifier::classify(const fused_sensor_data &data) {
     std::vector<double> x = extract_time_series(data, 0);
     std::vector<double> y = extract_time_series(data, 1);
     std::vector<double> z = extract_time_series(data, 2);
