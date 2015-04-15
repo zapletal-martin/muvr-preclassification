@@ -13,6 +13,8 @@ std::vector<double> classifier::extract_time_series(const fused_sensor_data &dat
     return x;
 }
 
+
+
 int classifier::classify(const fused_sensor_data &data) {
     std::vector<double> x = extract_time_series(data, 0);
     std::vector<double> y = extract_time_series(data, 1);
@@ -22,7 +24,8 @@ int classifier::classify(const fused_sensor_data &data) {
     std::vector<char> y_symbols = symbolic_aggregate_approximation(y, y.size() / 5, 15, 0.01);
     std::vector<char> z_symbols = symbolic_aggregate_approximation(z, z.size() / 5, 15, 0.01);
 
-    bool curl = false;
+    //TODO: Use real classifier
+    int curl = 0;
 
     std::string s (z_symbols.begin(), z_symbols.end());
     std::smatch m;
@@ -31,7 +34,15 @@ int classifier::classify(const fused_sensor_data &data) {
     while (std::regex_search(s, m, e)) {
         /*for (auto x:m) std::cout << x << " ";*/
         s = m.suffix().str();
-        curl = true;
+        curl += 1;
+    }
+
+    if(curl > 1) {
+        classification_succeeded("bicep curl", data);
+    } else if (curl == 0) {
+        classification_failed(data);
+    } else {
+        classification_ambiguous(std::vector<std::string> {"bicep curl", "leg press"}, data);
     }
 
     /*std::cout << "Symbolic representation \r\n";
