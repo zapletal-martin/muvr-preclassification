@@ -19,7 +19,7 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 
 }
 
-void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t received_at) {
+void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location) {
     // we say that exercise has to be at least 2 seconds after the first movement to be considered
     static const sensor_time_t minimum_exercise_duration = 3000;
 
@@ -30,7 +30,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
 #endif
 
     auto end = m_table.last_end();
-    auto entry = m_table.push_back(decoded, location, received_at);
+    auto entry = m_table.push_back(decoded, location);
     auto raw = entry.raw();
 
 #ifdef EYEBALL_DEBUG
@@ -47,7 +47,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
             }
 
             if (m_movement_start != EXERCISE_TIME_NAN && entry.end_time() - m_movement_start >= minimum_exercise_duration) {
-                int blocks = (entry.end_time() - m_movement_start) / minimum_exercise_duration;
+                auto blocks = (entry.end_time() - m_movement_start) / minimum_exercise_duration;
                 for (int i = 1; i <= blocks; ++i) {
                     auto r = entry.range(m_movement_start, m_movement_start + i * minimum_exercise_duration);
                     // scan backwards towards m_movement_start

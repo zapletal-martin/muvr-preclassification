@@ -15,10 +15,10 @@ namespace muvr {
     };
 
     /// sensor time is a synthetic, but monotonously increasing time in ms
-    typedef int32_t sensor_time_t;
+    typedef uint64_t sensor_time_t;
     /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
     /// number of dependencies especially for mobile clients.
-    const sensor_time_t EXERCISE_TIME_NAN = INT32_MAX;
+    const sensor_time_t EXERCISE_TIME_NAN = INT64_MAX;
 
     ///
     /// Decoded, but still raw sensor data.
@@ -28,16 +28,10 @@ namespace muvr {
         sensor_data_type type;
         /// the sampling rate
         uint8_t samples_per_second;
-        /// the negative time offset
-        uint8_t time_offset;
+        /// the sensor data timestamp
+        sensor_time_t timestamp;
         /// the decoded data
         cv::Mat data;
-
-        ///
-        /// Corrects the ``received_at`` by taking into account the ``time_offset``,
-        /// together with the number of samples and ``samples_per_second``.
-        ///
-        sensor_time_t received_at(const sensor_time_t received_at) const;
 
         ///
         /// Computes the duration in milliseconds
@@ -47,7 +41,7 @@ namespace muvr {
         ///
         /// Constructs the raw_sensor_data, assigns the given fields.
         ///
-        raw_sensor_data(const cv::Mat &data, const sensor_data_type type, const uint8_t samples_per_second, const uint8_t time_offset);
+        raw_sensor_data(const cv::Mat &data, const sensor_data_type type, const uint8_t samples_per_second, const sensor_time_t timestamp);
 
         ///
         /// Writes the ``obj`` to the given ``stream``
@@ -55,7 +49,7 @@ namespace muvr {
         friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
             stream << "raw_sensor_data { "
                    << "type=" << obj.type
-                   << ", time_offset=" << static_cast<int>(obj.time_offset)
+                   << ", timestamp=" << static_cast<int>(obj.timestamp)
                    << ", samples_per_second=" << static_cast<int>(obj.samples_per_second)
                    << ", duration=" << obj.duration()
                    << "}";

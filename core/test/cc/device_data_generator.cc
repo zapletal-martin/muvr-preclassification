@@ -1,10 +1,11 @@
+#include <device_data.h>
 #include "device_data.h"
 #include "test_data.h"
 
 using namespace muvr;
 
 device_data_generator::device_data_generator(const sensor_data_type type):
-        m_type(type), m_samples_per_second(100), m_time_offset(0), m_noise(0) {
+        m_type(type), m_samples_per_second(100), m_queue_size(0), m_noise(0), m_timestamp(0) {
 }
 
 device_data_generator& device_data_generator::samples_per_second(uint8_t samples_per_second) {
@@ -12,8 +13,8 @@ device_data_generator& device_data_generator::samples_per_second(uint8_t samples
     return *this;
 }
 
-device_data_generator& device_data_generator::time_offset(uint8_t time_offset) {
-    m_time_offset = time_offset;
+device_data_generator& device_data_generator::queue_size(uint8_t queue_size) {
+    m_queue_size = queue_size;
     return *this;
 }
 
@@ -40,7 +41,8 @@ device_data_payload device_data_generator::new_buffer(const uint8_t count) const
     header->count = count;
     header->sample_size = sample_size;
     header->samples_per_second = m_samples_per_second;
-    header->time_offset = m_time_offset;
+    header->queue_size = m_queue_size;
+    header->timestamp = m_timestamp;
     header->type = m_type;
 
     return memory;

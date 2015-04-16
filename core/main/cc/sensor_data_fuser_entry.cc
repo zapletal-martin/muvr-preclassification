@@ -7,7 +7,7 @@ namespace muvr {
         assert(gap_length > 0);
 
         // bigger than allowed epsilon
-        int gap_samples = gap_length / (1000 / samples_per_second);
+        auto gap_samples = gap_length / (1000 / samples_per_second);
         Mat gap(gap_samples, last.cols, CV_16S);
         for (int i = 0; i < last.cols; ++i) {
             Mat lcol = last.col(i);
@@ -48,9 +48,9 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
     static const sensor_time_t epsilon = 10;
 
     // correct start time of the data, taking into account the offset.
-    const sensor_time_t data_received_at = data.received_at(received_at);
+    const sensor_time_t data_received_at = data.timestamp;
     // gap between the last data and this data in milliseconds
-    const auto gap_length = data_received_at - end_time();
+    const int64_t gap_length = data_received_at - end_time();
     if (gap_length >= 0 && gap_length < epsilon) {
         // too small, but non-negative
         m_data.data.push_back(data.data);

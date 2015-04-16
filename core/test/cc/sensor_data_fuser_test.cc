@@ -50,6 +50,7 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
     // explicitly start
     fuser.exercise_block_start(0);
 
+    /*
     fuser.push_back(ad.data(), wrist, 0);    fuser.push_back(rd.data(), waist, 0);
     fuser.push_back(ad.data(), wrist, 1000); fuser.push_back(rd.data(), waist, 1000);
     fuser.push_back(ad.data(), wrist, 2000); fuser.push_back(rd.data(), waist, 2000);
@@ -62,6 +63,8 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
     for (auto &x : fuser.data()) {
         EXPECT_EQ(300, x.data.rows);
     }
+     */
+    GTEST_FAIL() << "Implement me";
 }
 
 ///
@@ -70,11 +73,12 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
 TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
     auto fuser = sdf(movement_decider::movement_result::yes, exercise_decider::exercise_result::yes);
     auto ad  = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, -1000, 200));
-    auto adp = device_data_generator(accelerometer).samples_per_second(100).time_offset(1).constant(100, Scalar(1000, -1000, 200));
+    auto adp = device_data_generator(accelerometer).samples_per_second(100).queue_size(1).constant(100, Scalar(1000, -1000, 200));
 
     // explicitly start
     fuser.exercise_block_start(0);
 
+    /*
     fuser.push_back(ad.data(),  wrist, 0);       //    0 - 1000 (received at 0, 1000 long)
     fuser.push_back(adp.data(), wrist, 2500);    // 1500 - 2500 (received at 2500, 1 * 1000 into the past, 1000 long)
     fuser.push_back(ad.data(),  wrist, 2505);    // 2500 - 3500 (received at 2505, 1000 long)
@@ -94,7 +98,9 @@ TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
             EXPECT_EQ(200,   row.at<int16_t>(2));
         }
     }
+     */
 
+    GTEST_FAIL() << "Implement me";
 }
 
 ///
@@ -110,6 +116,7 @@ TEST_F(sensor_data_fuser_test, very_synthetic_sin_pebble) {
     auto c = device_data_generator(accelerometer).samples_per_second(100).constant(100, Scalar(1000, 0, 0));
     auto s = device_data_generator(accelerometer).samples_per_second(100).sin(2, 50, Scalar(1000, 1000, 1000));
 
+    /*
     int t = 0;
     for (int i = 0; i < 10; ++i) fuser.push_back(c.data(), wrist, t += 1000);
 
@@ -124,6 +131,9 @@ TEST_F(sensor_data_fuser_test, very_synthetic_sin_pebble) {
     // after first no-movement, we expect the exercise block to be here
     EXPECT_EQ(1, fuser.data().size());
     EXPECT_EQ(500, fuser.data()[0].data.rows);
+     */
+
+    GTEST_FAIL() << "Implement me";
 }
 
 
@@ -143,6 +153,7 @@ TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
     auto s3 = device_data_generator(accelerometer).samples_per_second(100).with_noise(100).sin(4, 25, Scalar(500, 1000, 10));
     auto s4 = device_data_generator(accelerometer).samples_per_second(100).with_noise(300).sin(5, 20, Scalar(400, 700, 200));
 
+    /*
     int t = 0;
     for (int i = 0; i < 10; ++i) fuser.push_back(c.data(), wrist, t += 1000);
 
@@ -162,6 +173,8 @@ TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
     // after first no-movement, we expect the exercise block to be here
     EXPECT_EQ(1, fuser.data().size());
     EXPECT_EQ(700, fuser.data()[0].data.rows);  // in an ideal world, this would be 500.
+     */
+    GTEST_FAIL() << "Implement me";
 }
 
 ///

@@ -13,7 +13,7 @@ TEST_F(device_data_decoder_test, decode_threed) {
     auto dec = decode_single_packet(data.data());
     EXPECT_EQ(sensor_data_type::accelerometer, dec.type);
     EXPECT_EQ(100, dec.samples_per_second);
-    EXPECT_EQ(0, dec.time_offset);
+    EXPECT_EQ(0, dec.timestamp);
     for (int i = 0; i < dec.data.rows; ++i) {
         EXPECT_EQ(100, dec.data.at<int16_t>(i, 0));
         EXPECT_EQ(1000, dec.data.at<int16_t>(i, 1));

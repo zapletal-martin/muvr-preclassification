@@ -2,12 +2,8 @@
 
 using namespace muvr;
 
-raw_sensor_data::raw_sensor_data(const cv::Mat &adata, const sensor_data_type atype, const uint8_t asamples_per_second, const uint8_t atime_offset) :
-        data(adata), type(atype), samples_per_second(asamples_per_second), time_offset(atime_offset) {
-}
-
-sensor_time_t raw_sensor_data::received_at(const sensor_time_t received_at) const {
-    return (-time_offset * duration()) + received_at;
+raw_sensor_data::raw_sensor_data(const cv::Mat &adata, const sensor_data_type atype, const uint8_t asamples_per_second, const sensor_time_t atimestamp) :
+        data(adata), type(atype), samples_per_second(asamples_per_second), timestamp(atimestamp) {
 }
 
 sensor_time_t raw_sensor_data::duration() const {

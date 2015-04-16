@@ -149,7 +149,7 @@ namespace muvr {
         private:
             std::vector<raw_sensor_data_entry> m_entries;
         public:
-            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t received_at);
+            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location);
 
             ///
             /// Returns a subset of
@@ -193,7 +193,7 @@ namespace muvr {
         ///
         /// Push back a block of data arriving from a given location at the specified time
         ///
-        void push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t received_at);
+        void push_back(const uint8_t *buffer, const sensor_location location);
 
         ///
         /// Explicitly mark the start of the exercise block

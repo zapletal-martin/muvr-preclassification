@@ -16,7 +16,9 @@ typedef struct __attribute__((__packed__)) {
     /// the size of each sample ~> we will be reading count * sample_size bytes
     uint8_t  sample_size;
     /// time offset *always into the past*
-    uint8_t  time_offset;
+    uint8_t  queue_size;
+    /// timestamp of the last sample
+    uint64_t timestamp;
 } device_data_header;
 
 ///
