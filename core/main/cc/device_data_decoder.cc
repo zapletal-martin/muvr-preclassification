@@ -32,7 +32,19 @@ namespace muvr {
                 throw std::runtime_error("Cannot decode type " + std::to_string(header->type));
         }
 
-        return raw_sensor_data(data, static_cast<sensor_data_type>(header->type), header->samples_per_second, header->timestamp);
+        // ad643205 00e85647 c34c01
+        // TTCCssSS QQ
+
+        sensor_time_t timestamp =
+                        (sensor_time_t)header->timestamp[0] +
+                        (sensor_time_t)header->timestamp[1] * 0xff +
+                        (sensor_time_t)header->timestamp[2] * 0xffff +
+                        (sensor_time_t)header->timestamp[3] * 0xffffff +
+                        (sensor_time_t)header->timestamp[4] * 0xffffffff +
+                        (sensor_time_t)header->timestamp[5] * 0xffffffffff +
+                        (sensor_time_t)header->timestamp[6] * 0xffffffffffff +
+                        (sensor_time_t)header->timestamp[7] * 0xffffffffffffff;
+        return raw_sensor_data(data, static_cast<sensor_data_type>(header->type), header->samples_per_second, timestamp);
     }
 
 }

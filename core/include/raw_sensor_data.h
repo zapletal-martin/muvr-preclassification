@@ -49,7 +49,7 @@ namespace muvr {
         friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
             stream << "raw_sensor_data { "
                    << "type=" << obj.type
-                   << ", timestamp=" << static_cast<int>(obj.timestamp)
+                   << ", timestamp=" << static_cast<sensor_time_t>(obj.timestamp)
                    << ", samples_per_second=" << static_cast<int>(obj.samples_per_second)
                    << ", duration=" << obj.duration()
                    << "}";

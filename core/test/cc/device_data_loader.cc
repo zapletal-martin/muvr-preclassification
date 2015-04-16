@@ -35,7 +35,7 @@ sensor_time_t device_data_loader::parse_time(const std::string &time) const {
     auto s  = std::stoi(time.substr(6, 2));
     auto ms = std::stoi(time.substr(9, 3));
 
-    return ms + (1000 * s) + (60000 * m) + (3600000 * h);
+    return (sensor_time_t) (ms + (1000 * s) + (60000 * m) + (3600000 * h));
 }
 
 std::vector<device_data_loader::device_data> device_data_loader::load() {

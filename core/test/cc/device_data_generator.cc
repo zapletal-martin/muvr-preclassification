@@ -42,7 +42,8 @@ device_data_payload device_data_generator::new_buffer(const uint8_t count) const
     header->sample_size = sample_size;
     header->samples_per_second = m_samples_per_second;
     header->queue_size = m_queue_size;
-    header->timestamp = m_timestamp;
+    for (int i = 0; i < 8; ++i) header->timestamp[i] = 0;
+    header->timestamp[7] = (uint8_t)m_timestamp;
     header->type = m_type;
 
     return memory;
