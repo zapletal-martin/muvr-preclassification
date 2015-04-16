@@ -1,16 +1,24 @@
 #include <gtest/gtest.h>
-#include "sax_classifier.h"
+#include "classifier.h"
 #include "test_data.h"
 
 using namespace muvr;
 
 class sax_classifier_test : public testing::Test {
-
+protected:
+    class cs : public classifier {
+    private:
+    public:
+        virtual void classification_succeeded(const std::string &exercise, const fused_sensor_data &fromData);
+        virtual void classification_ambiguous(const std::vector<std::string> &exercises, const fused_sensor_data &fromData);
+        virtual void classification_failed(const fused_sensor_data &fromData);
+    };
 };
 
 TEST_F(sax_classifier_test, first_curl) {
-    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(574).max_values(100).load();
-    sax_classifier *classifier = new sax_classifier();
+    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(574).max_values(100).load_fused();
+
+    classifier *classifier = new cs();
 
     bool curl = classifier->classify(movement_data);
 
@@ -18,8 +26,8 @@ TEST_F(sax_classifier_test, first_curl) {
 }
 
 TEST_F(sax_classifier_test, second_curl) {
-    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(664).max_values(125).load();
-    sax_classifier *classifier = new sax_classifier();
+    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(664).max_values(125).load_fused();
+    classifier *classifier = new cs();
 
     bool curl = classifier->classify(movement_data);
 
@@ -27,10 +35,24 @@ TEST_F(sax_classifier_test, second_curl) {
 }
 
 TEST_F(sax_classifier_test, non_curl) {
-    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(700).max_values(125).load();
-    sax_classifier *classifier = new sax_classifier();
+    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(700).max_values(125).load_fused();
+    classifier *classifier = new cs();
 
     bool curl = classifier->classify(movement_data);
 
     EXPECT_EQ(false, curl);
+}
+
+void sax_classifier_test::cs::classification_succeeded(const std::string &exercise,
+                                                       const fused_sensor_data &fromData) {
+
+}
+
+void sax_classifier_test::cs::classification_ambiguous(const std::vector<std::string> &exercises,
+                                                       const fused_sensor_data &fromData) {
+
+}
+
+void sax_classifier_test::cs::classification_failed(const fused_sensor_data &fromData) {
+
 }

@@ -3,6 +3,7 @@
 #include "raw_sensor_data.h"
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+#include <sensor_data.h>
 
 namespace muvr {
 
@@ -134,6 +135,12 @@ namespace muvr {
         /// Loads the data using the current filters
         ///
         raw_sensor_data load();
+
+        ///
+        /// Loads the raw data as fused
+        /// No fusing actually performed. Use only for testing purposes.
+        ///
+        fused_sensor_data load_fused();
     };
 
     ///

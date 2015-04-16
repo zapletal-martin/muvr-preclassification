@@ -1,6 +1,7 @@
 #include "test_data.h"
 #include <boost/tokenizer.hpp>
 #include <fstream>
+#include <sensor_data.h>
 
 using namespace muvr;
 
@@ -53,6 +54,17 @@ cv::Mat raw_sensor_data_loader::empty_raw_mat(sensor_data_type type) {
         case rotation: return Mat(0, 3, CV_16S);
         case heart_rate: return Mat(0, 1, CV_8U);
     }
+}
+
+fused_sensor_data raw_sensor_data_loader::load_fused() {
+    auto data = load();
+
+    return fused_sensor_data {
+            .samples_per_second = data.samples_per_second,
+            .data = data.data,
+            .location = wrist,
+            .type = data.type
+    };
 }
 
 raw_sensor_data raw_sensor_data_loader::load() {
