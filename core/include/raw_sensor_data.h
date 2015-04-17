@@ -33,19 +33,24 @@ namespace muvr {
         /// the sensor data timestamp
         sensor_time_t timestamp;
         /// the duration
-        sensor_duration_t xduration;
+        sensor_duration_t duration;
         /// the decoded data
         cv::Mat data;
 
         ///
         /// Computes the duration in milliseconds
         ///
-        sensor_time_t duration() const;
+        sensor_time_t expected_duration() const;
 
         ///
         /// Constructs the raw_sensor_data, assigns the given fields.
         ///
-        raw_sensor_data(const cv::Mat &data, const sensor_data_type type, const uint8_t samples_per_second, const sensor_time_t timestamp);
+        raw_sensor_data(
+                const cv::Mat &data,
+                const sensor_data_type type,
+                const uint8_t samples_per_second,
+                const sensor_time_t timestamp,
+                const sensor_duration_t duration);
 
         ///
         /// Writes the ``obj`` to the given ``stream``
@@ -55,7 +60,7 @@ namespace muvr {
                    << "type=" << obj.type
                    << ", timestamp=" << static_cast<sensor_time_t>(obj.timestamp)
                    << ", samples_per_second=" << static_cast<int>(obj.samples_per_second)
-                   << ", duration=" << obj.duration()
+                   << ", duration=" << obj.expected_duration()
                    << "}";
             return stream;
         }

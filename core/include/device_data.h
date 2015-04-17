@@ -19,6 +19,7 @@ typedef struct __attribute__((__packed__)) {
     uint8_t  queue_size;
     /// timestamp of the last sample
     uint8_t  timestamp[8];               // equivalent of uint64_t: careful, the data is big-endian
+    /// duration of the sample
     uint8_t  duration[2];                // equivalent of uint16_t: careful, the data is big-endian
 } device_data_header;
 

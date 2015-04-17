@@ -18,7 +18,7 @@ raw_sensor_data raw_sensor_data_generator::constant(const uint count, const Scal
         randu(noise, Scalar::all(-m_noise), Scalar::all(m_noise));
         data = data + noise;
     }
-    return raw_sensor_data(data, m_type, 100, 0);
+    return raw_sensor_data(data, m_type, 100, 0, count * 10);
 }
 
 void raw_sensor_data_generator::sin(const uint count, uint period, const double amplitude, Mat &mat) {
@@ -37,13 +37,13 @@ raw_sensor_data raw_sensor_data_generator::sin(const uint count, const uint peri
         sin(count, period, amplitude[i], col);
     }
 
-    return raw_sensor_data(data, m_type, 100, 0);
+    return raw_sensor_data(data, m_type, 100, 0, count * 10);
 }
 
 raw_sensor_data raw_sensor_data_generator::gaussian_noise(const uint count, const int mean, const double stddev) {
     Mat data = mat(count);
     randn(data, mean, stddev);
-    return raw_sensor_data(data, m_type, 100, 0);
+    return raw_sensor_data(data, m_type, 100, 0, count * 10);
 }
 
 Mat raw_sensor_data_generator::mat(const uint count, const boost::optional<Scalar> &constant) {

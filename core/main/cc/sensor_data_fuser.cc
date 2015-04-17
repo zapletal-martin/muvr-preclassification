@@ -52,7 +52,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
         if (m_movement_decider->has_movement(raw) == movement_decider::movement_result::yes) {
             // we have movement. remember the start of it; we might be scanning back towards it.
             if (m_movement_start == EXERCISE_TIME_NAN) {
-                m_movement_start = entry.end_time() - decoded.duration();
+                m_movement_start = entry.end_time() - decoded.expected_duration();
             }
 
             if (m_movement_start != EXERCISE_TIME_NAN && entry.end_time() - m_movement_start >= minimum_exercise_duration) {

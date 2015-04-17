@@ -38,8 +38,8 @@ device_data_payload device_data_generator::new_buffer(const sensor_time_t timest
     header->timestamp[2] = static_cast<uint8_t>((timestamp >> 16) & 0xff);
     header->timestamp[1] = static_cast<uint8_t>((timestamp >> 8) & 0xff);
     header->timestamp[0] = static_cast<uint8_t>(timestamp & 0xff);
-    header->duration[0] = static_cast<uint8_t>(duration & 0xff);
     header->duration[1] = static_cast<uint8_t>((duration >> 8) & 0xff);
+    header->duration[0] = static_cast<uint8_t>(duration & 0xff);
     header->type = m_type;
 
     return memory;

@@ -98,5 +98,5 @@ raw_sensor_data raw_sensor_data_loader::load() {
         row++;
     }
 
-    return raw_sensor_data(data, m_type, 100, 0);
+    return raw_sensor_data(data, m_type, 100, 0, read_rows * 10);
 }
