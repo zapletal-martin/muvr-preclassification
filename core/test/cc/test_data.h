@@ -31,12 +31,13 @@ namespace muvr {
         const data_pattern_generator &m_pattern_generator;
 
         /// construct a buffer with header set;
-        device_data_payload new_buffer(const sensor_time_t timestamp, const uint8_t count) const;
+        device_data_payload new_buffer(const sensor_time_t timestamp, const uint8_t count,
+                                                      const sensor_duration_t duration) const;
         void add_threed(std::vector<uint8_t> &buf, const int16_t x, const int16_t y, const int16_t z) const;
     public:
         device_data_generator(const sensor_data_type type, const uint8_t samples_per_second, const data_pattern_generator &pattern_generator);
 
-        device_data_payload generate(const uint8_t count, const sensor_time_t timestamp) const;
+        device_data_payload generate(const uint8_t count, const sensor_time_t timestamp, const sensor_duration_t duration) const;
     };
 
     ///

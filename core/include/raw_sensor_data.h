@@ -16,6 +16,8 @@ namespace muvr {
 
     /// sensor time is a synthetic, but monotonously increasing time in ms
     typedef uint64_t sensor_time_t;
+    /// duration of sensor data
+    typedef uint16_t sensor_duration_t;
     /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
     /// number of dependencies especially for mobile clients.
     const sensor_time_t EXERCISE_TIME_NAN = INT64_MAX;
@@ -30,6 +32,8 @@ namespace muvr {
         uint8_t samples_per_second;
         /// the sensor data timestamp
         sensor_time_t timestamp;
+        /// the duration
+        sensor_duration_t xduration;
         /// the decoded data
         cv::Mat data;
 

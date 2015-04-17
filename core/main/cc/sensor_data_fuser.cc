@@ -20,10 +20,19 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 }
 
 void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location) {
-    // we say that exercise has to be at least 2 seconds after the first movement to be considered
+    // we say that exercise has to be at least 3 seconds after the first movement to be considered
     static const sensor_time_t minimum_exercise_duration = 3000;
 
     auto decoded = decode_single_packet(buffer);
+
+    // decoded: duration from device: 2000 [ms]
+    //          samples/sec:            50
+    //          data.rows:             100 ~> duration from device == computed duration :)
+
+    // decoded: duration from device: 2000 [ms]
+    //          samples/sec:            50
+    //          data.rows:              75 ~> duration from device > 1.5s ~> resize()
+    //
 
 #ifdef EYEBALL_DEBUG
     std::cout << decoded << std::endl;

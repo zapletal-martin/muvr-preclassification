@@ -1,4 +1,3 @@
-#include <device_data.h>
 #include "device_data.h"
 #include "test_data.h"
 
@@ -11,7 +10,8 @@ device_data_generator::device_data_generator(const sensor_data_type type, const 
 {
 }
 
-device_data_payload device_data_generator::new_buffer(const sensor_time_t timestamp, const uint8_t count) const {
+device_data_payload device_data_generator::new_buffer(const sensor_time_t timestamp, const uint8_t count,
+                                                      const sensor_duration_t duration) const {
     uint8_t sample_size;
     switch (m_type) {
         case accelerometer:
@@ -38,6 +38,8 @@ device_data_payload device_data_generator::new_buffer(const sensor_time_t timest
     header->timestamp[2] = static_cast<uint8_t>((timestamp >> 16) & 0xff);
     header->timestamp[1] = static_cast<uint8_t>((timestamp >> 8) & 0xff);
     header->timestamp[0] = static_cast<uint8_t>(timestamp & 0xff);
+    header->duration[0] = static_cast<uint8_t>(duration & 0xff);
+    header->duration[1] = static_cast<uint8_t>((duration >> 8) & 0xff);
     header->type = m_type;
 
     return memory;
@@ -55,9 +57,9 @@ void device_data_generator::add_threed(std::vector<uint8_t> &buf, const int16_t 
     buf.insert(buf.end(), item.begin(), item.end());
 }
 
-device_data_payload device_data_generator::generate(const uint8_t count, const sensor_time_t timestamp) const {
+device_data_payload device_data_generator::generate(const uint8_t count, const sensor_time_t timestamp, const sensor_duration_t duration) const {
     Mat data = m_pattern_generator(m_type, count);
-    device_data_payload buf = new_buffer(timestamp, count);
+    device_data_payload buf = new_buffer(timestamp, count, duration);
     for (auto &x : buf) std::cout << std::to_string(x) << std::endl;
     for (uint i = 0; i < count; ++i) {
         switch (m_type) {
