@@ -9,7 +9,7 @@ class device_data_decoder_test : public testing::Test {
 };
 
 TEST_F(device_data_decoder_test, decode_threed) {
-    sensor_time_t timestamp = 1429261207;
+    sensor_time_t timestamp = 1429205374267;
     auto data = device_data_generator(accelerometer, 100, data_patterns::constant(Scalar(100, 1000, 2000))).generate(100, timestamp);
     auto dec = decode_single_packet(data.data());
     EXPECT_EQ(sensor_data_type::accelerometer, dec.type);

@@ -58,6 +58,7 @@ void device_data_generator::add_threed(std::vector<uint8_t> &buf, const int16_t 
 device_data_payload device_data_generator::generate(const uint8_t count, const sensor_time_t timestamp) const {
     Mat data = m_pattern_generator(m_type, count);
     device_data_payload buf = new_buffer(timestamp, count);
+    for (auto &x : buf) std::cout << std::to_string(x) << std::endl;
     for (uint i = 0; i < count; ++i) {
         switch (m_type) {
             case accelerometer:
