@@ -9,6 +9,18 @@ namespace muvr {
 
     typedef std::vector<uint8_t> device_data_payload;
 
+    typedef std::function<Mat(const sensor_data_type type, const uint8_t count)> data_pattern_generator;
+
+    struct data_patterns {
+    private:
+        static void sin(const uint count, uint period, const double amplitude, Mat &mat);
+        static Mat mat(const sensor_data_type type, const uint count, const boost::optional<Scalar> &constant = boost::none);
+        static void add_noise(const uint noise, Mat &mat);
+    public:
+        static data_pattern_generator sin(const uint8_t period, const Scalar amplitude, const uint noise = 0);
+        static data_pattern_generator constant(const Scalar value, const uint noise = 0);
+    };
+
     ///
     /// Generates test data from devices
     ///
@@ -16,25 +28,15 @@ namespace muvr {
     private:
         sensor_data_type m_type;
         uint8_t m_samples_per_second;
-        uint8_t m_queue_size;
-        sensor_time_t m_timestamp;
-        int m_noise;
+        const data_pattern_generator &m_pattern_generator;
 
         /// construct a buffer with header set;
-        device_data_payload new_buffer(const uint8_t count) const;
-
+        device_data_payload new_buffer(const sensor_time_t timestamp, const uint8_t count) const;
         void add_threed(std::vector<uint8_t> &buf, const int16_t x, const int16_t y, const int16_t z) const;
     public:
-        device_data_generator(const sensor_data_type type);
+        device_data_generator(const sensor_data_type type, const uint8_t samples_per_second, const data_pattern_generator &pattern_generator);
 
-        device_data_generator &samples_per_second(uint8_t samples_per_second);
-        device_data_generator &queue_size(uint8_t queue_size);
-        device_data_generator &with_noise(const int noise);
-        device_data_generator &timesamp(const sensor_time_t timestamp);
-
-        device_data_payload constant(const uint8_t count, const Scalar value);
-
-        device_data_payload sin(const uint8_t count, const uint8_t period, const Scalar amplitude);
+        device_data_payload generate(const uint8_t count, const sensor_time_t timestamp) const;
     };
 
     ///
