@@ -50,8 +50,6 @@ std::vector<device_data_loader::device_data> device_data_loader::load() {
         //            ^          ^                  ^
         //            |11     +12|                  |idx
         //
-        std::cout << line << std::endl;
-
         size_t idx = line.find("] <", 0);
         if (idx == 0) continue;
 

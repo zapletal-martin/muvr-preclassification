@@ -1,11 +1,15 @@
-#include <device_data.h>
 #include "device_data.h"
 #include "device_data_decoder.h"
 
 namespace muvr {
 
     raw_sensor_data decode_single_packet(const uint8_t *buffer) {
+        assert(buffer != nullptr);
+
         const device_data_header *header = reinterpret_cast<const device_data_header *>(buffer);
+        if (header->samples_per_second == 0) throw std::runtime_error("header->samples_per_second == 0.");
+        if (header->sample_size == 0) throw std::runtime_error("header->sample_size == 0.");
+
         Mat data;
         switch (header->type) {
             case accelerometer:
@@ -33,9 +37,6 @@ namespace muvr {
                 throw std::runtime_error("Cannot decode type " + std::to_string(header->type));
         }
 
-        // ad643205 00e85647 c34c01
-        // TTCCssSS QQ
-
         sensor_time_t timestamp =
             (sensor_time_t)header->timestamp[0] +
             (sensor_time_t)header->timestamp[1] * 256 +
@@ -49,9 +50,6 @@ namespace muvr {
         sensor_duration_t duration =
             (sensor_duration_t)header->duration[0] +
             (sensor_duration_t)(header->duration[1] * 256);
-
-        if (header->samples_per_second == 0) throw std::runtime_error("header->samples_per_second == 0.");
-        if (header->sample_size == 0) throw std::runtime_error("header->sample_size == 0.");
 
         Mat destination;
         Size size(1, header->samples_per_second * duration / 1000);

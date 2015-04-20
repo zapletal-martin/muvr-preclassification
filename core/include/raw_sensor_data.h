@@ -58,14 +58,7 @@ namespace muvr {
         /// Returns the samples per second
         ///
         inline uint8_t samples_per_second() const { return m_samples_per_second; }
-
-//        ///
-//        /// Computes the real sampling rate
-//        ///
-//        inline double samples_per_second() const {
-//            return (m_data.rows * 1000.0) / (double)m_reported_duration;
-//        }
-
+        
         ///
         /// Returns the timestamp
         ///

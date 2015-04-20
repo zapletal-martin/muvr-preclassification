@@ -188,8 +188,8 @@ TEST_F(sensor_data_fuser_test, pebble_real_ad_no_movement) {
     auto no_movement_data = device_data_loader("pebble_no_movement.dat").load();
     for (auto &i : no_movement_data) {
         auto x = decode_single_packet(i.data.data());
-        std::cout << x << " at " << i.received_at << std::endl;
-        //fuser.push_back(i.data.data(), wrist, i.received_at);
+        // std::cout << x << " at " << i.received_at << std::endl;
+        fuser.push_back(i.data.data(), wrist);
     }
 }
 
