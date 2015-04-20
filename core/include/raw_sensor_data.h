@@ -17,7 +17,7 @@ namespace muvr {
     /// sensor time is a synthetic, but monotonously increasing time in ms
     typedef uint64_t sensor_time_t;
     /// duration of sensor data
-    typedef uint16_t sensor_duration_t;
+    typedef uint64_t sensor_duration_t;
     /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
     /// number of dependencies especially for mobile clients.
     const sensor_time_t EXERCISE_TIME_NAN = INT64_MAX;
@@ -58,7 +58,7 @@ namespace muvr {
         /// Returns the samples per second
         ///
         inline uint8_t samples_per_second() const { return m_samples_per_second; }
-        
+
         ///
         /// Returns the timestamp
         ///
@@ -85,6 +85,8 @@ namespace muvr {
                 const sensor_time_t timestamp,
                 const sensor_duration_t duration);
 
+        raw_sensor_data(const raw_sensor_data &that);
+
         ///
         /// Writes the ``obj`` to the given ``stream``
         ///
@@ -96,6 +98,25 @@ namespace muvr {
                    << ", duration=" << obj.m_reported_duration
                    << "}";
             return stream;
+        }
+
+        friend bool operator==(const raw_sensor_data &lhs, const raw_sensor_data &rhs) {
+            bool simple =
+                    lhs.m_data.cols == rhs.m_data.cols &&
+                    lhs.m_data.rows == rhs.m_data.rows &&
+                    lhs.m_type == rhs.m_type &&
+                    lhs.m_timestamp == rhs.m_timestamp &&
+                    lhs.m_reported_duration == rhs.m_reported_duration &&
+                    lhs.m_samples_per_second == rhs.m_samples_per_second;
+            if (simple) {
+                for (int i = 0; i < lhs.m_data.cols; ++i) {
+                    auto s = sum(lhs.m_data.col(i) - rhs.m_data.col(i))[0];
+                    if (s > 0) return false;
+                }
+                return true;
+            }
+
+            return false;
         }
     };
 

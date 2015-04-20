@@ -11,17 +11,17 @@ std::vector<fused_sensor_data> sensor_data_fuser::raw_sensor_data_table::range(c
     return result;
 }
 
-sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location location) {
+raw_sensor_data &sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location location) {
     for (auto &i : m_entries) {
         if (i.matches(location, data)) {
             i.push_back(data, data.timestamp());
-            return i;
+            return i.raw();
         }
     }
 
     auto entry = raw_sensor_data_entry(location, data.timestamp(), data);
     m_entries.push_back(entry);
-    return entry;
+    return entry.raw();
 }
 
 std::vector<sensor_data_fuser::raw_sensor_data_entry> &sensor_data_fuser::raw_sensor_data_table::entries() {
@@ -30,13 +30,4 @@ std::vector<sensor_data_fuser::raw_sensor_data_entry> &sensor_data_fuser::raw_se
 
 size_t sensor_data_fuser::raw_sensor_data_table::size() const {
     return m_entries.size();
-}
-
-sensor_time_t sensor_data_fuser::raw_sensor_data_table::last_end() const {
-    sensor_time_t last = 0;
-    for (auto &x : m_entries) {
-        auto et = x.end_time();
-        if (et > last) last = et;
-    }
-    return last;
 }

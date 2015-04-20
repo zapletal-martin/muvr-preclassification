@@ -11,6 +11,10 @@ raw_sensor_data::raw_sensor_data(
     m_data(data), m_type(type), m_samples_per_second(samples_per_second), m_timestamp(timestamp), m_reported_duration(reported_duration) {
 }
 
+raw_sensor_data::raw_sensor_data(const raw_sensor_data &that):
+    raw_sensor_data::raw_sensor_data(that.m_data, that.m_type, that.m_samples_per_second, that.m_timestamp, that.m_reported_duration) {
+}
+
 /*
 sensor_time_t raw_sensor_data::expected_duration() const {
     return (sensor_time_t) (data.rows * 1000 / samples_per_second);
@@ -30,7 +34,8 @@ void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t
     if (gap_length > 0) {
         // bigger than allowed epsilon
         auto gap_samples = gap_length / (1000 / samples_per_second());
-        if (gap_samples > 10000) throw std::runtime_error("Gap " + std::to_string(gap_samples) + " is too big.");
+        if (gap_samples > 10000)
+            throw std::runtime_error("Gap " + std::to_string(gap_samples) + " is too big.");
 
         Mat gap(static_cast<uint32_t>(gap_samples), m_data.cols, m_data.type());
         for (int i = 0; i < m_data.cols; ++i) {
@@ -50,6 +55,7 @@ void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t
         m_data.push_back(gap);
     }
 
-
     m_data.push_back(that.data());
+    m_timestamp = that.timestamp();
+    m_reported_duration += that.m_reported_duration + gap_length;
 }

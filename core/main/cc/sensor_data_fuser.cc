@@ -34,11 +34,11 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
     //          data.rows:              75 ~> duration from device > 1.5s ~> resize()
     //
 
-    auto end = m_table.last_end();
     auto entry = m_table.push_back(decoded, location);
-    auto raw = entry.raw();
 
+    std::cout << entry << std::endl;
 
+/*
     if (m_exercise_start == EXERCISE_TIME_NAN) {
         // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
         // movement and exercise for us to start considering the exercise block.
@@ -86,6 +86,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
             exercise_block_end(end - window);
         }
     }
+    */
 }
 
 void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {

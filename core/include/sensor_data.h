@@ -53,16 +53,20 @@ namespace muvr {
             /// the sensor location
             sensor_location  m_location;
             /// the start time of the first sample in m_data
-            sensor_time_t    m_start_time;
+            sensor_time_t m_wall_time;
             /// the data (padded & continuous)
             raw_sensor_data  m_data;
+            /// the last-received data
+            std::unique_ptr<raw_sensor_data> m_last_data;
             /// exercise decider context
             exercise_decider::exercise_context m_exercise_context;
         public:
+            raw_sensor_data_entry(const raw_sensor_data_entry &that);
+
             ///
             /// Construct entry, assign the fields
             ///
-            raw_sensor_data_entry(const sensor_location location, const sensor_time_t start_time,
+            raw_sensor_data_entry(const sensor_location location, const sensor_time_t wall_time,
                                   const raw_sensor_data data);
 
             ///
@@ -76,11 +80,6 @@ namespace muvr {
             /// the data so that the entry remains consistent.
             ///
             raw_sensor_data_entry range(const sensor_time_t start, const sensor_time_t end) const;
-
-            ///
-            /// Returns the last ``length`` worth of samples
-            ///
-            raw_sensor_data_entry from_end(const sensor_time_t length) const;
 
             ///
             /// Appends a new block of ``data`` received at ``received_at``. If there is a gap between the
@@ -104,16 +103,6 @@ namespace muvr {
             raw_sensor_data &raw();
 
             ///
-            /// Returns the start time of this entry
-            ///
-            sensor_time_t start_time() const;
-
-            ///
-            /// Computes the end time of this entry
-            ///
-            sensor_time_t end_time() const;
-
-            ///
             /// Computes the duration of this entry
             ///
             sensor_time_t duration() const;
@@ -125,8 +114,8 @@ namespace muvr {
 
             friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data_entry &obj) {
                 stream << "raw_sensor_data_entry "
-                       << "{ start_time=" << obj.m_start_time
-                       << ", end_time=" << obj.end_time()
+                       << "{ wall_time=" << obj.m_wall_time
+                       << ", timestamp=" << obj.m_data.timestamp()
                        << ", duration=" << obj.duration()
                        << "}";
 
@@ -149,7 +138,7 @@ namespace muvr {
         private:
             std::vector<raw_sensor_data_entry> m_entries;
         public:
-            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location);
+            raw_sensor_data &push_back(const raw_sensor_data &data, const sensor_location location);
 
             ///
             /// Returns a subset of
@@ -166,10 +155,6 @@ namespace muvr {
             ///
             size_t size() const;
 
-            ///
-            /// The end of the latest sensor entry
-            ///
-            sensor_time_t last_end() const;
         };
 
         std::unique_ptr<movement_decider> m_movement_decider;
