@@ -28,15 +28,15 @@ namespace muvr {
     struct raw_sensor_data {
     private:
         /// the type
-        const sensor_data_type m_type;
+        sensor_data_type m_type;
         /// the sampling rate
-        const uint8_t m_samples_per_second;
+        uint8_t m_samples_per_second;
         /// the sensor data timestamp
-        const sensor_time_t m_timestamp;
+        sensor_time_t m_timestamp;
         /// the duration
-        const sensor_duration_t m_reported_duration;
+        sensor_duration_t m_reported_duration;
         /// the decoded data
-        const cv::Mat m_data;
+        cv::Mat m_data;
     public:
 
         ///
@@ -59,10 +59,28 @@ namespace muvr {
         ///
         inline uint8_t samples_per_second() const { return m_samples_per_second; }
 
+//        ///
+//        /// Computes the real sampling rate
+//        ///
+//        inline double samples_per_second() const {
+//            return (m_data.rows * 1000.0) / (double)m_reported_duration;
+//        }
+
         ///
         /// Returns the timestamp
         ///
         inline sensor_time_t timestamp() const { return m_timestamp; }
+
+        ///
+        /// Evaluates if this instance "is compatible with" ``that``. Compatibility means sampling rate within
+        /// some small tolerance, and same sensor data.
+        ///
+        bool matches(const raw_sensor_data &that) const;
+
+        ///
+        ///
+        ///
+        void push_back(const raw_sensor_data &that, const sensor_time_t gap_length = 0);
 
         ///
         /// Constructs the raw_sensor_data, assigns the given fields.

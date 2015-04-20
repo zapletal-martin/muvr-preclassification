@@ -1,3 +1,4 @@
+#include <device_data.h>
 #include "device_data.h"
 #include "device_data_decoder.h"
 
@@ -48,6 +49,14 @@ namespace muvr {
         sensor_duration_t duration =
             (sensor_duration_t)header->duration[0] +
             (sensor_duration_t)(header->duration[1] * 256);
+
+        if (header->samples_per_second == 0) throw std::runtime_error("header->samples_per_second == 0.");
+        if (header->sample_size == 0) throw std::runtime_error("header->sample_size == 0.");
+
+        Mat destination;
+        Size size(1, header->samples_per_second * duration / 1000);
+        cv::resize(data, destination, size);
+        assert(destination.rows == header->samples_per_second * duration / 1000);
 
         return raw_sensor_data(data, static_cast<sensor_data_type>(header->type), header->samples_per_second, timestamp, duration);
     }

@@ -1,6 +1,8 @@
 #include "raw_sensor_data.h"
 #include "test_data.h"
 #include <gtest/gtest.h>
+
+/*
 #include "sampler.h"
 
 using namespace muvr;
@@ -149,3 +151,4 @@ TEST_F(sampler_test, real_test) {
     EXPECT_EQ(50, result.samples_per_second());
     EXPECT_EQ(202, result.data().rows);
 }
+*/

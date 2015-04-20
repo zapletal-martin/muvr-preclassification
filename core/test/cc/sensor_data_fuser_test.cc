@@ -185,7 +185,7 @@ TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
 ///
 TEST_F(sensor_data_fuser_test, pebble_real_ad_no_movement) {
     auto fuser = sdf(boost::none, boost::none);
-    auto no_movement_data = device_data_loader("pebble_ad.dat").load();
+    auto no_movement_data = device_data_loader("pebble_no_movement.dat").load();
     for (auto &i : no_movement_data) {
         auto x = decode_single_packet(i.data.data());
         std::cout << x << " at " << i.received_at << std::endl;
