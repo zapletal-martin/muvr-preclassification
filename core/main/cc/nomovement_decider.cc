@@ -3,10 +3,10 @@
 using namespace muvr;
 
 movement_decider::movement_result movement_decider::has_movement(const raw_sensor_data &source) const {
-    switch (source.type) {
+    switch (source.type()) {
         case accelerometer:
         case rotation:
-            return has_movement(source.data, 200);
+            return has_movement(source.data(), 200);
         default:
             return undecidable;
     }

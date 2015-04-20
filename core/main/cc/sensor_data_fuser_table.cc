@@ -14,12 +14,12 @@ std::vector<fused_sensor_data> sensor_data_fuser::raw_sensor_data_table::range(c
 sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location location) {
     for (auto &i : m_entries) {
         if (i.matches(location, data)) {
-            i.push_back(data, data.timestamp);
+            i.push_back(data, data.timestamp());
             return i;
         }
     }
 
-    auto entry = raw_sensor_data_entry(location, data.timestamp, data);
+    auto entry = raw_sensor_data_entry(location, data.timestamp(), data);
     m_entries.push_back(entry);
     return entry;
 }

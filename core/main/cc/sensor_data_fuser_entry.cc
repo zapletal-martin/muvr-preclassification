@@ -37,18 +37,19 @@ sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_loc
 }
 
 sensor_time_t sensor_data_fuser::raw_sensor_data_entry::end_time() const {
-    return m_start_time + m_data.expected_duration();
+    return m_start_time + m_data.reported_duration();
 }
 
 void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &data,
                                                          const sensor_time_t received_at) {
-    assert(data.data.cols == m_data.data.cols);
+    assert(data.data().cols == m_data.data().cols);
 
     // We don't care up to 10ms; we're not on RT OSs, anyway.
     static const sensor_time_t epsilon = 10;
 
+    /*
     // correct start time of the data, taking into account the offset.
-    const sensor_time_t data_received_at = data.timestamp;
+    const sensor_time_t data_received_at = data.timestamp();
     // gap between the last data and this data in milliseconds
     const int64_t gap_length = data_received_at - end_time();
     if (gap_length >= 0 && gap_length < epsilon) {
@@ -63,12 +64,13 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
         // negative gap
         throw std::runtime_error("raw_sensor_data_entry::push_back(): received data " + std::to_string(gap_length) + " ms into the past.");
     }
+     */
 }
 
 bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location location, const raw_sensor_data &data) {
     return m_location == location &&
-           m_data.type == data.type &&
-           m_data.samples_per_second == data.samples_per_second;
+           m_data.type() == data.type() &&
+           m_data.samples_per_second() == data.samples_per_second();
 }
 
 sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entry::range(
@@ -78,6 +80,7 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entr
     // we got lucky!
     if (m_start_time == start && end_time() == end) return *this;
 
+    /*
     // we're not so lucky: we must cut and/or pad on both sides
     int before_gap_length = start - m_start_time;      // negative -> pad, positive -> cut
     int after_gap_length  = end_time() - end;          // negative -> pad, positive -> cut
@@ -96,14 +99,15 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entr
     }
 
     return raw_sensor_data_entry(m_location, start, raw_sensor_data(data, m_data.type, m_data.samples_per_second, 0, end - start));
+     */
 }
 
 fused_sensor_data sensor_data_fuser::raw_sensor_data_entry::fused() {
     return fused_sensor_data {
-            .samples_per_second = m_data.samples_per_second,
-            .data = m_data.data,
+            .samples_per_second = m_data.samples_per_second(),
+            .data = m_data.data(),
             .location = m_location,
-            .type = m_data.type
+            .type = m_data.type()
     };
 }
 
@@ -123,7 +127,7 @@ sensor_time_t sensor_data_fuser::raw_sensor_data_entry::start_time() const {
 }
 
 sensor_time_t sensor_data_fuser::raw_sensor_data_entry::duration() const {
-    return m_data.expected_duration();
+    return m_data.reported_duration();
 }
 
 exercise_decider::exercise_context& sensor_data_fuser::raw_sensor_data_entry::exercise_context() {

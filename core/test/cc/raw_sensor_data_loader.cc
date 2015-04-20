@@ -60,10 +60,10 @@ fused_sensor_data raw_sensor_data_loader::load_fused() {
     auto data = load();
 
     return fused_sensor_data {
-            .samples_per_second = data.samples_per_second,
-            .data = data.data,
+            .samples_per_second = data.samples_per_second(),
+            .data = data.data(),
             .location = wrist,
-            .type = data.type
+            .type = data.type()
     };
 }
 

@@ -26,21 +26,43 @@ namespace muvr {
     /// Decoded, but still raw sensor data.
     ///
     struct raw_sensor_data {
+    private:
         /// the type
-        sensor_data_type type;
+        const sensor_data_type m_type;
         /// the sampling rate
-        uint8_t samples_per_second;
+        const uint8_t m_samples_per_second;
         /// the sensor data timestamp
-        sensor_time_t timestamp;
+        const sensor_time_t m_timestamp;
         /// the duration
-        sensor_duration_t duration;
+        const sensor_duration_t m_reported_duration;
         /// the decoded data
-        cv::Mat data;
+        const cv::Mat m_data;
+    public:
 
         ///
-        /// Computes the duration in milliseconds
+        /// Returns the device-reported duration
         ///
-        sensor_time_t expected_duration() const;
+        inline sensor_duration_t reported_duration() const { return m_reported_duration; }
+
+        ///
+        /// Returns the type
+        ///
+        inline sensor_data_type type() const { return m_type; }
+
+        ///
+        /// Returns the data
+        ///
+        inline const Mat &data() const { return m_data; }
+
+        ///
+        /// Returns the samples per second
+        ///
+        inline uint8_t samples_per_second() const { return m_samples_per_second; }
+
+        ///
+        /// Returns the timestamp
+        ///
+        inline sensor_time_t timestamp() const { return m_timestamp; }
 
         ///
         /// Constructs the raw_sensor_data, assigns the given fields.
@@ -57,10 +79,10 @@ namespace muvr {
         ///
         friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
             stream << "raw_sensor_data { "
-                   << "type=" << obj.type
-                   << ", timestamp=" << static_cast<sensor_time_t>(obj.timestamp)
-                   << ", samples_per_second=" << static_cast<int>(obj.samples_per_second)
-                   << ", duration=" << obj.expected_duration()
+                   << "type=" << obj.m_type
+                   << ", timestamp=" << static_cast<sensor_time_t>(obj.m_timestamp)
+                   << ", samples_per_second=" << static_cast<int>(obj.m_samples_per_second)
+                   << ", duration=" << obj.m_reported_duration
                    << "}";
             return stream;
         }
