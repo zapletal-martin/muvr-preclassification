@@ -95,9 +95,9 @@ TEST_F(sampler_test, input_frequency_same_as_output) {
 
     auto result = resample(movement_data_vector, 5);
 
-    EXPECT_EQ(2000, result.duration);
-    EXPECT_EQ(5, result.samples_per_second);
-    EXPECT_EQ(10, result.data.rows);
+    EXPECT_EQ(2000, result.reported_duration());
+    EXPECT_EQ(5, result.samples_per_second());
+    EXPECT_EQ(10, result.data().rows);
 }
 
 TEST_F(sampler_test, output_frequency_higher) {
@@ -105,9 +105,9 @@ TEST_F(sampler_test, output_frequency_higher) {
 
     auto result = resample(movement_data_vector, 10);
 
-    EXPECT_EQ(2000, result.duration);
-    EXPECT_EQ(10, result.samples_per_second);
-    EXPECT_EQ(20, result.data.rows);
+    EXPECT_EQ(2000, result.reported_duration());
+    EXPECT_EQ(10, result.samples_per_second());
+    EXPECT_EQ(20, result.data().rows);
 }
 
 TEST_F(sampler_test, output_frequency_lower) {
@@ -115,9 +115,9 @@ TEST_F(sampler_test, output_frequency_lower) {
 
     auto result = resample(movement_data_vector, 2);
 
-    EXPECT_EQ(2000, result.duration);
-    EXPECT_EQ(2, result.samples_per_second);
-    EXPECT_EQ(4, result.data.rows);
+    EXPECT_EQ(2000, result.reported_duration());
+    EXPECT_EQ(2, result.samples_per_second());
+    EXPECT_EQ(4, result.data().rows);
 }
 
 TEST_F(sampler_test, the_inputs_have_different_frequencies) {
@@ -125,9 +125,9 @@ TEST_F(sampler_test, the_inputs_have_different_frequencies) {
 
     auto result = resample(movement_data_vector, 10);
 
-    EXPECT_EQ(2000, result.duration);
-    EXPECT_EQ(10, result.samples_per_second);
-    EXPECT_EQ(20, result.data.rows);
+    EXPECT_EQ(2000, result.reported_duration());
+    EXPECT_EQ(10, result.samples_per_second());
+    EXPECT_EQ(20, result.data().rows);
 }
 
 TEST_F(sampler_test, the_inputs_have_different_durations) {
@@ -135,9 +135,9 @@ TEST_F(sampler_test, the_inputs_have_different_durations) {
 
     auto result = resample(movement_data_vector, 10);
 
-    EXPECT_EQ(3000, result.duration);
-    EXPECT_EQ(10, result.samples_per_second);
-    EXPECT_EQ(30, result.data.rows);
+    EXPECT_EQ(3000, result.reported_duration());
+    EXPECT_EQ(10, result.samples_per_second());
+    EXPECT_EQ(30, result.data().rows);
 }
 
 TEST_F(sampler_test, real_test) {
@@ -145,7 +145,7 @@ TEST_F(sampler_test, real_test) {
 
     auto result = resample(movement_data_vector, 50);
 
-    EXPECT_EQ(4074, result.duration);
-    EXPECT_EQ(50, result.samples_per_second);
-    EXPECT_EQ(202, result.data.rows);
+    EXPECT_EQ(4074, result.reported_duration());
+    EXPECT_EQ(50, result.samples_per_second());
+    EXPECT_EQ(202, result.data().rows);
 }
