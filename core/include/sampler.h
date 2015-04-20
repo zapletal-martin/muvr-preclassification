@@ -20,7 +20,7 @@ using namespace muvr;
 ///]
 ///
 ///new block arrived
-///data << raw_sensor_data(..., 1840, 9250)  ~> end timestamp = 9250 - duration = 1840 => start timestamp = 7410\
+///data << raw_sensor_data(..., 1840, 9250) ~> end timestamp = 9250 - duration = 1840 => start timestamp = 7410
 ///
 ///is there 3 seconds of data?
 ///data.duration() ~> 9250

@@ -9,8 +9,10 @@ raw_sensor_data resample(const std::vector<raw_sensor_data> &source, const uint8
    for (int i = 0; i < source.size(); i++) {
       raw_sensor_data data = source[i];
 
+      //assert(data.data.rows == (data.duration / 1000) * data.samples_per_second);
+
       Mat destination;
-      Size size(1, sampling_frequency);
+      Size size(1, sampling_frequency * data.duration / 1000);
       cv::resize(data.data, destination, size);
 
       result_mat.push_back(destination);
