@@ -67,6 +67,29 @@ std::vector<raw_sensor_data> prepare_different_duration_test_data() {
     };
 }
 
+std::vector<raw_sensor_data> prepare_real_data() {
+    Mat f1 = row(0);
+    for(int i = 0; i < 100; i++) {
+        f1.push_back(row(i));
+    }
+
+    Mat s1 = row(0);
+    for(int i = 0; i < 100; i++) {
+        s1.push_back(row(i));
+    }
+
+    Mat a1 = row(0);
+    for(int i = 0; i < 20; i++) {
+        a1.push_back(row(i));
+    }
+
+    return std::vector<raw_sensor_data> {
+        raw_sensor_data(f1, accelerometer, 54, 0, 1852),
+        raw_sensor_data(s1, accelerometer, 54, 1852, 1852),
+        raw_sensor_data(a1, accelerometer, 54, 3704, 370)
+    };
+}
+
 TEST_F(sampler_test, input_frequency_same_as_output) {
     std::vector<raw_sensor_data> movement_data_vector = prepare_same_frequency_test_data();
 
@@ -115,4 +138,14 @@ TEST_F(sampler_test, the_inputs_have_different_durations) {
     EXPECT_EQ(3000, result.duration);
     EXPECT_EQ(10, result.samples_per_second);
     EXPECT_EQ(30, result.data.rows);
+}
+
+TEST_F(sampler_test, real_test) {
+    std::vector<raw_sensor_data> movement_data_vector = prepare_real_data();
+
+    auto result = resample(movement_data_vector, 50);
+
+    EXPECT_EQ(4074, result.duration);
+    EXPECT_EQ(50, result.samples_per_second);
+    EXPECT_EQ(202, result.data.rows);
 }

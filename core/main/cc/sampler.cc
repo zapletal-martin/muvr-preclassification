@@ -19,10 +19,11 @@ raw_sensor_data resample(const std::vector<raw_sensor_data> &source, const uint8
       result_duration += data.duration;
    }
 
-#ifdef EYEBALL_DEBUG
+//#ifdef EYEBALL_DEBUG
    std::cout << "Resampled and concatenated data matrix " << std::endl;
    std::cout << "M = "<< std::endl << " "  << result_mat << std::endl << std::endl;
-#endif
+//#endif
 
+   //TODO: Make again sure result_mat.rows == (result_duration / 1000) * sampling_frequency ???
    return raw_sensor_data(result_mat, source[0].type, sampling_frequency, source[0].timestamp, result_duration);
 }
