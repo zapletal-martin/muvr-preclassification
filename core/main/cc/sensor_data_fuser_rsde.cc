@@ -7,7 +7,7 @@ sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_dat
 
 }
 
-sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_location location,
+sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_location_t location,
                                                                 const sensor_time_t wall_time,
                                                                 const raw_sensor_data data):
     m_location(location), m_wall_time(wall_time), m_data(data), m_last_data(nullptr) {
@@ -45,7 +45,7 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
     }
 }
 
-bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location location, const raw_sensor_data &data) {
+bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location_t location, const raw_sensor_data &data) {
     return m_location == location && m_data.matches(data);
 }
 

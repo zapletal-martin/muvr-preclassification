@@ -2,7 +2,7 @@
 
 using namespace muvr;
 
-sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t wall_time) {
+sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_table::push_back(const raw_sensor_data &data, const sensor_location_t location, const sensor_time_t wall_time) {
     for (auto &i : m_entries) {
         if (i.matches(location, data)) {
             i.push_back(data, wall_time);
@@ -13,6 +13,10 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_tabl
     auto entry = raw_sensor_data_entry(location, wall_time, data);
     m_entries.push_back(entry);
     return entry;
+}
+
+std::vector<fused_sensor_data> sensor_data_fuser::raw_sensor_data_table::slice(const sensor_time_t start,
+                                                                               const sensor_time_t end) const {
 }
 
 void sensor_data_fuser::raw_sensor_data_table::clear() {

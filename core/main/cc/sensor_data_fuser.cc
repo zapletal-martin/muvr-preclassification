@@ -17,7 +17,7 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 
 }
 
-fused_sensor_data sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t wall_time) {
+std::vector<fused_sensor_data> sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location_t location, const sensor_time_t wall_time) {
     auto decoded = decode_single_packet(buffer);
 
     return m_sensor_context_table.push_back(decoded, location, wall_time);

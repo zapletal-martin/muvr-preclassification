@@ -7,36 +7,30 @@ namespace muvr {
     /// Sensor location
     typedef enum  {
         wrist, chest, waist, foot, any
-    } sensor_location;
+    } sensor_location_t;
 
     ///
     /// Fused exercise data
     ///
     struct fused_sensor_data {
-    private:
-        /// the type
-        sensor_type_t m_type;
-        /// the sampling rate
-        uint8_t m_samples_per_second;
-        /// the negative time offset
-        sensor_location m_location;
-        /// the decoded data
-        Mat m_data;
+        device_id_t device_id;
+        sensor_type_t sensor_type;
+        uint8_t samples_per_second;
+        sensor_location_t sensor_location;
+        Mat data;
 
-        /// empty ctor
-        fused_sensor_data();
-        /// static empty instance
-        static fused_sensor_data m_empty;
-    public:
-        fused_sensor_data(const raw_sensor_data &raw, const sensor_location location);
-        fused_sensor_data(const fused_sensor_data &that);
-
-        static fused_sensor_data empty() { return m_empty; }
-
-        inline const Mat &data() const { return m_data; }
-
-        /// checks for "empty"
-        inline operator bool() const { return m_data.rows > 0; }
+        ///
+        /// operator <<
+        ///
+        friend std::ostream &operator<<(std::ostream &stream, const fused_sensor_data &obj) {
+            stream << "fused_sensor_data"
+                   << "{ device_id=" << std::to_string(obj.device_id)
+                   << ", sensor_type=" << std::to_string(obj.sensor_type)
+                   << ", samples_per_second=" << std::to_string(obj.samples_per_second)
+                   << ", sensor_location=" << std::to_string(obj.sensor_location)
+                   << "}";
+            return stream;
+        }
     };
 
 #ifdef NO_FUSION_STATS
@@ -67,7 +61,7 @@ namespace muvr {
         struct raw_sensor_data_entry {
         private:
             /// the sensor location
-            sensor_location  m_location;
+            sensor_location_t m_location;
             /// the start time of the first sample in m_data
             sensor_time_t m_wall_time;
             /// the data (padded & continuous)
@@ -80,14 +74,14 @@ namespace muvr {
             ///
             /// Construct entry, assign the fields
             ///
-            raw_sensor_data_entry(const sensor_location location, const sensor_time_t wall_time,
+            raw_sensor_data_entry(const sensor_location_t location, const sensor_time_t wall_time,
                                   const raw_sensor_data data);
 
             ///
             /// Returns ``true`` if this entry matches the location and type and samples per second
             /// in data
             ///
-            bool matches(const sensor_location location, const raw_sensor_data &data);
+            bool matches(const sensor_location_t location, const raw_sensor_data &data);
 
             ///
             /// Appends a new block of ``data`` received at ``received_at``. If there is a gap between the
@@ -135,7 +129,8 @@ namespace muvr {
         private:
             std::vector<raw_sensor_data_entry> m_entries;
         public:
-            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t wall_time);
+            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location_t location, const sensor_time_t wall_time);
+            std::vector<fused_sensor_data> slice(const sensor_time_t start, const sensor_time_t end) const;
             void clear();
             void erase_before(const sensor_time_t end);
         };
@@ -176,7 +171,7 @@ namespace muvr {
         public:
             sensor_context_table(std::shared_ptr<movement_decider> movement_decider, std::shared_ptr<exercise_decider> exercise_decider);
 
-            fused_sensor_data push_back(const raw_sensor_data &new_data, const sensor_location location, const sensor_time_t wall_time);
+            std::vector<fused_sensor_data> push_back(const raw_sensor_data &new_data, const sensor_location_t location, const sensor_time_t wall_time);
         };
 
 
@@ -197,7 +192,7 @@ namespace muvr {
         ///
         /// Push back a block of data arriving from a given location at the specified time
         ///
-        fused_sensor_data push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t wall_time);
+        std::vector<fused_sensor_data> push_back(const uint8_t *buffer, const sensor_location_t location, const sensor_time_t wall_time);
 
         ///
         /// Explicitly mark the start of the exercise block
