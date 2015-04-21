@@ -16,7 +16,7 @@ TEST_F(device_data_decoder_test, decode_threed) {
     sensor_time_t timestamp = 1429205374267;
     auto data = device_data_generator(pebble, accelerometer, 100, data_patterns::constant(Scalar(100, 1000, 2000))).generate(100, timestamp, duration);
     auto dec = decode_single_packet(data.data());
-    EXPECT_EQ(sensor_data_type_t::accelerometer, dec.type());
+    EXPECT_EQ(sensor_type_t::accelerometer, dec.type());
     EXPECT_EQ(100, dec.samples_per_second());
     EXPECT_EQ(duration, dec.reported_duration());
     EXPECT_EQ(timestamp, dec.end_timestamp());

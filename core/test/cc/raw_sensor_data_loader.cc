@@ -18,7 +18,7 @@ raw_sensor_data_loader &raw_sensor_data_loader::from_sensor(const std::string &s
     return *this;
 }
 
-raw_sensor_data_loader &raw_sensor_data_loader::from_type(const sensor_data_type_t type) {
+raw_sensor_data_loader &raw_sensor_data_loader::from_type(const sensor_type_t type) {
     m_type = type;
     return *this;
 }
@@ -40,15 +40,15 @@ std::vector<std::string> raw_sensor_data_loader::tokenize(const std::string &lin
     return std::vector<std::string>(tokenizer.begin(), tokenizer.end());
 }
 
-sensor_data_type_t raw_sensor_data_loader::parse_type(const std::string &type) {
-    if (type == "AccelerometerValue") return muvr::sensor_data_type_t::accelerometer;
-    if (type == "RotationValue") return muvr::sensor_data_type_t::rotation;
-    if (type == "HeartRate") return muvr::sensor_data_type_t::heart_rate;
+sensor_type_t raw_sensor_data_loader::parse_type(const std::string &type) {
+    if (type == "AccelerometerValue") return muvr::sensor_type_t::accelerometer;
+    if (type == "RotationValue") return muvr::sensor_type_t::rotation;
+    if (type == "HeartRate") return muvr::sensor_type_t::heart_rate;
 
     throw std::runtime_error("Bad type " + type);
 }
 
-cv::Mat raw_sensor_data_loader::empty_raw_mat(sensor_data_type_t type) {
+cv::Mat raw_sensor_data_loader::empty_raw_mat(sensor_type_t type) {
     switch (type) {
         case accelerometer:
         case rotation:

@@ -59,7 +59,7 @@ namespace muvr {
 
         return raw_sensor_data(data,
                                static_cast<device_id_t>(header->device_id),
-                               static_cast<sensor_data_type_t>(header->type),
+                               static_cast<sensor_type_t>(header->type),
                                header->samples_per_second,
                                timestamp,
                                duration);

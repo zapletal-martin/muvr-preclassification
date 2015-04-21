@@ -4,7 +4,7 @@
 using namespace muvr;
 
 
-device_data_generator::device_data_generator(const device_id_t device_id, const sensor_data_type_t type, const uint8_t samples_per_second,
+device_data_generator::device_data_generator(const device_id_t device_id, const sensor_type_t type, const uint8_t samples_per_second,
                                              const data_pattern_generator &pattern_generator) :
     m_device_id(device_id), m_type(type), m_samples_per_second(samples_per_second), m_pattern_generator(pattern_generator) {
 }

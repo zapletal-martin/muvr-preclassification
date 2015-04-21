@@ -8,7 +8,7 @@ using namespace cv;
 namespace muvr {
 
     /// sensor data type
-    enum sensor_data_type_t {
+    enum sensor_type_t {
         accelerometer = 0xad,
         rotation = 0xbd,
         heart_rate = 0xed
@@ -41,7 +41,7 @@ namespace muvr {
     struct raw_sensor_data {
     private:
         /// the type
-        sensor_data_type_t m_type;
+        sensor_type_t m_type;
         /// the sampling rate
         uint8_t m_samples_per_second;
         /// the sensor data timestamp
@@ -62,7 +62,7 @@ namespace muvr {
         ///
         /// Returns the type
         ///
-        inline sensor_data_type_t type() const { return m_type; }
+        inline sensor_type_t type() const { return m_type; }
 
         ///
         /// Returns the data
@@ -106,7 +106,7 @@ namespace muvr {
         raw_sensor_data(
                 const cv::Mat &data,
                 const device_id_t device_id,
-                const sensor_data_type_t type,
+                const sensor_type_t type,
                 const uint8_t samples_per_second,
                 const sensor_time_t timestamp,
                 const sensor_duration_t duration);

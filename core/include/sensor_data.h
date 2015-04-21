@@ -14,7 +14,7 @@ namespace muvr {
     ///
     struct fused_sensor_data {
         /// the type
-        sensor_data_type_t type;
+        sensor_type_t type;
         /// the sampling rate
         uint8_t samples_per_second;
         /// the negative time offset
@@ -127,15 +127,15 @@ namespace muvr {
             ///
             std::vector<fused_sensor_data> range(const sensor_time_t start, const sensor_time_t end) const;
 
-            ///
-            /// Returns the vector of entries
-            ///
-            //std::vector<raw_sensor_data_entry> &entries();
+        };
 
-            ///
-            /// The size of this table
-            ///
-            //size_t size() const;
+        struct sensor_data_context_entry {
+        private:
+            device_id_t m_device_id;
+            sensor_type_t m_sensor_data_type;
+        };
+
+        struct sensor_data_context_table {
 
         };
 

@@ -10,7 +10,7 @@ void data_patterns::add_noise(const uint noise, Mat &mat) {
     }
 }
 
-Mat data_patterns::mat(const sensor_data_type_t type, const uint count, const boost::optional<Scalar> &constant) {
+Mat data_patterns::mat(const sensor_type_t type, const uint count, const boost::optional<Scalar> &constant) {
     switch (type) {
         case accelerometer:
         case rotation: {
@@ -41,7 +41,7 @@ void data_patterns::sin(const uint count, uint period, const double amplitude, M
 }
 
 data_pattern_generator data_patterns::sin(const uint8_t period, const Scalar amplitude, const uint noise) {
-    return [noise, period, amplitude](const sensor_data_type_t type, const uint8_t count) {
+    return [noise, period, amplitude](const sensor_type_t type, const uint8_t count) {
         Mat data = mat(type, count);
 
         for (int i = 0; i < data.cols; ++i) {
@@ -55,7 +55,7 @@ data_pattern_generator data_patterns::sin(const uint8_t period, const Scalar amp
 }
 
 data_pattern_generator data_patterns::constant(const Scalar value, const uint noise) {
-    return [noise, value](const sensor_data_type_t type, const uint8_t count) {
+    return [noise, value](const sensor_type_t type, const uint8_t count) {
         Mat data = mat(type, count, value);
         add_noise(noise, data);
         return data;

@@ -2,7 +2,7 @@
 
 using namespace muvr;
 
-raw_sensor_data_generator::raw_sensor_data_generator(const device_id_t device_id, const sensor_data_type_t type):
+raw_sensor_data_generator::raw_sensor_data_generator(const device_id_t device_id, const sensor_type_t type):
        m_device_id(device_id), m_type(type), m_noise(0) {
 }
 

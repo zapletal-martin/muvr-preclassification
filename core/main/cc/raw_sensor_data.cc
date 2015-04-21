@@ -5,7 +5,7 @@ using namespace muvr;
 raw_sensor_data::raw_sensor_data(
         const cv::Mat &data,
         const device_id_t device_id,
-        const sensor_data_type_t type,
+        const sensor_type_t type,
         const uint8_t samples_per_second,
         const sensor_time_t timestamp,
         const sensor_duration_t reported_duration) :
