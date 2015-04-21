@@ -52,6 +52,13 @@ namespace muvr {
         device_id_t m_device_id;
         /// the decoded data
         cv::Mat m_data;
+
+        /// converts the time to the number of samples
+        inline uint time_to_samples(const sensor_time_t time) const {
+            assert(time < 60000 * 1000); // more than an hour is almost certainly programming error
+
+            return static_cast<uint>(time / (1000 / m_samples_per_second));
+        }
     public:
 
         ///

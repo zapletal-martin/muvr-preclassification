@@ -16,12 +16,6 @@ raw_sensor_data::raw_sensor_data(const raw_sensor_data &that):
     raw_sensor_data::raw_sensor_data(that.m_data, that.m_device_id, that.m_type, that.m_samples_per_second, that.m_end_timestamp, that.m_reported_duration) {
 }
 
-/*
-sensor_time_t raw_sensor_data::expected_duration() const {
-    return (sensor_time_t) (data.rows * 1000 / samples_per_second);
-}
-*/
-
 bool raw_sensor_data::matches(const raw_sensor_data &that) const {
     static const uint8_t epsilon = 1;
     return m_data.type() == that.m_data.type() &&
@@ -34,9 +28,8 @@ void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t
 
     if (gap_length > 0) {
         // bigger than allowed epsilon
-        auto gap_samples = gap_length / (1000 / samples_per_second());
-        if (gap_samples > 10000)
-            throw std::runtime_error("Gap " + std::to_string(gap_samples) + " is too big.");
+        auto gap_samples = time_to_samples(gap_length);
+        if (gap_samples > 10000) throw std::runtime_error("Gap " + std::to_string(gap_samples) + " is too big.");
 
         Mat gap(static_cast<uint32_t>(gap_samples), m_data.cols, m_data.type());
         for (int i = 0; i < m_data.cols; ++i) {
@@ -59,4 +52,29 @@ void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t
     m_data.push_back(that.data());
     m_end_timestamp = that.end_timestamp();
     m_reported_duration += that.m_reported_duration + gap_length;
+}
+
+raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_time_t end) const {
+    assert(end > start);
+
+    if (start < start_timestamp()) throw std::runtime_error("start < start_timestamp");
+    if (end > end_timestamp()) throw std::runtime_error("end > end_timestamp()");
+
+    if (start == start_timestamp() && end == end_timestamp()) return *this;
+
+    // we're not so lucky: we must cut on both sides
+    uint first_row = time_to_samples(start - start_timestamp());
+    uint last_row  = MIN(m_data.rows - time_to_samples(end_timestamp() - end), static_cast<uint>(m_data.rows));
+    Mat data = Mat(m_data, Range(first_row, last_row));
+
+    return raw_sensor_data(data, m_device_id, m_type, m_samples_per_second, start, end - start);
+}
+
+raw_sensor_data raw_sensor_data::slice_from_end(const sensor_duration_t duration) const {
+    assert(duration <= m_reported_duration);
+
+    auto start = end_timestamp() - duration;
+    assert(start >= 0);
+
+    return slice(start, end_timestamp());
 }
