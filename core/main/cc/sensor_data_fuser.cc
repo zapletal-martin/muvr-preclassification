@@ -24,59 +24,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
     LOG(DEBUG) << entry;
 
     m_sensor_context_table.evaluate(entry.raw());
-
-/*
-    // we say that exercise has to be at least 3 seconds after the first movement to be considered
-    static const sensor_time_t minimum_exercise_duration = 3000;
-
-    if (m_exercise_start == EXERCISE_TIME_NAN) {
-        // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
-        // movement and exercise for us to start considering the exercise block.
-        if (m_movement_decider->has_movement(raw) == movement_decider::movement_result::yes) {
-            // we have movement. remember the start of it; we might be scanning back towards it.
-            if (m_movement_start == EXERCISE_TIME_NAN) {
-                m_movement_start = entry.end_time() - decoded.reported_duration();
-            }
-
-            if (m_movement_start != EXERCISE_TIME_NAN && entry.end_time() - m_movement_start >= minimum_exercise_duration) {
-                auto blocks = (entry.end_time() - m_movement_start) / minimum_exercise_duration;
-                for (int i = 1; i <= blocks; ++i) {
-                    auto r = entry.range(m_movement_start, m_movement_start + i * minimum_exercise_duration);
-                    // scan backwards towards m_movement_start
-                    if (m_exercise_decider->has_exercise(r.raw(), entry.exercise_context()) == exercise_decider::exercise_result::yes) {
-                        // movement & exercise -> we are starting
-                        m_exercise_start = r.start_time();
-                    }
-                }
-            }
-        }
-    } else {
-        // We have already detected movement or exercise from at least one sensor. To stop, all sensors must report no
-        // movement in the last block, or must start reporting no exercise.
-        int no_movement = 0;
-        int no_exercise = 0;
-        sensor_time_t window = minimum_exercise_duration;
-
-        for (auto &x : m_sensor_data_table.entries()) {
-            if (x.duration() < 1000) continue;
-            auto last = x.from_end(1000).raw();
-            // undecidable counts as no movement
-            if (m_movement_decider->has_movement(last) != movement_decider::movement_result::yes) no_movement++;
-            // undecidable counts as no exercise
-            if (x.duration() >= window) {
-                auto last_ex = x.from_end(window).raw();
-                if (m_exercise_decider->has_exercise(last_ex, x.exercise_context()) != exercise_decider::exercise_result::yes) no_exercise++;
-            }
-        }
-        // TODO: reset exercise contexts in the table
-        if (no_movement == m_sensor_data_table.size()) {
-            exercise_block_end(end);
-        } else if (no_exercise == m_sensor_data_table.size()) {
-            // all sensors report no exercise or no movement => end exercise at end
-            exercise_block_end(end - window);
-        }
-    }
-    */
+    
 }
 
 void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
