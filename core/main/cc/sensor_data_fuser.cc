@@ -1,3 +1,4 @@
+#include "easylogging++.h"
 #include "sensor_data.h"
 #include "device_data_decoder.h"
 
@@ -19,7 +20,7 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 
 }
 
-void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location) {
+void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t wall_time) {
     // we say that exercise has to be at least 3 seconds after the first movement to be considered
     static const sensor_time_t minimum_exercise_duration = 3000;
 
@@ -34,9 +35,23 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
     //          data.rows:              75 ~> duration from device > 1.5s ~> resize()
     //
 
-    auto entry = m_table.push_back(decoded, location);
+    auto entry = m_sensor_data_table.push_back(decoded, location, wall_time);
+    auto raw = entry.raw();
 
-    std::cout << entry << std::endl;
+    LOG(DEBUG) << entry;
+
+    if (m_exercise_start == EXERCISE_TIME_NAN) {
+        // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
+        // movement and exercise for us to start considering the exercise block.
+        if (m_movement_decider->has_movement(raw) == movement_decider::movement_result::yes) {
+            if (m_movement_start == EXERCISE_TIME_NAN) {
+                m_movement_start = raw.start_timestamp();
+                LOG(DEBUG) << "m_movement_start = " << std::to_string(m_movement_start);
+            }
+        }
+    } else {
+
+    }
 
 /*
     if (m_exercise_start == EXERCISE_TIME_NAN) {
@@ -67,7 +82,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
         int no_exercise = 0;
         sensor_time_t window = minimum_exercise_duration;
 
-        for (auto &x : m_table.entries()) {
+        for (auto &x : m_sensor_data_table.entries()) {
             if (x.duration() < 1000) continue;
             auto last = x.from_end(1000).raw();
             // undecidable counts as no movement
@@ -79,9 +94,9 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
             }
         }
         // TODO: reset exercise contexts in the table
-        if (no_movement == m_table.size()) {
+        if (no_movement == m_sensor_data_table.size()) {
             exercise_block_end(end);
-        } else if (no_exercise == m_table.size()) {
+        } else if (no_exercise == m_sensor_data_table.size()) {
             // all sensors report no exercise or no movement => end exercise at end
             exercise_block_end(end - window);
         }
@@ -92,7 +107,7 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
 void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
     if (m_exercise_start == EXERCISE_TIME_NAN) return;
 
-    exercise_block_ended(m_table.range(m_exercise_start, end), fusion_stats());
+    // exercise_block_ended(m_sensor_data_table.range(m_exercise_start, end), fusion_stats());
     erase_ending_before(end);
 }
 

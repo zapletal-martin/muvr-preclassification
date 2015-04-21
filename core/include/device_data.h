@@ -16,7 +16,7 @@ typedef struct __attribute__((__packed__)) {
     /// the size of each sample ~> we will be reading count * sample_size bytes
     uint8_t  sample_size;
     /// time offset *always into the past*
-    uint8_t  queue_size;
+    uint8_t  device_id;
     /// timestamp of the last sample
     uint8_t  timestamp[8];               // equivalent of uint64_t: careful, the data is big-endian
     /// duration of the sample
@@ -32,6 +32,5 @@ typedef struct __attribute__((__packed__)) {
     int16_t z     : 13;
     int8_t  valid : 1;
 } device_data_threed;
-
 
 #endif //_PRECLASSIFICATION_SENSOR_FORMATS_H_

@@ -6,7 +6,7 @@ movement_decider::movement_result movement_decider::has_movement(const raw_senso
     switch (source.type()) {
         case accelerometer:
         case rotation:
-            return has_movement(source.data(), 200);
+            return has_movement(source.data(), 250);
         default:
             return undecidable;
     }

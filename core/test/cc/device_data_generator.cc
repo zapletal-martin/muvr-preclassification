@@ -4,10 +4,9 @@
 using namespace muvr;
 
 
-device_data_generator::device_data_generator(const sensor_data_type type, const uint8_t samples_per_second,
+device_data_generator::device_data_generator(const device_id_t device_id, const sensor_data_type_t type, const uint8_t samples_per_second,
                                              const data_pattern_generator &pattern_generator) :
-    m_type(type), m_samples_per_second(samples_per_second), m_pattern_generator(pattern_generator)
-{
+    m_device_id(device_id), m_type(type), m_samples_per_second(samples_per_second), m_pattern_generator(pattern_generator) {
 }
 
 device_data_payload device_data_generator::new_buffer(const sensor_time_t timestamp, const uint8_t count,
@@ -29,7 +28,7 @@ device_data_payload device_data_generator::new_buffer(const sensor_time_t timest
     header->count = count;
     header->sample_size = sample_size;
     header->samples_per_second = m_samples_per_second;
-    header->queue_size = 0;
+    header->device_id = m_device_id;
     header->timestamp[7] = static_cast<uint8_t>((timestamp >> 56) & 0xff);
     header->timestamp[6] = static_cast<uint8_t>((timestamp >> 48) & 0xff);
     header->timestamp[5] = static_cast<uint8_t>((timestamp >> 40) & 0xff);

@@ -14,7 +14,7 @@ sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_loc
 }
 
 void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &data,
-                                                         const sensor_time_t) {
+                                                         const sensor_time_t __unused wall_time) {
     assert(m_data.matches(data));
     assert(data.data().cols == m_data.data().cols);
 
@@ -30,7 +30,7 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
     static const sensor_time_t epsilon = 10;
 
     // gap between the last data and this data in milliseconds
-    const int64_t gap_length = data.timestamp() - data.reported_duration() - m_data.timestamp();
+    const int64_t gap_length = data.end_timestamp() - data.reported_duration() - m_data.end_timestamp();
 
     if (gap_length < 0) {
         // negative gap
@@ -78,23 +78,6 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entr
      */
 }
 
-fused_sensor_data sensor_data_fuser::raw_sensor_data_entry::fused() {
-    return fused_sensor_data {
-            .samples_per_second = m_data.samples_per_second(),
-            .data = m_data.data(),
-            .location = m_location,
-            .type = m_data.type()
-    };
-}
-
 raw_sensor_data &sensor_data_fuser::raw_sensor_data_entry::raw() {
     return m_data;
-}
-
-sensor_time_t sensor_data_fuser::raw_sensor_data_entry::duration() const {
-    return m_data.reported_duration();
-}
-
-exercise_decider::exercise_context& sensor_data_fuser::raw_sensor_data_entry::exercise_context() {
-    return m_exercise_context;
 }

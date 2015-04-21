@@ -8,10 +8,23 @@ using namespace cv;
 namespace muvr {
 
     /// sensor data type
-    enum sensor_data_type {
+    enum sensor_data_type_t {
         accelerometer = 0xad,
         rotation = 0xbd,
         heart_rate = 0xed
+    };
+
+    ///
+    /// The device id
+    ///
+    typedef uint8_t device_id_t;
+
+    ///
+    /// The known device ids
+    ///
+    enum device_ids {
+        pebble = 0x01,
+        iphone_like = 0x02
     };
 
     /// sensor time is a synthetic, but monotonously increasing time in ms
@@ -28,13 +41,15 @@ namespace muvr {
     struct raw_sensor_data {
     private:
         /// the type
-        sensor_data_type m_type;
+        sensor_data_type_t m_type;
         /// the sampling rate
         uint8_t m_samples_per_second;
         /// the sensor data timestamp
-        sensor_time_t m_timestamp;
+        sensor_time_t m_end_timestamp;
         /// the duration
         sensor_duration_t m_reported_duration;
+        /// the device id sending the data
+        device_id_t m_device_id;
         /// the decoded data
         cv::Mat m_data;
     public:
@@ -47,7 +62,7 @@ namespace muvr {
         ///
         /// Returns the type
         ///
-        inline sensor_data_type type() const { return m_type; }
+        inline sensor_data_type_t type() const { return m_type; }
 
         ///
         /// Returns the data
@@ -60,9 +75,19 @@ namespace muvr {
         inline uint8_t samples_per_second() const { return m_samples_per_second; }
 
         ///
-        /// Returns the timestamp
+        /// Returns the end timestamp
         ///
-        inline sensor_time_t timestamp() const { return m_timestamp; }
+        inline sensor_time_t end_timestamp() const { return m_end_timestamp; }
+
+        ///
+        /// Returns the start timestamp
+        ///
+        inline sensor_time_t start_timestamp() const { return m_end_timestamp - m_reported_duration; }
+
+        ///
+        /// Returns the device id
+        ///
+        inline device_id_t device_id() const { return m_device_id; }
 
         ///
         /// Evaluates if this instance "is compatible with" ``that``. Compatibility means sampling rate within
@@ -80,7 +105,8 @@ namespace muvr {
         ///
         raw_sensor_data(
                 const cv::Mat &data,
-                const sensor_data_type type,
+                const device_id_t device_id,
+                const sensor_data_type_t type,
                 const uint8_t samples_per_second,
                 const sensor_time_t timestamp,
                 const sensor_duration_t duration);
@@ -93,7 +119,7 @@ namespace muvr {
         friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
             stream << "raw_sensor_data { "
                    << "type=" << obj.m_type
-                   << ", timestamp=" << static_cast<sensor_time_t>(obj.m_timestamp)
+                   << ", timestamp=" << static_cast<sensor_time_t>(obj.m_end_timestamp)
                    << ", samples_per_second=" << static_cast<int>(obj.m_samples_per_second)
                    << ", duration=" << obj.m_reported_duration
                    << "}";
@@ -105,7 +131,7 @@ namespace muvr {
                     lhs.m_data.cols == rhs.m_data.cols &&
                     lhs.m_data.rows == rhs.m_data.rows &&
                     lhs.m_type == rhs.m_type &&
-                    lhs.m_timestamp == rhs.m_timestamp &&
+                    lhs.m_end_timestamp == rhs.m_end_timestamp &&
                     lhs.m_reported_duration == rhs.m_reported_duration &&
                     lhs.m_samples_per_second == rhs.m_samples_per_second;
             if (simple) {
@@ -226,12 +252,6 @@ namespace muvr {
         public:
             /// tests whether this instance diverges from the x, y, z
             bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
-#ifdef EYEBALL_DEBUG
-                for (auto &i : m_freq_powers) std::cout << i << std::endl;
-                std::cout << std::endl;
-                std::cout << "x = " << x << ", y = " << y << ", z = " << z << std::endl;
-                std::cout << std::endl;
-#endif
                 if (m_freq_powers.size() == 0) return false;
 
                 if (!m_freq_powers[0].is_roughly_equal(x)) return true;

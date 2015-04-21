@@ -4,15 +4,16 @@ using namespace muvr;
 
 raw_sensor_data::raw_sensor_data(
         const cv::Mat &data,
-        const sensor_data_type type,
+        const device_id_t device_id,
+        const sensor_data_type_t type,
         const uint8_t samples_per_second,
         const sensor_time_t timestamp,
         const sensor_duration_t reported_duration) :
-    m_data(data), m_type(type), m_samples_per_second(samples_per_second), m_timestamp(timestamp), m_reported_duration(reported_duration) {
+    m_data(data), m_device_id(device_id), m_type(type), m_samples_per_second(samples_per_second), m_end_timestamp(timestamp), m_reported_duration(reported_duration) {
 }
 
 raw_sensor_data::raw_sensor_data(const raw_sensor_data &that):
-    raw_sensor_data::raw_sensor_data(that.m_data, that.m_type, that.m_samples_per_second, that.m_timestamp, that.m_reported_duration) {
+    raw_sensor_data::raw_sensor_data(that.m_data, that.m_device_id, that.m_type, that.m_samples_per_second, that.m_end_timestamp, that.m_reported_duration) {
 }
 
 /*
@@ -56,6 +57,6 @@ void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t
     }
 
     m_data.push_back(that.data());
-    m_timestamp = that.timestamp();
+    m_end_timestamp = that.end_timestamp();
     m_reported_duration += that.m_reported_duration + gap_length;
 }

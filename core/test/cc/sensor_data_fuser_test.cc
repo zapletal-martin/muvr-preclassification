@@ -44,8 +44,8 @@ protected:
 ///
 TEST_F(sensor_data_fuser_test, perfectly_aligned) {
     auto fuser = sdf(movement_decider::movement_result::yes, exercise_decider::exercise_result::yes);
-    auto ad = device_data_generator(accelerometer, 50, data_patterns::constant(Scalar(1000, 1000, 1000)));
-    auto rd = device_data_generator(rotation, 50, data_patterns::constant(Scalar(0, 0, 0)));
+    auto ad = device_data_generator(pebble, accelerometer, 50, data_patterns::constant(Scalar(1000, 1000, 1000)));
+    auto rd = device_data_generator(pebble, rotation, 50, data_patterns::constant(Scalar(0, 0, 0)));
 
     data_pattern_generator x = data_patterns::sin(50, Scalar(1000, 1000, 1000));
     std::cout << x(accelerometer, 100) << std::endl;
@@ -75,7 +75,7 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
 ///
 TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
     auto fuser = sdf(movement_decider::movement_result::yes, exercise_decider::exercise_result::yes);
-    auto ad  = device_data_generator(accelerometer, 50, data_patterns::constant(Scalar(1000, -1000, 200)));
+    auto ad  = device_data_generator(pebble, accelerometer, 50, data_patterns::constant(Scalar(1000, -1000, 200)));
 
     // explicitly start
     fuser.exercise_block_start(0);
@@ -115,8 +115,8 @@ TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
 ///
 TEST_F(sensor_data_fuser_test, very_synthetic_sin_pebble) {
     auto fuser = sdf(boost::none, boost::none);
-    auto c = device_data_generator(accelerometer, 50, data_patterns::constant(Scalar(1000, 0, 0)));
-    auto s = device_data_generator(accelerometer, 50, data_patterns::sin(50, Scalar(1000, 1000, 1000)));
+    auto c = device_data_generator(pebble, accelerometer, 50, data_patterns::constant(Scalar(1000, 0, 0)));
+    auto s = device_data_generator(pebble, accelerometer, 50, data_patterns::sin(50, Scalar(1000, 1000, 1000)));
 
     /*
     int t = 0;
@@ -149,11 +149,11 @@ TEST_F(sensor_data_fuser_test, very_synthetic_sin_pebble) {
 ///
 TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
     auto fuser = sdf(boost::none, boost::none);
-    auto c = device_data_generator(accelerometer, 50, data_patterns::constant(Scalar(1000, 0, 0)));
-    auto s1 = device_data_generator(accelerometer, 50, data_patterns::sin(50, Scalar(1000, 1000, 1000)));
-    auto s2 = device_data_generator(accelerometer, 50, data_patterns::sin(100, Scalar(1000, 1000, 1000)));
-    auto s3 = device_data_generator(accelerometer, 50, data_patterns::sin(25, Scalar(500, 1000, 10)));
-    auto s4 = device_data_generator(accelerometer, 50, data_patterns::sin(20, Scalar(400, 700, 200)));
+    auto c = device_data_generator(pebble, accelerometer, 50, data_patterns::constant(Scalar(1000, 0, 0)));
+    auto s1 = device_data_generator(pebble, accelerometer, 50, data_patterns::sin(50, Scalar(1000, 1000, 1000)));
+    auto s2 = device_data_generator(pebble, accelerometer, 50, data_patterns::sin(100, Scalar(1000, 1000, 1000)));
+    auto s3 = device_data_generator(pebble, accelerometer, 50, data_patterns::sin(25, Scalar(500, 1000, 10)));
+    auto s4 = device_data_generator(pebble, accelerometer, 50, data_patterns::sin(20, Scalar(400, 700, 200)));
 
     /*
     int t = 0;
@@ -188,7 +188,7 @@ TEST_F(sensor_data_fuser_test, pebble_real_ad_no_movement) {
     auto no_movement_data = device_data_loader("pebble_no_movement.dat").load();
     for (auto &i : no_movement_data) {
         auto x = decode_single_packet(i.data.data());
-        fuser.push_back(i.data.data(), wrist);
+        fuser.push_back(i.data.data(), wrist, i.received_at);
     }
 }
 

@@ -14,7 +14,7 @@ namespace muvr {
     ///
     struct fused_sensor_data {
         /// the type
-        sensor_data_type type;
+        sensor_data_type_t type;
         /// the sampling rate
         uint8_t samples_per_second;
         /// the negative time offset
@@ -58,8 +58,6 @@ namespace muvr {
             raw_sensor_data  m_data;
             /// the last-received data
             std::unique_ptr<raw_sensor_data> m_last_data;
-            /// exercise decider context
-            exercise_decider::exercise_context m_exercise_context;
         public:
             raw_sensor_data_entry(const raw_sensor_data_entry &that);
 
@@ -90,33 +88,17 @@ namespace muvr {
             /// reconstructed data will form a line between the last point of the last element and the
             /// first point of the element being added.
             ///
-            void push_back(const raw_sensor_data &data, const sensor_time_t received_at);
-
-            ///
-            /// Returns a fused view if this entry
-            ///
-            fused_sensor_data fused();
+            void push_back(const raw_sensor_data &data, const sensor_time_t wall_time);
 
             ///
             /// Returns the raw view of this data
             ///
             raw_sensor_data &raw();
 
-            ///
-            /// Computes the duration of this entry
-            ///
-            sensor_time_t duration() const;
-
-            ///
-            /// Returns reference to the exercise_context
-            ///
-            exercise_decider::exercise_context &exercise_context();
-
             friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data_entry &obj) {
                 stream << "raw_sensor_data_entry "
                        << "{ wall_time=" << obj.m_wall_time
-                       << ", timestamp=" << obj.m_data.timestamp()
-                       << ", duration=" << obj.duration()
+                       << ", data=" << obj.m_data
                        << "}";
 
                 return stream;
@@ -138,7 +120,7 @@ namespace muvr {
         private:
             std::vector<raw_sensor_data_entry> m_entries;
         public:
-            raw_sensor_data &push_back(const raw_sensor_data &data, const sensor_location location);
+            raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t wall_time);
 
             ///
             /// Returns a subset of
@@ -148,12 +130,12 @@ namespace muvr {
             ///
             /// Returns the vector of entries
             ///
-            std::vector<raw_sensor_data_entry> &entries();
+            //std::vector<raw_sensor_data_entry> &entries();
 
             ///
             /// The size of this table
             ///
-            size_t size() const;
+            //size_t size() const;
 
         };
 
@@ -161,7 +143,7 @@ namespace muvr {
         std::unique_ptr<exercise_decider> m_exercise_decider;
         sensor_time_t m_exercise_start;
         sensor_time_t m_movement_start;
-        raw_sensor_data_table m_table;
+        raw_sensor_data_table m_sensor_data_table;
 
         void erase_ending_before(const sensor_time_t time);
     public:
@@ -178,7 +160,7 @@ namespace muvr {
         ///
         /// Push back a block of data arriving from a given location at the specified time
         ///
-        void push_back(const uint8_t *buffer, const sensor_location location);
+        void push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t wall_time);
 
         ///
         /// Explicitly mark the start of the exercise block
