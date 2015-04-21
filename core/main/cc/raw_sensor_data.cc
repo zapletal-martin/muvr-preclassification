@@ -57,8 +57,10 @@ void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t
 raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_time_t end) const {
     assert(end > start);
 
-    if (start < start_timestamp()) throw std::runtime_error("start < start_timestamp");
-    if (end > end_timestamp()) throw std::runtime_error("end > end_timestamp()");
+    if (start < start_timestamp())
+        throw std::runtime_error("start < start_timestamp");
+    if (end > end_timestamp())
+        throw std::runtime_error("end > end_timestamp()");
 
     if (start == start_timestamp() && end == end_timestamp()) return *this;
 

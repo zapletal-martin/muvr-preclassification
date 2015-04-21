@@ -7,8 +7,8 @@ using namespace muvr;
 std::vector<double> classifier::extract_time_series(const fused_sensor_data &data, int column) {
     std::vector<double> x;
 
-    for(int i = 0; i < data.data.col(column).rows; i++)
-        x.push_back(double(data.data.at<int16_t>(i, column)));
+    for(int i = 0; i < data.data().col(column).rows; i++)
+        x.push_back(double(data.data().at<int16_t>(i, column)));
 
     return x;
 }

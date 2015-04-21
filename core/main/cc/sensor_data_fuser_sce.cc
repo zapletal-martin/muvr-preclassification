@@ -25,20 +25,21 @@ void sensor_data_fuser::sensor_context_entry::evaluate(const raw_sensor_data &da
         if (movement_decider->has_movement(movement_data) == movement_decider::movement_result::yes) {
             // but ``data`` tells us that we have just started moving
             m_movement_start = data.start_timestamp();
-            LOG(DEBUG) << "started moving at " << m_movement_start;
+            LOG(TRACE) << "started moving at " << m_movement_start;
         }
     } else {
         // we're moving ...
         if (movement_decider->has_movement(movement_data) != movement_decider::movement_result::yes) {
             // but ``data`` tells us that we've stopped moving
-            LOG(DEBUG) << "stopped moving at " << m_movement_start;
+            LOG(TRACE) << "stopped moving at " << m_movement_start;
             m_movement_start = EXERCISE_TIME_NAN;
         }
     }
 
     // then, if needed, exercise checks
     if (m_movement_start == EXERCISE_TIME_NAN) return;
-    if (data.end_timestamp() - m_exercise_start < minimum_exercise_duration) return;
+    if (data.reported_duration() < minimum_exercise_duration) return;
+    //if (data.end_timestamp() - m_exercise_start < minimum_exercise_duration) return;
 
     if (m_exercise_start == EXERCISE_TIME_NAN) {
         // we're moving from m_movement_start, but not yet decided whether we're exercising...
@@ -48,7 +49,7 @@ void sensor_data_fuser::sensor_context_entry::evaluate(const raw_sensor_data &da
             if (exercise_decider->has_exercise(r, m_exercise_context) == exercise_decider::exercise_result::yes) {
                 // we are exercising!
                 m_exercise_start = r.start_timestamp();
-                LOG(DEBUG) << "started exercising at " << m_exercise_start;
+                LOG(TRACE) << "started exercising at " << m_exercise_start;
             }
 
         }

@@ -13,14 +13,29 @@ namespace muvr {
     /// Fused exercise data
     ///
     struct fused_sensor_data {
+    private:
         /// the type
-        sensor_type_t type;
+        sensor_type_t m_type;
         /// the sampling rate
-        uint8_t samples_per_second;
+        uint8_t m_samples_per_second;
         /// the negative time offset
-        sensor_location location;
+        sensor_location m_location;
         /// the decoded data
-        cv::Mat data;
+        const Mat m_data;
+        /// empty ctor
+        fused_sensor_data();
+    public:
+        fused_sensor_data(const raw_sensor_data &raw);
+        fused_sensor_data(const fused_sensor_data &that);
+
+        fused_sensor_data& operator=(fused_sensor_data that);
+
+        static fused_sensor_data empty() { return fused_sensor_data(); }
+
+        inline const Mat &data() const { return m_data; }
+
+        /// checks for "empty"
+        inline operator bool() const { return m_data.rows > 0; }
     };
 
 #ifdef NO_FUSION_STATS
@@ -160,7 +175,7 @@ namespace muvr {
         public:
             sensor_context_table(std::shared_ptr<movement_decider> movement_decider, std::shared_ptr<exercise_decider> exercise_decider);
 
-            void push_back(const raw_sensor_data &new_data, const sensor_location location, const sensor_time_t wall_time);
+            fused_sensor_data push_back(const raw_sensor_data &new_data, const sensor_location location, const sensor_time_t wall_time);
         };
 
 
@@ -181,7 +196,7 @@ namespace muvr {
         ///
         /// Push back a block of data arriving from a given location at the specified time
         ///
-        void push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t wall_time);
+        fused_sensor_data push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t wall_time);
 
         ///
         /// Explicitly mark the start of the exercise block
