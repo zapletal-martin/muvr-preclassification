@@ -43,7 +43,9 @@ fused_sensor_data sensor_data_fuser::sensor_context_table::push_back(const raw_s
             // we had exercise block. this has now ended.
             LOG(TRACE) << "all movement->exercise ended at " << fused_data.end_timestamp();
             LOG(INFO) << "\n\n****\n" << fused_data << "\n\n****";
-            // TODO: report
+
+            // TODO: Multiple locations & sensors
+            result = fused_sensor_data(fused_data, location);
         }
         LOG(TRACE) << "all no-movement from all sensors; dropping all accumulated fused_data.";
         // now that we processed all, we can drop all accumulated fused_data
@@ -66,9 +68,12 @@ fused_sensor_data sensor_data_fuser::sensor_context_table::push_back(const raw_s
             // we had exercise block. this has now ended.
             LOG(TRACE) << "all exercise ended at " << fused_data.end_timestamp();
             LOG(INFO) << "\n\n****\n" << fused_data << "\n\n****";
-            // TODO: report
+
+            // TODO: Multiple locations & sensors
+            fused_sensor_data result(fused_data, location);
             m_exercise_start = m_movement_start = EXERCISE_TIME_NAN;
             m_sensor_data_table.clear();
+            return result;
         }
     } else if (m_exercise_start == EXERCISE_TIME_NAN) {
         // something is exercising and this is the first time we're seeing exercise

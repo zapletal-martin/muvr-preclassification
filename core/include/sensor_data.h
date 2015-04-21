@@ -21,16 +21,17 @@ namespace muvr {
         /// the negative time offset
         sensor_location m_location;
         /// the decoded data
-        const Mat m_data;
+        Mat m_data;
+
         /// empty ctor
         fused_sensor_data();
+        /// static empty instance
+        static fused_sensor_data m_empty;
     public:
-        fused_sensor_data(const raw_sensor_data &raw);
+        fused_sensor_data(const raw_sensor_data &raw, const sensor_location location);
         fused_sensor_data(const fused_sensor_data &that);
 
-        fused_sensor_data& operator=(fused_sensor_data that);
-
-        static fused_sensor_data empty() { return fused_sensor_data(); }
+        static fused_sensor_data empty() { return m_empty; }
 
         inline const Mat &data() const { return m_data; }
 

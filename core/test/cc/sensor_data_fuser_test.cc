@@ -203,7 +203,10 @@ TEST_F(sensor_data_fuser_test, pebble_lab_bicep_curl_1) {
     auto fuser = sdf(boost::none, boost::none);
     auto no_movement_data = device_data_loader("pebble_lab_bicep_curl_1.dat").load();
     for (auto &i : no_movement_data) {
-        fuser.push_back(i.data.data(), wrist, i.received_at);
+        auto x = fuser.push_back(i.data.data(), wrist, i.received_at);
+        if (x) {
+            std::cout << x << std::endl;
+        }
     }
 }
 
