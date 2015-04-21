@@ -183,9 +183,17 @@ TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
 /// Tests that the real block of no movement data received from the Pebble device
 /// is decoded and aligned properly
 ///
-TEST_F(sensor_data_fuser_test, pebble_real_ad_no_movement) {
+TEST_F(sensor_data_fuser_test, pebble_no_movement) {
     auto fuser = sdf(boost::none, boost::none);
     auto no_movement_data = device_data_loader("pebble_no_movement.dat").load();
+    for (auto &i : no_movement_data) {
+        fuser.push_back(i.data.data(), wrist, i.received_at);
+    }
+}
+
+TEST_F(sensor_data_fuser_test, pebble_hand_shake) {
+    auto fuser = sdf(boost::none, boost::none);
+    auto no_movement_data = device_data_loader("pebble_hand_shake.dat").load();
     for (auto &i : no_movement_data) {
         fuser.push_back(i.data.data(), wrist, i.received_at);
     }
