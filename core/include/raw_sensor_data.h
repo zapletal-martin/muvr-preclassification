@@ -223,7 +223,10 @@ namespace muvr {
 
         public:
             friend std::ostream& operator<<(std::ostream &stream, const freq_power &obj) {
-                stream << "frequency = " << obj.frequency << ", power = " << obj.power;
+                stream << "freq_power "
+                       << "{ frequency=" << obj.frequency
+                       << ", power=" << obj.power
+                       << "}";
                 return stream;
             }
         };
@@ -251,7 +254,7 @@ namespace muvr {
             /// Computes whether there is enough distiction between the powers of the first and other
             /// frequencies by at least ``factor``.
             ///
-            bool is_distinct(const double factor = 100) const;
+            bool is_distinct(const double factor = 10) const;
 
             ///
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
@@ -259,8 +262,12 @@ namespace muvr {
             bool is_roughly_equal(const freq_powers& that, const uint count = 2, const double freq_tolerance = 0.2) const;
 
             friend std::ostream &operator<<(std::ostream &stream, const freq_powers &obj) {
-                for (auto &x : obj.m_items) stream << x << std::endl;
-                stream << std::endl;
+                stream << "freq_powers"
+                       << " { m_items=[";
+                for (auto &x : obj.m_items) stream << x << ",";
+                stream << "]"
+                       << ", is_distinct=" << obj.is_distinct()
+                       << "}";
                 return stream;
             }
         };

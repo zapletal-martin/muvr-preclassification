@@ -199,6 +199,14 @@ TEST_F(sensor_data_fuser_test, pebble_hand_shake) {
     }
 }
 
+TEST_F(sensor_data_fuser_test, pebble_lab_bicep_curl_1) {
+    auto fuser = sdf(boost::none, boost::none);
+    auto no_movement_data = device_data_loader("pebble_lab_bicep_curl_1.dat").load();
+    for (auto &i : no_movement_data) {
+        fuser.push_back(i.data.data(), wrist, i.received_at);
+    }
+}
+
 sensor_data_fuser_test::sdf::sdf(const boost::optional<movement_decider::movement_result> movement_result, const boost::optional<exercise_decider::exercise_result> exercise_result)
         : sensor_data_fuser(std::unique_ptr<movement_decider>(new md(movement_result)),
                             std::unique_ptr<exercise_decider>(new ed(exercise_result))) {

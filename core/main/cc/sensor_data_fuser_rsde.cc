@@ -54,5 +54,7 @@ raw_sensor_data sensor_data_fuser::raw_sensor_data_entry::raw() const {
 }
 
 void sensor_data_fuser::raw_sensor_data_entry::erase_before(const sensor_time_t end) {
-    if (m_data.start_timestamp() != end) m_data = m_data.slice(m_data.start_timestamp(), end);
+    if (m_data.end_timestamp() < end) {
+        if (m_data.start_timestamp() != end) m_data = m_data.slice(m_data.start_timestamp(), end);
+    }
 }

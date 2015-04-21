@@ -42,32 +42,41 @@ void sensor_data_fuser::sensor_context_table::push_back(const raw_sensor_data &n
             // we had exercise block. this has now ended.
             LOG(DEBUG) << "all exercise ended at " << fused_data.end_timestamp();
 
-            // reset our context
-            m_exercise_start = EXERCISE_TIME_NAN;
-            m_movement_start = EXERCISE_TIME_NAN;
+            // TODO: report
         }
         LOG(DEBUG) << "all no-movement from all sensors; dropping all accumulated fused_data.";
         // now that we processed all, we can drop all accumulated fused_data
-        m_movement_start = movement_start;
+        m_movement_start = m_exercise_start = EXERCISE_TIME_NAN;
         m_sensor_data_table.clear();
+        // exercising|moving -> not exercising. nothing else to be done
+        return;
     } else if (m_movement_start == EXERCISE_TIME_NAN) {
         // something is moving and this is the first time we're seeing movement
         LOG(DEBUG) << "all movement started at " << movement_start;
         m_sensor_data_table.erase_before(movement_start);
         m_movement_start = movement_start;
+        // not exercising -> moving
+        return;
     }
 
-//    if (exercise_start == EXERCISE_TIME_NAN) {
-//        // nothing is exercising (or the exercise has diverged)
-//        if (m_exercise_start != EXERCISE_TIME_NAN) {
-//            // we had exercise block. this has now ended.
-//            LOG(DEBUG) << "Exercise ended at " << fused_data.end_timestamp();
-//
-//            // reset our context
-//            m_exercise_start = EXERCISE_TIME_NAN;
-//            m_movement_start = EXERCISE_TIME_NAN;
-//        }
-//        m_movement_start = movement_start;
-//    }
+    if (exercise_start == EXERCISE_TIME_NAN) {
+        // nothing is exercising (or the exercise has diverged)
+        if (m_exercise_start != EXERCISE_TIME_NAN) {
+            // we had exercise block. this has now ended.
+            LOG(DEBUG) << "all exercise ended at " << fused_data.end_timestamp();
+
+            // TODO: report
+            m_exercise_start = m_movement_start = EXERCISE_TIME_NAN;
+            m_sensor_data_table.clear();
+        }
+        return;
+    } else if (m_exercise_start == EXERCISE_TIME_NAN) {
+        // something is exercising and this is the first time we're seeing exercise
+        LOG(DEBUG) << "all exercise started at " << exercise_start;
+        m_sensor_data_table.erase_before(exercise_start);
+        m_exercise_start = exercise_start;
+        // moving & not exercising -> exercising
+        return;
+    }
 
 }

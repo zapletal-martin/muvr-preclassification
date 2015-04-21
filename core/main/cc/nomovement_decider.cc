@@ -3,7 +3,7 @@
 using namespace muvr;
 
 movement_decider::movement_decider() {
-    m_thresholds[pebble] = 250;
+    m_thresholds[pebble] = 200;
     m_thresholds[iphone_like] = 200;
 }
 
