@@ -101,6 +101,16 @@ namespace muvr {
         void push_back(const raw_sensor_data &that, const sensor_time_t gap_length = 0);
 
         ///
+        /// Slices the data in this instance so that they fall between start and end
+        ///
+        raw_sensor_data slice(const sensor_time_t start, const sensor_time_t end) const;
+
+        ///
+        /// Slices the data from end
+        ///
+        raw_sensor_data slice_from_end(const sensor_duration_t duration) const;
+
+        ///
         /// Constructs the raw_sensor_data, assigns the given fields.
         ///
         raw_sensor_data(

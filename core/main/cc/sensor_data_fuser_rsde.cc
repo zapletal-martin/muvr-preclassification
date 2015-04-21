@@ -49,35 +49,6 @@ bool sensor_data_fuser::raw_sensor_data_entry::matches(const sensor_location loc
     return m_location == location && m_data.matches(data);
 }
 
-sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entry::range(
-        const sensor_time_t start, const sensor_time_t end) const {
-    assert(end > start);
-    throw std::runtime_error("Not implemented");
-    /*
-    // we got lucky!
-    if (m_wall_time == start && end_time() == end) return *this;
-
-    // we're not so lucky: we must cut and/or pad on both sides
-    int before_gap_length = start - m_wall_time;      // negative -> pad, positive -> cut
-    int after_gap_length  = end_time() - end;          // negative -> pad, positive -> cut
-
-    // sort out cuts first
-    int first_row = max(before_gap_length / (1000 / m_data.samples_per_second), 0);
-    int last_row  = min(m_data.data.rows - after_gap_length / (1000 / m_data.samples_per_second), m_data.data.rows);
-    Mat data = Mat(m_data.data, Range(first_row, last_row));
-
-    // now pad if needed
-    if (before_gap_length < 0) {
-        data = linear_gap(m_data.data.row(0), m_data.data, -before_gap_length, m_data.samples_per_second) + data;
-    }
-    if (after_gap_length < 0) {
-        data = data + linear_gap(m_data.data, m_data.data.row(m_data.data.rows - 1), -after_gap_length, m_data.samples_per_second);
-    }
-
-    return raw_sensor_data_entry(m_location, start, raw_sensor_data(data, m_data.type, m_data.samples_per_second, 0, end - start));
-     */
-}
-
 raw_sensor_data sensor_data_fuser::raw_sensor_data_entry::raw() const {
     return m_data;
 }

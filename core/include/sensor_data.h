@@ -74,12 +74,6 @@ namespace muvr {
             bool matches(const sensor_location location, const raw_sensor_data &data);
 
             ///
-            /// Aligns the data by letting ``m_start_time`` = ``start``, and then cutting or approximating
-            /// the data so that the entry remains consistent.
-            ///
-            raw_sensor_data_entry range(const sensor_time_t start, const sensor_time_t end) const;
-
-            ///
             /// Appends a new block of ``data`` received at ``received_at``. If there is a gap between the
             /// end time of the last entry and ``received_at``, this method will pad the gap by attempting
             /// to reconstruct the values between the last block and the block being added.
@@ -121,14 +115,11 @@ namespace muvr {
             std::vector<raw_sensor_data_entry> m_entries;
         public:
             raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t wall_time);
-
-            ///
-            /// Returns a subset of
-            ///
-            std::vector<fused_sensor_data> range(const sensor_time_t start, const sensor_time_t end) const;
-
         };
 
+        ///
+        /// Entry in the SC table that groups data from the same device & sensor
+        ///
         struct sensor_context_entry {
         private:
             device_id_t m_device_id;
@@ -140,7 +131,10 @@ namespace muvr {
             sensor_context_entry(const device_id_t device_id, const sensor_type_t sensor_type);
 
             void evaluate(const raw_sensor_data &data, movement_decider *movement_decider, exercise_decider *exercise_decider);
+
             bool matches(const device_id_t device_id, const sensor_type_t sensor_type) const;
+
+            bool exercising() const { return m_movement_start != EXERCISE_TIME_NAN && m_exercise_start != EXERCISE_TIME_NAN; }
         };
 
         struct sensor_context_table {
