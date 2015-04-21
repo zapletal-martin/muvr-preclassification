@@ -85,6 +85,11 @@ namespace muvr {
             void push_back(const raw_sensor_data &data, const sensor_time_t wall_time);
 
             ///
+            /// Erases data that ends before the given ``end``
+            ///
+            void erase_before(const sensor_time_t end);
+
+            ///
             /// Returns the raw view of this data
             ///
             raw_sensor_data raw() const;
@@ -115,6 +120,8 @@ namespace muvr {
             std::vector<raw_sensor_data_entry> m_entries;
         public:
             raw_sensor_data_entry push_back(const raw_sensor_data &data, const sensor_location location, const sensor_time_t wall_time);
+            void clear();
+            void erase_before(const sensor_time_t end);
         };
 
         ///
@@ -134,7 +141,10 @@ namespace muvr {
 
             bool matches(const device_id_t device_id, const sensor_type_t sensor_type) const;
 
-            bool exercising() const { return m_movement_start != EXERCISE_TIME_NAN && m_exercise_start != EXERCISE_TIME_NAN; }
+            inline bool has_movement() const { return m_movement_start != EXERCISE_TIME_NAN; }
+            inline bool has_exercise() const { return m_movement_start != EXERCISE_TIME_NAN && m_exercise_start != EXERCISE_TIME_NAN; }
+            inline sensor_time_t exercise_start() const { return m_exercise_start; }
+            inline sensor_time_t movement_start() const { return m_movement_start; }
         };
 
         struct sensor_context_table {
@@ -142,14 +152,18 @@ namespace muvr {
             std::shared_ptr<movement_decider> m_movement_decider;
             std::shared_ptr<exercise_decider> m_exercise_decider;
 
+            raw_sensor_data_table m_sensor_data_table;
             std::vector<sensor_context_entry> m_entries;
+
+            sensor_time_t m_movement_start = EXERCISE_TIME_NAN;
+            sensor_time_t m_exercise_start = EXERCISE_TIME_NAN;
         public:
             sensor_context_table(std::shared_ptr<movement_decider> movement_decider, std::shared_ptr<exercise_decider> exercise_decider);
 
-            void evaluate(const raw_sensor_data &data);
+            void push_back(const raw_sensor_data &new_data, const sensor_location location, const sensor_time_t wall_time);
         };
 
-        raw_sensor_data_table m_sensor_data_table;
+
         sensor_context_table m_sensor_context_table;
 
         void erase_ending_before(const sensor_time_t time);

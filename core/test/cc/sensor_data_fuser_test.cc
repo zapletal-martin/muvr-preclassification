@@ -56,7 +56,7 @@ TEST_F(sensor_data_fuser_test, perfectly_aligned) {
     /*
     fuser.push_back(ad.data(), wrist, 0);    fuser.push_back(rd.data(), waist, 0);
     fuser.push_back(ad.data(), wrist, 1000); fuser.push_back(rd.data(), waist, 1000);
-    fuser.evaluate(ad.data(), wrist, 2000); fuser.evaluate(rd.data(), waist, 2000);
+    fuser.evaluate(ad.data(), wrist, 2000); fuser.push_back(rd.data(), waist, 2000);
 
     // explicitly end
     fuser.exercise_block_end(3000);
@@ -84,7 +84,7 @@ TEST_F(sensor_data_fuser_test, with_padding_single_sensor) {
     fuser.push_back(ad.data(),  wrist, 0);       //    0 - 1000 (received at 0, 1000 long)
     fuser.push_back(adp.data(), wrist, 2500);    // 1500 - 2500 (received at 2500, 1 * 1000 into the past, 1000 long)
     fuser.evaluate(ad.data(),  wrist, 2505);    // 2500 - 3500 (received at 2505, 1000 long)
-    fuser.evaluate(ad.data(),  wrist, 4000);    // 4000 - 5000 (received at 4000, 1000 long)
+    fuser.push_back(ad.data(),  wrist, 4000);    // 4000 - 5000 (received at 4000, 1000 long)
 
     // explicitly end
     fuser.exercise_block_end(5000);
@@ -124,7 +124,7 @@ TEST_F(sensor_data_fuser_test, very_synthetic_sin_pebble) {
 
     fuser.push_back(s.data(), wrist, t += 1000);
     fuser.push_back(s.data(), wrist, t += 1000);
-    fuser.evaluate(s.data(), wrist, t += 1000);
+    fuser.push_back(s.data(), wrist, t += 1000);
     fuser.push_back(s.data(), wrist, t += 1000);
     fuser.push_back(s.data(), wrist, t += 1000);
 
@@ -168,7 +168,7 @@ TEST_F(sensor_data_fuser_test, rather_synthetic_sin_pebble) {
     fuser.evaluate(s2.data(), wrist, t += 1000);
     fuser.push_back(s3.data(), wrist, t += 1000);
     fuser.push_back(s2.data(), wrist, t += 1000);
-    fuser.evaluate(s3.data(), wrist, t += 1000);
+    fuser.push_back(s3.data(), wrist, t += 1000);
     fuser.push_back(s4.data(), wrist, t += 1000);
     fuser.push_back(s3.data(), wrist, t += 1000);
 

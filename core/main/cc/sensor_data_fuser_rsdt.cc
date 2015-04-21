@@ -15,10 +15,10 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_tabl
     return entry;
 }
 
-//std::vector<sensor_data_fuser::raw_sensor_data_entry> &sensor_data_fuser::raw_sensor_data_table::entries() {
-//    return m_entries;
-//}
+void sensor_data_fuser::raw_sensor_data_table::clear() {
+    m_entries.clear();
+}
 
-//size_t sensor_data_fuser::raw_sensor_data_table::size() const {
-//    return m_entries.size();
-//}
+void sensor_data_fuser::raw_sensor_data_table::erase_before(const sensor_time_t end) {
+    for (auto &x : m_entries) x.erase_before(end);
+}

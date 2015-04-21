@@ -59,7 +59,7 @@ std::vector<raw_sensor_data> prepare_different_duration_test_data() {
     f1.push_back(row(50));
 
     Mat s1 = row(50);
-    s1.evaluate(row(40));
+    s1.push_back(row(40));
     s1.push_back(row(30));
     s1.push_back(row(20));
 
