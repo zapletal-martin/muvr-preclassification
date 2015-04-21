@@ -93,7 +93,7 @@ namespace muvr {
             ///
             /// Returns the raw view of this data
             ///
-            raw_sensor_data &raw();
+            raw_sensor_data raw() const;
 
             friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data_entry &obj) {
                 stream << "raw_sensor_data_entry "
@@ -129,21 +129,34 @@ namespace muvr {
 
         };
 
-        struct sensor_data_context_entry {
+        struct sensor_context_entry {
         private:
             device_id_t m_device_id;
-            sensor_type_t m_sensor_data_type;
+            sensor_type_t m_sensor_type;
+            sensor_time_t m_movement_start;
+            sensor_time_t m_exercise_start;
+            exercise_decider::exercise_context m_exercise_context;
+        public:
+            sensor_context_entry(const device_id_t device_id, const sensor_type_t sensor_type);
+
+            void evaluate(const raw_sensor_data &data, movement_decider *movement_decider, exercise_decider *exercise_decider);
+            bool matches(const device_id_t device_id, const sensor_type_t sensor_type) const;
         };
 
-        struct sensor_data_context_table {
+        struct sensor_context_table {
+        private:
+            std::shared_ptr<movement_decider> m_movement_decider;
+            std::shared_ptr<exercise_decider> m_exercise_decider;
 
+            std::vector<sensor_context_entry> m_entries;
+        public:
+            sensor_context_table(std::shared_ptr<movement_decider> movement_decider, std::shared_ptr<exercise_decider> exercise_decider);
+
+            void evaluate(const raw_sensor_data &data);
         };
 
-        std::unique_ptr<movement_decider> m_movement_decider;
-        std::unique_ptr<exercise_decider> m_exercise_decider;
-        sensor_time_t m_exercise_start;
-        sensor_time_t m_movement_start;
         raw_sensor_data_table m_sensor_data_table;
+        sensor_context_table m_sensor_context_table;
 
         void erase_ending_before(const sensor_time_t time);
     public:
@@ -155,7 +168,7 @@ namespace muvr {
         ///
         /// Construct new instance of the fuser
         ///
-        sensor_data_fuser(std::unique_ptr<movement_decider> movement_decider, std::unique_ptr<exercise_decider> exercise_decider);
+        sensor_data_fuser(std::shared_ptr<movement_decider> movement_decider, std::shared_ptr<exercise_decider> exercise_decider);
 
         ///
         /// Push back a block of data arriving from a given location at the specified time

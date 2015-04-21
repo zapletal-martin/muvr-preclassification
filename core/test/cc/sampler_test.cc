@@ -36,7 +36,7 @@ std::vector<raw_sensor_data> prepare_same_frequency_test_data() {
 
 std::vector<raw_sensor_data> prepare_different_frequency_test_data() {
     Mat f1 = row(10);
-    f1.push_back(row(20));
+    f1.evaluate(row(20));
     f1.push_back(row(30));
     f1.push_back(row(40));
     f1.push_back(row(50));
@@ -59,7 +59,7 @@ std::vector<raw_sensor_data> prepare_different_duration_test_data() {
     f1.push_back(row(50));
 
     Mat s1 = row(50);
-    s1.push_back(row(40));
+    s1.evaluate(row(40));
     s1.push_back(row(30));
     s1.push_back(row(20));
 

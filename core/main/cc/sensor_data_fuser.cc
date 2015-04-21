@@ -4,16 +4,13 @@
 
 using namespace muvr;
 
-sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(std::unique_ptr<movement_decider>(new movement_decider()),
-                                                          std::unique_ptr<exercise_decider>(new exercise_decider())) {
+sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(std::shared_ptr<movement_decider>(new movement_decider()),
+                                                          std::shared_ptr<exercise_decider>(new exercise_decider())) {
 }
 
-sensor_data_fuser::sensor_data_fuser(std::unique_ptr<movement_decider> movement_decider,
-                                     std::unique_ptr<exercise_decider> exercise_decider):
-    m_movement_decider(std::move(movement_decider)),
-    m_exercise_decider(std::move(exercise_decider)),
-    m_exercise_start(EXERCISE_TIME_NAN),
-    m_movement_start(EXERCISE_TIME_NAN) {
+sensor_data_fuser::sensor_data_fuser(std::shared_ptr<movement_decider> movement_decider,
+                                     std::shared_ptr<exercise_decider> exercise_decider):
+    m_sensor_context_table(movement_decider, exercise_decider ){
 }
 
 void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
@@ -21,39 +18,17 @@ void sensor_data_fuser::erase_ending_before(const sensor_time_t time) {
 }
 
 void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location location, const sensor_time_t wall_time) {
+    auto decoded = decode_single_packet(buffer);
+
+    auto entry = m_sensor_data_table.push_back(decoded, location, wall_time);
+    LOG(DEBUG) << entry;
+
+    m_sensor_context_table.evaluate(entry.raw());
+
+/*
     // we say that exercise has to be at least 3 seconds after the first movement to be considered
     static const sensor_time_t minimum_exercise_duration = 3000;
 
-    auto decoded = decode_single_packet(buffer);
-
-    // decoded: duration from device: 2000 [ms]
-    //          samples/sec:            50
-    //          data.rows:             100 ~> duration from device == computed duration :)
-
-    // decoded: duration from device: 2000 [ms]
-    //          samples/sec:            50
-    //          data.rows:              75 ~> duration from device > 1.5s ~> resize()
-    //
-
-    auto entry = m_sensor_data_table.push_back(decoded, location, wall_time);
-    auto raw = entry.raw();
-
-    LOG(DEBUG) << entry;
-
-    if (m_exercise_start == EXERCISE_TIME_NAN) {
-        // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
-        // movement and exercise for us to start considering the exercise block.
-        if (m_movement_decider->has_movement(raw) == movement_decider::movement_result::yes) {
-            if (m_movement_start == EXERCISE_TIME_NAN) {
-                m_movement_start = raw.start_timestamp();
-                LOG(DEBUG) << "m_movement_start = " << std::to_string(m_movement_start);
-            }
-        }
-    } else {
-
-    }
-
-/*
     if (m_exercise_start == EXERCISE_TIME_NAN) {
         // We have not yet detected movement or exercise. It is sufficient for one sensor to start reporting
         // movement and exercise for us to start considering the exercise block.
@@ -105,13 +80,11 @@ void sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location l
 }
 
 void sensor_data_fuser::exercise_block_end(const sensor_time_t end) {
-    if (m_exercise_start == EXERCISE_TIME_NAN) return;
 
     // exercise_block_ended(m_sensor_data_table.range(m_exercise_start, end), fusion_stats());
     erase_ending_before(end);
 }
 
 void sensor_data_fuser::exercise_block_start(const sensor_time_t now) {
-    m_exercise_start = now;
     exercise_block_started();
 }

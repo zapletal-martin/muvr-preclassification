@@ -35,7 +35,7 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
     if (gap_length < 0) {
         // negative gap
         std::cerr << data << std::endl;
-        throw std::runtime_error("raw_sensor_data_entry::push_back(): received data " + std::to_string(gap_length) + " ms into the past.");
+        throw std::runtime_error("raw_sensor_data_entry::evaluate(): received data " + std::to_string(gap_length) + " ms into the past.");
     } else if (gap_length >= 0 && gap_length < epsilon) {
         // too small, but non-negative
         m_data.push_back(data);
@@ -78,6 +78,6 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_entr
      */
 }
 
-raw_sensor_data &sensor_data_fuser::raw_sensor_data_entry::raw() {
+raw_sensor_data sensor_data_fuser::raw_sensor_data_entry::raw() const {
     return m_data;
 }
