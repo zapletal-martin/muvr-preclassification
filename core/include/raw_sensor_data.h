@@ -23,8 +23,8 @@ namespace muvr {
     /// The known device ids
     ///
     enum device_ids {
-        pebble = 0x01,
-        iphone_like = 0x02
+        pebble = 0x00,
+        iphone_like = 0xf0
     };
 
     /// sensor time is a synthetic, but monotonously increasing time in ms
@@ -117,8 +117,9 @@ namespace muvr {
         /// Writes the ``obj`` to the given ``stream``
         ///
         friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
-            stream << "raw_sensor_data { "
-                   << "type=" << obj.m_type
+            stream << "raw_sensor_data "
+                   << "{ device_id=" << std::to_string(obj.m_device_id)
+                   << ", type=" << obj.m_type
                    << ", timestamp=" << static_cast<sensor_time_t>(obj.m_end_timestamp)
                    << ", samples_per_second=" << static_cast<int>(obj.m_samples_per_second)
                    << ", duration=" << obj.m_reported_duration
@@ -163,12 +164,19 @@ namespace muvr {
             no, yes, undecidable
         };
 
+        /// ctor
+        movement_decider();
+
         ///
         /// Checks to see if there is no movement in the given ``source``.
         ///
         virtual movement_result has_movement(const raw_sensor_data& source) const;
     private:
+        /// the decision function
         movement_result has_movement(const cv::Mat &source, const int16_t threshold) const;
+    protected:
+        /// thresholds for the different devices
+        std::map<device_id_t, int16_t> m_thresholds;
     };
 
     ///

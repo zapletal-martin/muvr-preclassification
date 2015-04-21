@@ -2,11 +2,16 @@
 
 using namespace muvr;
 
+movement_decider::movement_decider() {
+    m_thresholds[pebble] = 250;
+    m_thresholds[iphone_like] = 200;
+}
+
 movement_decider::movement_result movement_decider::has_movement(const raw_sensor_data &source) const {
     switch (source.type()) {
         case accelerometer:
         case rotation:
-            return has_movement(source.data(), 250);
+            return has_movement(source.data(), m_thresholds.at(source.device_id()));
         default:
             return undecidable;
     }
