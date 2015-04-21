@@ -131,8 +131,8 @@ namespace muvr {
         private:
             device_id_t m_device_id;
             sensor_type_t m_sensor_type;
-            sensor_time_t m_movement_start;
-            sensor_time_t m_exercise_start;
+            sensor_time_t m_movement_start = EXERCISE_TIME_NAN;
+            sensor_time_t m_exercise_start = EXERCISE_TIME_NAN;
             exercise_decider::exercise_context m_exercise_context;
         public:
             sensor_context_entry(const device_id_t device_id, const sensor_type_t sensor_type);

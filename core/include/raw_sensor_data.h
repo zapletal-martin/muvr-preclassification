@@ -194,6 +194,7 @@ namespace muvr {
     protected:
         /// thresholds for the different devices
         std::map<device_id_t, int16_t> m_thresholds;
+
     };
 
     ///

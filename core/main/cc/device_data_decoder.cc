@@ -1,4 +1,3 @@
-#include <device_data.h>
 #include "device_data.h"
 #include "device_data_decoder.h"
 
@@ -53,7 +52,7 @@ namespace muvr {
             (sensor_duration_t)(header->duration[1] * 256);
 
         Mat destination;
-        Size size(1, header->samples_per_second * duration / 1000);
+        Size size(1, static_cast<int>(header->samples_per_second * duration / 1000));
         cv::resize(data, destination, size);
         assert(destination.rows == header->samples_per_second * duration / 1000);
 

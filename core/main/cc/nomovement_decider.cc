@@ -18,14 +18,22 @@ movement_decider::movement_result movement_decider::has_movement(const raw_senso
 }
 
 movement_decider::movement_result movement_decider::has_movement(const cv::Mat &source, const int16_t threshold) const {
+    static const int window_size = 15;
     for (int i = 0; i < source.cols; ++i) {
         Mat col = source.col(i);
-        auto m = mean(col);
-        Mat diff;
-        blur(col - m, diff, Size(50, 1));
 
-        for (int j = 0; j < diff.rows; ++j) {
-            int16_t d = diff.at<int16_t>(j, 0);
+        Mat smooth(0, 1, col.type());
+        for (int j = 0; j < col.rows / window_size; j++) {
+            Mat sub = Mat(col, Range(j * window_size, (j + 1) * window_size));
+            Scalar m = mean(sub);
+            Mat smooth_window(window_size, 1, col.type(), m);
+            smooth.push_back(smooth_window);
+        }
+
+        smooth = smooth - mean(smooth);
+
+        for (int j = 0; j < smooth.rows; ++j) {
+            int16_t d = smooth.at<int16_t>(j, 0);
             if (abs(d) > threshold) {
                 return yes;
             }
