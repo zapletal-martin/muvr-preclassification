@@ -23,7 +23,7 @@ TEST_F(sax_classifier_test, first_curl) {
 
     classifier->classify(test_data);
 
-    //TODO: The method now does not return, it just calls callback functions. Fix.
+    //TODO: The method now does not return a value, it just calls callback functions. Fix.
     EXPECT_EQ(true, true);
 }
 
@@ -35,7 +35,7 @@ TEST_F(sax_classifier_test, second_curl) {
 
     classifier->classify(test_data);
 
-    //TODO: The method now does not return, it just calls callback functions. Fix.
+    //TODO: The method now does not return a value, it just calls callback functions. Fix.
     EXPECT_EQ(true, true);
 }
 
@@ -47,7 +47,7 @@ TEST_F(sax_classifier_test, non_curl) {
 
     classifier->classify(test_data);
 
-    //TODO: The method now does not return, it just calls callback functions. Fix.
+    //TODO: The method now does not return a value, it just calls callback functions. Fix.
     EXPECT_EQ(false, false);
 }
 
