@@ -59,6 +59,7 @@ namespace muvr {
 
             return static_cast<uint>(time / (1000 / m_samples_per_second));
         }
+
     public:
 
         ///

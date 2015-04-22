@@ -1,3 +1,4 @@
+#include <device_data.h>
 #include "device_data.h"
 #include "device_data_decoder.h"
 
@@ -51,17 +52,28 @@ namespace muvr {
             (sensor_duration_t)header->duration[0] +
             (sensor_duration_t)(header->duration[1] * 256);
 
+        // align duration to samples
+        duration = (duration / header->samples_per_second) * header->samples_per_second;
+        // align timestamp to samples
+        timestamp = (timestamp / header->samples_per_second) * header->samples_per_second;
+        // resample if needed
         Mat destination;
-        Size size(1, static_cast<int>(header->samples_per_second * duration / 1000));
+        Size size(data.cols, static_cast<int>(header->samples_per_second * duration / 1000));
         cv::resize(data, destination, size);
-        assert(destination.rows == header->samples_per_second * duration / 1000);
+        int64_t actual_duration = 1000 * static_cast<uint>(destination.rows) / header->samples_per_second;
+                                // 2038    2020
+        int64_t duration_diff = duration - actual_duration;
+        if (duration_diff > header->samples_per_second) throw std::runtime_error("bad resampling.");
+        if (duration_diff < 0) throw std::runtime_error("bad resampling.");
 
-        return raw_sensor_data(data,
+        assert(destination.rows == header->samples_per_second * actual_duration / 1000);  // 2020
+
+        return raw_sensor_data(destination,
                                static_cast<device_id_t>(header->device_id),
                                static_cast<sensor_type_t>(header->type),
                                header->samples_per_second,
-                               timestamp,
-                               duration);
+                               timestamp - duration_diff,
+                               static_cast<sensor_duration_t>(actual_duration));
     }
 
 }

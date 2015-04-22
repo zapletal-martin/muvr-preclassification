@@ -10,6 +10,9 @@ raw_sensor_data::raw_sensor_data(
         const sensor_time_t timestamp,
         const sensor_duration_t reported_duration) :
     m_data(data), m_device_id(device_id), m_type(type), m_samples_per_second(samples_per_second), m_end_timestamp(timestamp), m_reported_duration(reported_duration) {
+
+    assert(m_reported_duration == 1000 * m_data.rows / m_samples_per_second);
+    assert(m_reported_duration == end_timestamp() - start_timestamp());
 }
 
 raw_sensor_data::raw_sensor_data(const raw_sensor_data &that):
@@ -26,9 +29,11 @@ bool raw_sensor_data::matches(const raw_sensor_data &that) const {
 void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t gap_length) {
     assert(matches(that));
 
-    if (gap_length > 0) {
+    auto aligned_gap_length = 1000 * time_to_samples(gap_length) / m_samples_per_second;
+
+    if (aligned_gap_length > 0) {
         // bigger than allowed epsilon
-        auto gap_samples = time_to_samples(gap_length);
+        auto gap_samples = time_to_samples(aligned_gap_length);
         if (gap_samples > 10000) throw std::runtime_error("Gap " + std::to_string(gap_samples) + " is too big.");
 
         Mat gap(static_cast<uint32_t>(gap_samples), m_data.cols, m_data.type());
@@ -51,7 +56,9 @@ void raw_sensor_data::push_back(const raw_sensor_data &that, const sensor_time_t
 
     m_data.push_back(that.data());
     m_end_timestamp = that.end_timestamp();
-    m_reported_duration += that.m_reported_duration + gap_length;
+    m_reported_duration += that.m_reported_duration + aligned_gap_length;
+    assert(m_reported_duration == 1000 * m_data.rows / m_samples_per_second);
+    assert(m_reported_duration == end_timestamp() - start_timestamp());
 }
 
 raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_time_t end) const {
@@ -65,13 +72,13 @@ raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_t
     if (start == start_timestamp() && end == end_timestamp()) return *this;
 
     // we're not so lucky: we must cut on both sides
+    sensor_time_t const duration = end - start;
     uint first_row_index = time_to_samples(start - start_timestamp());
-    uint last_row_index = MIN(m_data.rows - time_to_samples(end_timestamp() - end), static_cast<uint>(m_data.rows));
+    uint expected_rows = time_to_samples(duration);
+    uint last_row_index = MIN(first_row_index + expected_rows, static_cast<uint>(m_data.rows));
     Mat data = Mat(m_data, Range(first_row_index, last_row_index));
 
-    sensor_time_t const duration = end - start;
-    uint expected_rows = time_to_samples(duration);
-    if (abs(data.rows - static_cast<int>(expected_rows)) > expected_rows / 5)
+    if (abs(data.rows - static_cast<int>(expected_rows)) > 1)
         throw std::runtime_error("precision loss too big in slice()");
 
     Mat last_row = data.row(data.rows - 1);
@@ -85,13 +92,11 @@ raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_t
     auto x = raw_sensor_data(data, m_device_id, m_type, m_samples_per_second, end, end - start);
     assert(x.start_timestamp() == start);
     assert(x.end_timestamp() == end);
-    assert(x.reported_duration() == 1000 * x.data().rows / x.samples_per_second());
     return x;
 }
 
 raw_sensor_data raw_sensor_data::slice_from_end(const sensor_duration_t duration) const {
     assert(duration <= m_reported_duration);
-
     auto start = end_timestamp() - duration;
     assert(start >= 0);
 
