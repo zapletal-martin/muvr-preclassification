@@ -7,9 +7,8 @@
 namespace muvr {
     class classifier {
     private:
-        std::vector<double> extract_time_series(const fused_sensor_data &data, int column);
     public:
-        int classify(const fused_sensor_data &data);
+        void classify(const std::vector<fused_sensor_data> &data);
 
         ///
         /// Implementations will have this method called when the classification has successfuly identified exercise.
