@@ -8,6 +8,9 @@
 namespace muvr {
     class svm_classifier {
     private:
+        //TODO: Model property
+        //TODO: Scale property
+        //TODO: Destruct
     public:
         ///
         /// Reconstruct svm_classifier instance from a libsvm file.
