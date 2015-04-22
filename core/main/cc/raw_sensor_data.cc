@@ -65,13 +65,27 @@ raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_t
     if (start == start_timestamp() && end == end_timestamp()) return *this;
 
     // we're not so lucky: we must cut on both sides
-    uint first_row = time_to_samples(start - start_timestamp());
-    uint last_row  = MIN(m_data.rows - time_to_samples(end_timestamp() - end), static_cast<uint>(m_data.rows));
-    Mat data = Mat(m_data, Range(first_row, last_row));
+    uint first_row_index = time_to_samples(start - start_timestamp());
+    uint last_row_index = MIN(m_data.rows - time_to_samples(end_timestamp() - end), static_cast<uint>(m_data.rows));
+    Mat data = Mat(m_data, Range(first_row_index, last_row_index));
+
+    sensor_time_t const duration = end - start;
+    uint expected_rows = time_to_samples(duration);
+    if (abs(data.rows - static_cast<int>(expected_rows)) > expected_rows / 5)
+        throw std::runtime_error("precision loss too big in slice()");
+
+    Mat last_row = data.row(data.rows - 1);
+    while (expected_rows > data.rows) {
+        data.push_back(last_row);
+    }
+    if (data.rows > expected_rows) {
+        data = Mat(data, Range(0, expected_rows));
+    }
 
     auto x = raw_sensor_data(data, m_device_id, m_type, m_samples_per_second, end, end - start);
     assert(x.start_timestamp() == start);
     assert(x.end_timestamp() == end);
+    assert(x.reported_duration() == 1000 * x.data().rows / x.samples_per_second());
     return x;
 }
 

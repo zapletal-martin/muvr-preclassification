@@ -195,8 +195,6 @@ namespace muvr {
 
 
         sensor_context_table m_sensor_context_table;
-
-        void erase_ending_before(const sensor_time_t time);
     public:
         ///
         /// Constructs new instance of the fuser
@@ -222,21 +220,6 @@ namespace muvr {
         /// Explicitly mark the end of the exercise block
         ///
         void exercise_block_end(const sensor_time_t now);
-
-        ///
-        /// Implementations will have this method called when the exercise block has ended:
-        /// either automatically or explicitly. The ``data`` parameter will hold the entire
-        /// exercise block; the ``fusion_stats`` parameter will have the details of the fusion
-        /// steps taken.
-        ///
-        virtual void exercise_block_ended(const std::vector<fused_sensor_data> &data, const fusion_stats &fusion_stats) = 0;
-
-        ///
-        /// Implementations will have this method called when the exercise block has started:
-        /// either automatically or explicitly. Once this method has been called, you can expect
-        /// that the ``exercise_block_ended(...)`` will be called "soon".
-        ///
-        virtual void exercise_block_started() = 0;
     };
 
 }
