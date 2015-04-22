@@ -46,9 +46,11 @@ void sensor_data_fuser::sensor_context_entry::evaluate(const raw_sensor_data &da
         uint blocks = static_cast<uint>((data.end_timestamp() - m_movement_start) / minimum_exercise_duration);
         for (int i = 1; i <= blocks; ++i) {
             auto r = data.slice(m_movement_start, m_movement_start + i * minimum_exercise_duration);
+            assert(r.start_timestamp() == m_movement_start);
             if (exercise_decider->has_exercise(r, m_exercise_context) == exercise_decider::exercise_result::yes) {
                 // we are exercising!
                 m_exercise_start = r.start_timestamp();
+                assert(m_exercise_start >= m_movement_start);
                 LOG(TRACE) << "started exercising at " << m_exercise_start;
             }
 

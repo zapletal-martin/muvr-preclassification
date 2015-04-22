@@ -69,7 +69,10 @@ raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_t
     uint last_row  = MIN(m_data.rows - time_to_samples(end_timestamp() - end), static_cast<uint>(m_data.rows));
     Mat data = Mat(m_data, Range(first_row, last_row));
 
-    return raw_sensor_data(data, m_device_id, m_type, m_samples_per_second, start, end - start);
+    auto x = raw_sensor_data(data, m_device_id, m_type, m_samples_per_second, end, end - start);
+    assert(x.start_timestamp() == start);
+    assert(x.end_timestamp() == end);
+    return x;
 }
 
 raw_sensor_data raw_sensor_data::slice_from_end(const sensor_duration_t duration) const {

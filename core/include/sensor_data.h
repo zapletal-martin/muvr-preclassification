@@ -20,14 +20,28 @@ namespace muvr {
         Mat data;
 
         ///
+        /// Convenience "ctor"
+        ///
+        inline static fused_sensor_data from_raw(const raw_sensor_data &raw, const sensor_location_t sensor_location) {
+            return fused_sensor_data {
+                    .device_id = raw.device_id(),
+                    .sensor_type = raw.type(),
+                    .samples_per_second = raw.samples_per_second(),
+                    .sensor_location = sensor_location,
+                    .data = raw.data()
+                };
+        }
+
+        ///
         /// operator <<
         ///
         friend std::ostream &operator<<(std::ostream &stream, const fused_sensor_data &obj) {
-            stream << "fused_sensor_data"
+            stream << "fused_sensor_data "
                    << "{ device_id=" << std::to_string(obj.device_id)
                    << ", sensor_type=" << std::to_string(obj.sensor_type)
                    << ", samples_per_second=" << std::to_string(obj.samples_per_second)
                    << ", sensor_location=" << std::to_string(obj.sensor_location)
+                   << ", samples=Mat(" << obj.data.cols << "," << obj.data.rows << ")"
                    << "}";
             return stream;
         }
@@ -103,6 +117,11 @@ namespace muvr {
             /// Returns the raw view of this data
             ///
             raw_sensor_data raw() const;
+
+            ///
+            /// Returns the sensor location
+            ///
+            inline sensor_location_t sensor_location() const { return m_location; }
 
             friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data_entry &obj) {
                 stream << "raw_sensor_data_entry "

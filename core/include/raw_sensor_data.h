@@ -137,7 +137,7 @@ namespace muvr {
             stream << "raw_sensor_data "
                    << "{ device_id=" << std::to_string(obj.m_device_id)
                    << ", type=" << obj.m_type
-                   << ", timestamp=" << static_cast<sensor_time_t>(obj.m_end_timestamp)
+                   << ", timestamp=" << obj.start_timestamp() << "-" << obj.end_timestamp()
                    << ", samples_per_second=" << static_cast<int>(obj.m_samples_per_second)
                    << ", duration=" << obj.m_reported_duration
                    << "}";

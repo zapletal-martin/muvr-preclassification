@@ -2614,7 +2614,7 @@ typedef std::lock_guard<std::mutex> ScopedLock;
             set(Level::Error, ConfigurationType::Format, std::string("%datetime %level [%logger] %msg"));
             set(Level::Fatal, ConfigurationType::Format, std::string("%datetime %level [%logger] %msg"));
             set(Level::Verbose, ConfigurationType::Format, std::string("%datetime %level-%vlevel [%logger] %msg"));
-            set(Level::Trace, ConfigurationType::Format, std::string("%datetime %level [%logger] [%func] [%loc] %msg"));
+            set(Level::Trace, ConfigurationType::Format, std::string("%datetime %level [%logger] [%func] %msg"));
         }
 
         /// @brief Lets you set the remaining configurations to default.
