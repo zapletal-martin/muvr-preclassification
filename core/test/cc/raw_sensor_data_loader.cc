@@ -1,7 +1,6 @@
 #include "test_data.h"
 #include <boost/tokenizer.hpp>
 #include <fstream>
-#include <sensor_data.h>
 
 using namespace muvr;
 
@@ -64,12 +63,13 @@ fused_sensor_data raw_sensor_data_loader::load_fused() {
     auto data = load(pebble);
 
     return fused_sensor_data {
-            .samples_per_second = data.samples_per_second(),
             .data = data.data(),
-            .location = wrist,
-            .type = data.type()
+            .device_id = data.device_id(),
+            .samples_per_second = data.samples_per_second(),
+            .sensor_location = wrist,
+            .sensor_type = data.type()
     };
-}
+};
 
 raw_sensor_data raw_sensor_data_loader::load(const boost::optional<device_id_t> default_device_id) {
     std::ifstream file(m_file_name);

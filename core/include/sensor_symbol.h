@@ -11,7 +11,7 @@ namespace muvr {
     /// sensor data holds
     struct sensor_data {
         /// the location
-        sensor_location location;
+        sensor_location_t location;
         /// the symbols
         std::vector <sensor_data_symbol> symbols;
     };

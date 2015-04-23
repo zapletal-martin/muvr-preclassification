@@ -38,7 +38,7 @@ raw_sensor_data raw_sensor_data_generator::sin(const uint count, const uint peri
         sin(count, period, amplitude[i], col);
     }
 
-    return raw_sensor_data(data, m_device_id, m_type, 100, 0, count * 10);
+    return raw_sensor_data(data, m_device_id, m_type, 100, 0, 10 * count * period);
 }
 
 raw_sensor_data raw_sensor_data_generator::gaussian_noise(const uint count, const int mean, const double stddev) {
