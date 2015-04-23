@@ -202,18 +202,30 @@ namespace muvr {
         ///
         struct sensor_context_entry {
         public:
-            struct evaluation_result {
+            ///
+            /// Holds the state of one sensor
+            ///
+            struct state {
                 sensor_time_t movement_start;
                 sensor_time_t movement_end;
                 sensor_time_t exercise_start;
                 sensor_time_t exercise_end;
                 
-                static evaluation_result nothing;
+                /// Zero state
+                static state empty;
                 
+                /// Indicates that we have reached a decision
+                inline bool is_decidable() const { return movement_end != EXERCISE_TIME_NAN || exercise_end != EXERCISE_TIME_NAN; }
+                
+                /// Indicates that the state has movement
                 inline bool has_movement() const { return movement_start != EXERCISE_TIME_NAN; }
+                
+                /// Indicates that the state has exercise
                 inline bool has_exercise() const { return movement_start != EXERCISE_TIME_NAN && exercise_start != EXERCISE_TIME_NAN; }
                 
-                friend evaluation_result operator+(const evaluation_result &lhs, const evaluation_result &rhs) {
+                /// Adds two states together by moving the starts back in time and ends forward in time, but
+                /// preserving NANs
+                friend state operator+(const state &lhs, const state &rhs) {
                     sensor_time_t ms = MIN(lhs.movement_start, rhs.movement_start);
                     sensor_time_t es = MIN(lhs.exercise_start, rhs.exercise_start);
                     
@@ -222,16 +234,14 @@ namespace muvr {
                     sensor_time_t ee = lhs.exercise_end;
                     if (rhs.exercise_end > ee && rhs.exercise_end != EXERCISE_TIME_NAN) ee = rhs.exercise_end;
                     
-                    return evaluation_result {.movement_start = ms, .movement_end = me, .exercise_start = es, .exercise_end = ee};
+                    return state {.movement_start = ms, .movement_end = me, .exercise_start = es, .exercise_end = ee};
                 }
             };
         private:
             device_id_t m_device_id;
             sensor_type_t m_sensor_type;
-            sensor_time_t m_movement_start = EXERCISE_TIME_NAN;
-            sensor_time_t m_exercise_start = EXERCISE_TIME_NAN;
             exercise_decider::exercise_context m_exercise_context;
-            evaluation_result m_state = evaluation_result::nothing;
+            state m_state = state::empty;
         public:
             sensor_context_entry(const device_id_t device_id, const sensor_type_t sensor_type);
 
@@ -241,7 +251,7 @@ namespace muvr {
             
             void reset_state();
             
-            inline evaluation_result state() { return m_state; }
+            inline state current_state() const { return m_state; }
         };
         
         ///

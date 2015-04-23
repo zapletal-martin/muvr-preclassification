@@ -31,11 +31,21 @@ sensor_data_fuser::fusion_result sensor_data_fuser::sensor_context_table::push_b
 
     // find the earliest movement and exercise starts across all devices / sensors
     
-    sensor_context_entry::evaluation_result er = sensor_context_entry::evaluation_result::nothing;
+    sensor_context_entry::state er = sensor_context_entry::state::empty;
     for (sensor_context_entry &x : m_entries) {
-        er = er + x.state();
+        er = er + x.current_state();
     }
     
+    if (er.is_decidable()) {
+        if (er.has_exercise()) {
+            // we have made a final decision on exercise
+            LOG(TRACE) << "all movement->exercise ended at " << fused_data.end_timestamp();
+            return fusion_result();
+            m_state.set_fused_exercise_data(m_sensor_data_table.slice(er.exercise_start, er.exercise_end));
+        }
+    }
+    
+    /*
     if (!er.has_movement()) {
         // nothing is moving
         if (m_exercise_start != EXERCISE_TIME_NAN) {
@@ -81,6 +91,7 @@ sensor_data_fuser::fusion_result sensor_data_fuser::sensor_context_table::push_b
         m_exercise_start = er.exercise_start;
         // moving & not exercising -> exercising
     }
+     */
 
     return m_state;
 }

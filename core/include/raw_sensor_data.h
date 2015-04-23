@@ -280,6 +280,7 @@ namespace muvr {
         ///
         /// The opaque structure that the clients hold
         ///
+        // TODO: Rename me to state
         struct exercise_context {
         private:
             std::vector<freq_powers> m_freq_powers;
