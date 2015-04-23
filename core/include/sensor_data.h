@@ -94,6 +94,8 @@ namespace muvr {
                 m_exercise_fused_data.insert(m_exercise_fused_data.begin(), data.begin(), data.end());
                 m_type = exercise_ended;
             }
+            
+            inline type_t type() { return m_type; }
 
             std::vector<fused_sensor_data> &fused_exercise_data() {
                 if (m_type != exercise_ended) throw std::runtime_error("cannot get fused exercise data when not ended.");
