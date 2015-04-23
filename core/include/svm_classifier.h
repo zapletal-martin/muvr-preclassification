@@ -4,18 +4,36 @@
 #include <iostream>
 #include <vector>
 #include "sensor_data.h"
+#include "svm.h"
+
 
 namespace muvr {
+    struct svm_scale {
+    private:
+        std::vector<double> m_scale_vector;
+        std::vector<double> m_center_vector;
+    public:
+        svm_scale(std::vector<double> scale, std::vector<double> center);
+        ~svm_scale();
+    };
+
     class svm_classifier {
     private:
-        //TODO: Model property
+        svm_scale m_scale;
+        svm_model m_model;
+
         //TODO: Scale property
         //TODO: Destruct
     public:
         ///
-        /// Reconstruct svm_classifier instance from a libsvm file.
+        /// Constructor.
         ///
-        svm_classifier(std::string model_file_path, std::string scale_file_path);
+        svm_classifier(svm_model model, svm_scale scale);
+
+        ///
+        /// Destructor.
+        ///
+        ~svm_classifier();
 
         ///
         /// Classify data from sensors.
