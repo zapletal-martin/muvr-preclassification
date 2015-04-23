@@ -255,7 +255,7 @@ namespace muvr {
         ///
         /// Push back a block of data arriving from a given location at the specified time
         ///
-        fusion_result push_back(const uint8_t *buffer, const sensor_location_t location, const sensor_time_t wall_time);
+        fusion_result push_back(const raw_sensor_data &decoded, const sensor_location_t location, const sensor_time_t wall_time);
 
         ///
         /// Explicitly mark the start of the exercise block
