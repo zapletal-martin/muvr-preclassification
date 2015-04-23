@@ -52,8 +52,8 @@ TEST_F(sensor_data_fuser_test, pebble_lab_bicep_curl_1) {
     auto no_movement_data = device_data_loader("pebble_lab_bicep_curl_1.dat").load();
     for (auto &i : no_movement_data) {
         auto fused_exercise = fuser.push_back(i.data.data(), wrist, i.received_at);
-        if (!fused_exercise.empty()) {
-            for (auto &x : fused_exercise) std::cout << x << std::endl;
+        if (fused_exercise == sensor_data_fuser::fusion_result::exercise_ended) {
+            for (auto &x : fused_exercise.fused_exercise_data()) std::cout << x << std::endl;
         }
     }
 }

@@ -72,11 +72,44 @@ namespace muvr {
     };
 #endif
 
+
     ///
     /// Provides ways to fuse the sensor data
     ///
     class sensor_data_fuser {
+    public:
+
+        ///
+        /// The result of fusing and evaluating new block of data
+        ///
+        class fusion_result {
+        public:
+            typedef enum { not_moving, moving, exercising, exercise_ended } type_t;
+
+            fusion_result(): m_type(not_moving) { }
+            fusion_result(const fusion_result &that): m_type(that.m_type), m_exercise_fused_data(that.m_exercise_fused_data) { }
+
+            void set_type(const type_t type) { m_type = type; }
+            void set_fused_exercise_data(const std::vector<fused_sensor_data> &data) {
+                m_exercise_fused_data.insert(m_exercise_fused_data.begin(), data.begin(), data.end());
+                m_type = exercise_ended;
+            }
+
+            std::vector<fused_sensor_data> &fused_exercise_data() {
+                if (m_type != exercise_ended) throw std::runtime_error("cannot get fused exercise data when not ended.");
+                return m_exercise_fused_data;
+            }
+
+            friend bool operator==(const fusion_result &lhs, const type_t type) {
+                return lhs.m_type == type;
+            }
+        private:
+            type_t m_type;
+            std::vector<fused_sensor_data> m_exercise_fused_data;
+        };
+
     private:
+
         ///
         /// Entry in a table of raw_sensor_data, holding the location, start_time and data
         ///
@@ -185,6 +218,9 @@ namespace muvr {
             inline sensor_time_t movement_start() const { return m_movement_start; }
         };
 
+        ///
+        /// Context table that holds the exercise contexts across the sensors
+        ///
         struct sensor_context_table {
         private:
             std::shared_ptr<movement_decider> m_movement_decider;
@@ -198,12 +234,12 @@ namespace muvr {
         public:
             sensor_context_table(std::shared_ptr<movement_decider> movement_decider, std::shared_ptr<exercise_decider> exercise_decider);
 
-            std::vector<fused_sensor_data> push_back(const raw_sensor_data &new_data, const sensor_location_t location, const sensor_time_t wall_time);
+            sensor_data_fuser::fusion_result push_back(const raw_sensor_data &new_data, const sensor_location_t location, const sensor_time_t wall_time);
         };
-
 
         sensor_context_table m_sensor_context_table;
     public:
+
         ///
         /// Constructs new instance of the fuser
         ///
@@ -217,7 +253,7 @@ namespace muvr {
         ///
         /// Push back a block of data arriving from a given location at the specified time
         ///
-        std::vector<fused_sensor_data> push_back(const uint8_t *buffer, const sensor_location_t location, const sensor_time_t wall_time);
+        fusion_result push_back(const uint8_t *buffer, const sensor_location_t location, const sensor_time_t wall_time);
 
         ///
         /// Explicitly mark the start of the exercise block

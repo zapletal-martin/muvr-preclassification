@@ -1,4 +1,3 @@
-#include <device_data.h>
 #include "device_data.h"
 #include "device_data_decoder.h"
 
