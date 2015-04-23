@@ -73,6 +73,7 @@ fused_sensor_data raw_sensor_data_loader::load_fused() {
 
 raw_sensor_data raw_sensor_data_loader::load(const boost::optional<device_id_t> default_device_id) {
     std::ifstream file(m_file_name);
+
     std::string line;
     int version = -1;
     uint row = 0;
