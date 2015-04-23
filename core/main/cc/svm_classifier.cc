@@ -6,35 +6,49 @@
 
 using namespace muvr;
 
-svm_scale::svm_scale(std::vector<double> scale, std::vector<double> center): m_scale_vector(scale), m_center_vector(center) {
-
-}
-
-svm_scale::~svm_scale() {
-
-}
-
 svm_classifier::svm_classifier(svm_model model, svm_scale scale): m_scale(scale), m_model(model) {
 
 }
 
 svm_classifier::~svm_classifier() {
-    
+
 }
 
-void svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
+svm_node **prepare_data(const cv::Mat& data) {
+    const int rowSize = data.rows;
+    const int colSize = data.cols;
+
+    svm_node** x = new svm_node*[rowSize];
+
+    for(int row = 0; row < rowSize; ++row) {
+        x[row] = new svm_node[colSize + 1];
+    }
+
+    for(int row = 0; row < rowSize; ++row) {
+        for(int col = 0; col < colSize; ++col) {
+            double tempVal = data.at<double>(row,col);
+            x[row][col].value = tempVal;
+        }
+
+        x[row][colSize].index = -1;
+        x[row][colSize].value = 0;
+    }
+
+    return x;
+}
+
+svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
     auto first_sensor_data = data[0];
-    classification_succeeded("bicep curl", first_sensor_data);
-}
 
-void svm_classifier::classification_succeeded(const std::string &exercise, const fused_sensor_data &fromData) {
+    svm_node** x = prepare_data(first_sensor_data.data);
 
-}
+    auto prediction = svm_predict(&m_model, x[0]);
 
-void svm_classifier::classification_ambiguous(const std::vector<std::string> &exercises, const fused_sensor_data &fromData) {
 
-}
-
-void svm_classifier::classification_failed(const fused_sensor_data &fromData) {
+    if(prediction > 0.5) {
+        return svm_classifier::classification_result(classification_result::success, std::vector<string> {"bicep curl"}, data);
+    } else {
+        return svm_classifier::classification_result(classification_result::failure, std::vector<string> { }, data);
+    }
 
 }

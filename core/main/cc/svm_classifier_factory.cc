@@ -7,7 +7,7 @@
 
 using namespace muvr;
 
-svm_scale svm_classifier_factory::parse_scale(std::string scale_file_path) {
+svm_classifier::svm_scale svm_classifier_factory::parse_scale(std::string scale_file_path) {
     std::ifstream fin (scale_file_path, std::ifstream::in);
 
     if(!fin.good()) throw std::bad_function_call();
@@ -27,7 +27,7 @@ svm_scale svm_classifier_factory::parse_scale(std::string scale_file_path) {
         centers.push_back(center);
     }
 
-    return svm_scale(scales, centers);
+    return svm_classifier::svm_scale(scales, centers);
 }
 
 svm_model svm_classifier_factory::parse_model(std::string svm_lib_file_path) {

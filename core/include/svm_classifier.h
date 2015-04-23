@@ -7,20 +7,42 @@
 #include "svm.h"
 
 namespace muvr {
-    struct svm_scale {
-    private:
-        std::vector<double> m_scale_vector;
-        std::vector<double> m_center_vector;
-    public:
-        svm_scale(std::vector<double> scale, std::vector<double> center);
-        ~svm_scale();
-    };
 
     class svm_classifier {
-    private:
-        svm_scale m_scale;
-        svm_model m_model;
     public:
+
+        ///
+        /// Scaling data for SVM prediction.
+        ///
+        struct svm_scale {
+        public:
+            inline std::vector<double> scale() { return m_scale_vector; }
+            inline std::vector<double> center() { return m_center_vector; }
+
+            svm_scale(std::vector<double> scale, std::vector<double> center): m_scale_vector(scale), m_center_vector(center) { }
+        private:
+            std::vector<double> m_scale_vector;
+            std::vector<double> m_center_vector;
+        };
+
+        ///
+        /// The result of classification.
+        ///
+        class classification_result {
+        public:
+            typedef enum { success, ambiguous, failure } classification_result_type;
+
+            classification_result(classification_result_type type, std::vector<std::string> exercises, std::vector<fused_sensor_data> data): m_type(failure), m_exercises(exercises), m_data(data) { }
+
+            inline classification_result_type type() { return m_type; }
+            inline std::vector<std::string> exercises() { return m_exercises; }
+            inline std::vector<fused_sensor_data> data() { return m_data; }
+        private:
+            classification_result_type m_type;
+            std::vector<std::string> m_exercises;
+            std::vector<fused_sensor_data> m_data;
+        };
+
         ///
         /// Constructor.
         ///
@@ -34,22 +56,11 @@ namespace muvr {
         ///
         /// Classify data from sensors.
         ///
-        void classify(const std::vector<fused_sensor_data> &data);
+        classification_result classify(const std::vector<fused_sensor_data> &data);
 
-        ///
-        /// Implementations will have this method called when the classification has successfuly identified exercise.
-        ///
-        virtual void classification_succeeded(const std::string &exercise, const fused_sensor_data &fromData);
-
-        ///
-        /// Implementations will have this method called when the exercise classification identified multiple possibilities.
-        ///
-        virtual void classification_ambiguous(const std::vector<std::string> &exercises, const fused_sensor_data &fromData);
-
-        ///
-        /// Implementations will have this method called when the exercise classification failed.
-        ///
-        virtual void classification_failed(const fused_sensor_data &fromData);
+    private:
+        svm_scale m_scale;
+        svm_model m_model;
     };
 }
 

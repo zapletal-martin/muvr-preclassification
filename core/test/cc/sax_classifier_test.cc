@@ -1,3 +1,4 @@
+/*
 #include <gtest/gtest.h>
 #include "classifier.h"
 #include "test_data.h"
@@ -63,4 +64,4 @@ void sax_classifier_test::cs::classification_ambiguous(const std::vector<std::st
 
 void sax_classifier_test::cs::classification_failed(const fused_sensor_data &fromData) {
 
-}
+}*/

@@ -1,3 +1,4 @@
+/*
 #include "classifier.h"
 #include "symbolic_aggregate_approximation.h"
 #include <regex>
@@ -32,7 +33,9 @@ void classifier::classify(const std::vector<fused_sensor_data> &data) {
     std::regex e ("[defgh]{1,5}[ijkl]{0,7}[mn]{1,10}[ijkl]{1,5}[defgh]{1,5}");
 
     while (std::regex_search(s, m, e)) {
-        /*for (auto x:m) std::cout << x << " ";*/
+        */
+/*for (auto x:m) std::cout << x << " ";*//*
+
         s = m.suffix().str();
         curl += 1;
     }
@@ -45,9 +48,11 @@ void classifier::classify(const std::vector<fused_sensor_data> &data) {
         classification_ambiguous(std::vector<std::string> {"bicep curl", "leg press"}, first_sensor_data);
     }
 
-    /*std::cout << "Symbolic representation \r\n";
+    */
+/*std::cout << "Symbolic representation \r\n";
     std::cout << "z \r\n";
     for( std::vector<char>::const_iterator i = z_symbols.begin(); i != z_symbols.end(); ++i)
         std::cout << *i << ' ';
-    std::cout << "\r\n";*/
-}
+    std::cout << "\r\n";*//*
+
+}*/
