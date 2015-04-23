@@ -33,6 +33,13 @@ namespace muvr {
         }
 
         ///
+        /// The duration
+        ///
+        inline sensor_duration_t duration() const {
+            return static_cast<uint>(1000 * data.rows) / samples_per_second;
+        }
+
+        ///
         /// operator <<
         ///
         friend std::ostream &operator<<(std::ostream &stream, const fused_sensor_data &obj) {
@@ -41,6 +48,7 @@ namespace muvr {
                    << ", sensor_type=" << std::to_string(obj.sensor_type)
                    << ", samples_per_second=" << std::to_string(obj.samples_per_second)
                    << ", sensor_location=" << std::to_string(obj.sensor_location)
+                   << ", duration=" << obj.duration()
                    << ", samples=Mat(" << obj.data.cols << "," << obj.data.rows << ")"
                    << "}";
             return stream;
