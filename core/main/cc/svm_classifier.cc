@@ -19,7 +19,7 @@ svm_classifier::svm_classifier(svm_model model, svm_scale scale): m_scale(scale)
 }
 
 svm_classifier::~svm_classifier() {
-
+    
 }
 
 void svm_classifier::classify(const std::vector<fused_sensor_data> &data) {

@@ -18,16 +18,6 @@ svm_scale svm_classifier_factory::parse_scale(std::string scale_file_path) {
     std::string line;
 
     while(std::getline(fin, line)) {
-
-        /*string tokens[2];
-        int i = 0;
-        std::stringstream ssin(line);
-
-        while (ssin.good() && i < 2){
-            ssin >> tokens[i];
-            ++i;
-        }*/
-
         std::string::size_type sz;
 
         double scale = std::stod(line, &sz);
@@ -42,9 +32,9 @@ svm_scale svm_classifier_factory::parse_scale(std::string scale_file_path) {
 
 svm_model svm_classifier_factory::parse_model(std::string svm_lib_file_path) {
     const char *model_file_path_c = svm_lib_file_path.c_str();
-    svm_model *model = svm_load_model(model_file_path_c);
+    svm_model model = *(svm_load_model(model_file_path_c));
 
-    return *model;
+    return model;
 }
 
 svm_classifier svm_classifier_factory::build(std::string svm_lib_file_path, std::string scale_file_path) {
