@@ -1,3 +1,4 @@
+/*
 #include <gtest/gtest.h>
 #include "test_data.h"
 #include "device_data_decoder.h"
@@ -75,3 +76,4 @@ exercise_decider::exercise_result sensor_data_fuser_test::ed::has_exercise(const
     if (m_value) return m_value.get();
     return exercise_decider::has_exercise(source, context);
 }
+*/

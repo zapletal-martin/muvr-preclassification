@@ -32,7 +32,7 @@ namespace muvr {
         public:
             typedef enum { success, ambiguous, failure } classification_result_type;
 
-            classification_result(classification_result_type type, std::vector<std::string> exercises, std::vector<fused_sensor_data> data): m_type(failure), m_exercises(exercises), m_data(data) { }
+            classification_result(classification_result_type type, std::vector<std::string> exercises, std::vector<fused_sensor_data> data): m_type(type), m_exercises(exercises), m_data(data) { }
 
             inline classification_result_type type() { return m_type; }
             inline std::vector<std::string> exercises() { return m_exercises; }

@@ -43,11 +43,8 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     auto first_sensor_data = data[0];
 
     svm_node** x = prepare_data(first_sensor_data.data);
-    std::cout << "INDEX: " << x[0][0].index << std::endl;
-    std::cout << "VALUE: " << x[0][0].value << std::endl;
 
     auto prediction = svm_predict(&m_model, x[0]);
-    std::cout << "BOOm3" << std::endl;
 
     if(prediction > 0.5) {
         return svm_classifier::classification_result(classification_result::success, std::vector<string> {"bicep curl"}, data);
