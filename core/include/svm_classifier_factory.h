@@ -1,6 +1,8 @@
 #ifndef PRECLASSIFICATION_SVM_CLASSIFIER_FACTORY_H
 #define PRECLASSIFICATION_SVM_CLASSIFIER_FACTORY_H
 
+#include "svm_classifier.h"
+#include <string>
 
 namespace muvr {
     class svm_classifier_factory {
