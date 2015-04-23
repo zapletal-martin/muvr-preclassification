@@ -13,9 +13,7 @@ sensor_data_fuser::sensor_data_fuser(std::shared_ptr<movement_decider> movement_
     m_sensor_context_table(movement_decider, exercise_decider ){
 }
 
-sensor_data_fuser::fusion_result sensor_data_fuser::push_back(const uint8_t *buffer, const sensor_location_t location, const sensor_time_t wall_time) {
-    auto decoded = decode_single_packet(buffer);
-
+sensor_data_fuser::fusion_result sensor_data_fuser::push_back(const raw_sensor_data &decoded, const sensor_location_t location, const sensor_time_t wall_time) {
     return m_sensor_context_table.push_back(decoded, location, wall_time);
 }
 

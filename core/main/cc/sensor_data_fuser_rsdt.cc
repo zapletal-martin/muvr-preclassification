@@ -19,7 +19,7 @@ sensor_data_fuser::raw_sensor_data_entry sensor_data_fuser::raw_sensor_data_tabl
 std::vector<fused_sensor_data> sensor_data_fuser::raw_sensor_data_table::slice(const sensor_time_t start,
                                                                                const sensor_time_t end) const {
     std::vector<fused_sensor_data> result;
-    LOG(TRACE) << "slicing over " << m_entries.size() << " fields";
+    LOG(TRACE) << "slicing over " << m_entries.size() << " entries";
     for (auto &entry : m_entries) {
         auto raw = entry.raw();
         LOG(TRACE) << "slicing " << raw << " to (" << start << "," << end << ")";
