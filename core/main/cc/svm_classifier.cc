@@ -133,8 +133,8 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     }
 
     if(prediction > 0.5) {
-        return svm_classifier::classification_result(classification_result::success, std::vector<string> { "bicep curl" }, data);
+        return svm_classifier::classification_result(classification_result::success, std::vector<string> { "bicep curl" }, 1, data);
     } else {
-        return svm_classifier::classification_result(classification_result::failure, std::vector<string> { }, data);
+        return svm_classifier::classification_result(classification_result::failure, std::vector<string> { }, 1, data);
     }
 }
