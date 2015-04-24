@@ -1,8 +1,4 @@
 #include "svm_classifier.h"
-#include <iostream>
-#include <vector>
-#include "sensor_data.h"
-#include "svm.h"
 
 using namespace muvr;
 
@@ -14,9 +10,39 @@ svm_classifier::~svm_classifier() {
 
 }
 
-svm_node **prepare_data(const cv::Mat& data) {
-    std::cout << "M = "<< std::endl << " "  << data << std::endl << std::endl;
+cv::Mat transform_to_evenly_sized_mat(const cv::Mat &data) {
+    Mat even_data;
+    int w = data.cols;
+    int h = data.rows;
+    int w2,h2;
+    if (w % 2 == 0)
+        w2 = w;
+    else
+        w2 = w+1;
+    if (h % 2 == 0)
+        h2 = h;
+    else
+        h2 = h+1;
+    copyMakeBorder(data, even_data, 0, h2-h, 0, w2-w, IPL_BORDER_REPLICATE);
 
+    return even_data;
+}
+
+cv::Mat transform_internal_representation(const cv::Mat &data) {
+    Mat cv_data;
+    data.convertTo(cv_data, CV_32FC1);
+
+    return cv_data;
+}
+
+cv::Mat transform_discrete_cosine(const cv::Mat &data) {
+    Mat dct_data;
+    dct(data, dct_data);
+
+    return  dct_data;
+}
+
+svm_node **mat_to_svm_node(const cv::Mat& data) {
     const int rowSize = data.rows;
     const int colSize = data.cols;
 
@@ -39,6 +65,18 @@ svm_node **prepare_data(const cv::Mat& data) {
     return x;
 }
 
+svm_node **prepare_data(const cv::Mat& data) {
+    Mat even_data = transform_to_evenly_sized_mat(data);
+    Mat cv_data = transform_internal_representation(even_data);
+    Mat dct_data = transform_discrete_cosine(cv_data);
+
+    std::cout << "M = "<< std::endl << " "  << data << std::endl << std::endl;
+    std::cout << "Mcv = "<< std::endl << " "  << cv_data << std::endl << std::endl;
+    std::cout << "Mdct = "<< std::endl << " "  << dct_data << std::endl << std::endl;
+
+    return mat_to_svm_node(data);
+}
+
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
     auto first_sensor_data = data[0];
 
@@ -46,10 +84,11 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
 
     auto prediction = svm_predict(&m_model, x[0]);
 
+    std::cout << " PRED: " << prediction << std::endl;
+
     if(prediction > 0.5) {
         return svm_classifier::classification_result(classification_result::success, std::vector<string> {"bicep curl"}, data);
     } else {
         return svm_classifier::classification_result(classification_result::failure, std::vector<string> { }, data);
     }
-
 }
