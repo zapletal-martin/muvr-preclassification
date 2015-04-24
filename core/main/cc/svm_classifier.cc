@@ -12,18 +12,14 @@ svm_classifier::~svm_classifier() {
 
 cv::Mat transform_to_evenly_sized_mat(const cv::Mat &data) {
     Mat even_data;
+
     int w = data.cols;
     int h = data.rows;
-    int w2,h2;
-    if (w % 2 == 0)
-        w2 = w;
-    else
-        w2 = w+1;
-    if (h % 2 == 0)
-        h2 = h;
-    else
-        h2 = h+1;
-    copyMakeBorder(data, even_data, 0, h2-h, 0, w2-w, IPL_BORDER_REPLICATE);
+
+    int w2 = w % 2 == 0 ? w : w + 1;
+    int h2 = h % 2 == 0 ? h : h + 1;
+
+    copyMakeBorder(data, even_data, 0, h2 - h, 0, w2 - w, IPL_BORDER_REPLICATE);
 
     return even_data;
 }
@@ -79,11 +75,9 @@ svm_node **prepare_data(const cv::Mat& data) {
 
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
     auto first_sensor_data = data[0];
-
     svm_node** x = prepare_data(first_sensor_data.data);
 
     auto prediction = svm_predict(&m_model, x[0]);
-
     std::cout << " PRED: " << prediction << std::endl;
 
     if(prediction > 0.5) {
