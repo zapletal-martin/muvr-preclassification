@@ -3,26 +3,14 @@
 
 using namespace muvr;
 
-device_data_generator::device_data_generator(const sensor_data_type type):
-        m_type(type), m_samples_per_second(100), m_time_offset(0), m_noise(0) {
+
+device_data_generator::device_data_generator(const device_id_t device_id, const sensor_type_t type, const uint8_t samples_per_second,
+                                             const data_pattern_generator &pattern_generator) :
+    m_device_id(device_id), m_type(type), m_samples_per_second(samples_per_second), m_pattern_generator(pattern_generator) {
 }
 
-device_data_generator& device_data_generator::samples_per_second(uint8_t samples_per_second) {
-    m_samples_per_second = samples_per_second;
-    return *this;
-}
-
-device_data_generator& device_data_generator::time_offset(uint8_t time_offset) {
-    m_time_offset = time_offset;
-    return *this;
-}
-
-device_data_generator& device_data_generator::with_noise(const int noise) {
-    m_noise = noise;
-    return *this;
-}
-
-device_data_payload device_data_generator::new_buffer(const uint8_t count) const {
+device_data_payload device_data_generator::new_buffer(const sensor_time_t timestamp, const uint8_t count,
+                                                      const sensor_duration_t duration) const {
     uint8_t sample_size;
     switch (m_type) {
         case accelerometer:
@@ -40,7 +28,17 @@ device_data_payload device_data_generator::new_buffer(const uint8_t count) const
     header->count = count;
     header->sample_size = sample_size;
     header->samples_per_second = m_samples_per_second;
-    header->time_offset = m_time_offset;
+    header->device_id = m_device_id;
+    header->timestamp[7] = static_cast<uint8_t>((timestamp >> 56) & 0xff);
+    header->timestamp[6] = static_cast<uint8_t>((timestamp >> 48) & 0xff);
+    header->timestamp[5] = static_cast<uint8_t>((timestamp >> 40) & 0xff);
+    header->timestamp[4] = static_cast<uint8_t>((timestamp >> 32) & 0xff);
+    header->timestamp[3] = static_cast<uint8_t>((timestamp >> 24) & 0xff);
+    header->timestamp[2] = static_cast<uint8_t>((timestamp >> 16) & 0xff);
+    header->timestamp[1] = static_cast<uint8_t>((timestamp >> 8) & 0xff);
+    header->timestamp[0] = static_cast<uint8_t>(timestamp & 0xff);
+    header->duration[1] = static_cast<uint8_t>((duration >> 8) & 0xff);
+    header->duration[0] = static_cast<uint8_t>(duration & 0xff);
     header->type = m_type;
 
     return memory;
@@ -58,37 +56,18 @@ void device_data_generator::add_threed(std::vector<uint8_t> &buf, const int16_t 
     buf.insert(buf.end(), item.begin(), item.end());
 }
 
-device_data_payload device_data_generator::constant(const uint8_t count, const Scalar value) {
-    device_data_payload buf = new_buffer(count);
+device_data_payload device_data_generator::generate(const uint8_t count, const sensor_time_t timestamp, const sensor_duration_t duration) const {
+    Mat data = m_pattern_generator(m_type, count);
+    device_data_payload buf = new_buffer(timestamp, count, duration);
+
     for (uint i = 0; i < count; ++i) {
         switch (m_type) {
             case accelerometer:
-            case rotation: {
-                add_threed(buf, value[0], value[1], value[2]);
-                break;
-            }
-            case heart_rate:
-                buf.push_back((uint8_t)(value[0] + random() % m_noise));
-                break;
-        }
-    }
-
-    return buf;
-}
-
-device_data_payload device_data_generator::sin(const uint8_t count, const uint8_t period, const Scalar amplitude) {
-    assert(count * period < 256);
-
-    device_data_payload buf = new_buffer(count * period);
-    for (uint i = 0; i < count * period; ++i) {
-        double a = ((double)i / period) * M_PI;
-        switch (m_type) {
-            case accelerometer:
             case rotation:
-                add_threed(buf, (int16_t)(::sin(a) * amplitude[0]), (int16_t)(::sin(a) * amplitude[1]), (int16_t)(::sin(a) * amplitude[2]));
+                add_threed(buf, data.at<int16_t>(i, 0), data.at<int16_t>(i, 1), data.at<int16_t>(i, 2));
                 break;
             case heart_rate:
-                buf.push_back((uint8_t)(::sin(a) * amplitude[0]));
+                buf.push_back(static_cast<uint8_t>(data.at<int16_t>(i, 0)));
                 break;
         }
     }

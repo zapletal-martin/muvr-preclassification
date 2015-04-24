@@ -9,30 +9,36 @@ namespace muvr {
 
     typedef std::vector<uint8_t> device_data_payload;
 
+    typedef std::function<Mat(const sensor_type_t type, const uint8_t count)> data_pattern_generator;
+
+    struct data_patterns {
+    private:
+        static void sin(const uint count, uint period, const double amplitude, Mat &mat);
+        static Mat mat(const sensor_type_t type, const uint count, const boost::optional<Scalar> &constant = boost::none);
+        static void add_noise(const uint noise, Mat &mat);
+    public:
+        static data_pattern_generator sin(const uint8_t period, const Scalar amplitude, const uint noise = 0);
+        static data_pattern_generator constant(const Scalar value, const uint noise = 0);
+    };
+
     ///
     /// Generates test data from devices
     ///
     class device_data_generator {
     private:
-        sensor_data_type m_type;
-        uint8_t m_samples_per_second;
-        uint8_t m_time_offset;
-        int m_noise;
+        const sensor_type_t m_type;
+        const uint8_t m_samples_per_second;
+        const device_id_t m_device_id;
+        const data_pattern_generator &m_pattern_generator;
 
         /// construct a buffer with header set;
-        device_data_payload new_buffer(const uint8_t count) const;
-
+        device_data_payload new_buffer(const sensor_time_t timestamp, const uint8_t count,
+                                                      const sensor_duration_t duration) const;
         void add_threed(std::vector<uint8_t> &buf, const int16_t x, const int16_t y, const int16_t z) const;
     public:
-        device_data_generator(const sensor_data_type type);
+        device_data_generator(const device_id_t device_id, const sensor_type_t type, const uint8_t samples_per_second, const data_pattern_generator &pattern_generator);
 
-        device_data_generator &samples_per_second(uint8_t samples_per_second);
-        device_data_generator &time_offset(uint8_t time_offset);
-        device_data_generator &with_noise(const int noise);
-
-        device_data_payload constant(const uint8_t count, const Scalar value);
-
-        device_data_payload sin(const uint8_t count, const uint8_t period, const Scalar amplitude);
+        device_data_payload generate(const uint8_t count, const sensor_time_t timestamp, const sensor_duration_t duration) const;
     };
 
     ///
@@ -40,7 +46,8 @@ namespace muvr {
     ///
     class raw_sensor_data_generator {
     private:
-        sensor_data_type m_type;
+        sensor_type_t m_type;
+        device_id_t m_device_id;
         int m_noise;
         void sin(const uint count, uint period, const double amplitude, Mat &mat);
 
@@ -49,7 +56,7 @@ namespace muvr {
         ///
         /// Constructs generator that will produce values of ``sensor_data_type``.
         ///
-        raw_sensor_data_generator(const sensor_data_type type);
+        raw_sensor_data_generator(const device_id_t device_id, const sensor_type_t type);
 
         ///
         /// Sets the noise element of the generator; the ``noise`` should be within the values
@@ -87,14 +94,14 @@ namespace muvr {
     private:
         std::string m_sensor;
         std::string m_file_name;
-        sensor_data_type m_type;
+        sensor_type_t m_type;
         uint m_first_value;
         uint m_max_values;
         bool m_drop_zeros;
 
         std::vector<std::string> tokenize(const std::string &line);
-        sensor_data_type parse_type(const std::string &type);
-        cv::Mat empty_raw_mat(sensor_data_type type);
+        sensor_type_t parse_type(const std::string &type);
+        cv::Mat empty_raw_mat(sensor_type_t type);
     public:
         ///
         /// Constructs the generator loading the data from the given ``file_name``. It is usual to
@@ -114,7 +121,7 @@ namespace muvr {
         ///
         /// Sets the filter for data of the given type.
         ///
-        raw_sensor_data_loader& from_type(const sensor_data_type type);
+        raw_sensor_data_loader& from_type(const sensor_type_t type);
 
         ///
         /// Makes the loader drop rows containing all zeros.
@@ -134,7 +141,7 @@ namespace muvr {
         ///
         /// Loads the data using the current filters
         ///
-        raw_sensor_data load();
+        raw_sensor_data load(const boost::optional<device_id_t> default_device_id);
 
         ///
         /// Loads the raw data as fused

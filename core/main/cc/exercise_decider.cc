@@ -67,12 +67,18 @@ exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
 }
 
 exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, exercise_context &context) const {
-    if (source.data.rows < m_min_samples) return undecidable;
+    if (source.reported_duration() < 1500) return undecidable;
 
-    if (source.type == accelerometer || source.type == rotation) {
-        auto pfx = fft(source.data.col(0));
-        auto pfy = fft(source.data.col(1));
-        auto pfz = fft(source.data.col(2));
+    if (source.type() == accelerometer || source.type() == rotation) {
+        auto pfx = fft(source.data().col(0));
+        auto pfy = fft(source.data().col(1));
+        auto pfz = fft(source.data().col(2));
+
+        #if 0
+        std::cout << "pfx=" << pfx << std::endl;
+        std::cout << "pfy=" << pfy << std::endl;
+        std::cout << "pfz=" << pfz << std::endl;
+        #endif
 
         if (!pfx.is_distinct() || !pfy.is_distinct() || !pfz.is_distinct()) return no;
         if (!pfx.is_roughly_equal(pfy) || !pfy.is_roughly_equal(pfz)) return no;

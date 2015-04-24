@@ -13,8 +13,6 @@ std::vector<double> classifier::extract_time_series(const fused_sensor_data &dat
     return x;
 }
 
-
-
 int classifier::classify(const fused_sensor_data &data) {
     std::vector<double> x = extract_time_series(data, 0);
     std::vector<double> y = extract_time_series(data, 1);
@@ -53,4 +51,3 @@ int classifier::classify(const fused_sensor_data &data) {
 
     return curl;
 }
-

@@ -8,58 +8,169 @@ using namespace cv;
 namespace muvr {
 
     /// sensor data type
-    enum sensor_data_type {
+    enum sensor_type_t {
         accelerometer = 0xad,
         rotation = 0xbd,
         heart_rate = 0xed
     };
 
+    ///
+    /// The device id
+    ///
+    typedef uint8_t device_id_t;
+
+    ///
+    /// The known device ids
+    ///
+    enum device_ids {
+        pebble = 0x00,
+        iphone_like = 0xf0
+    };
+
     /// sensor time is a synthetic, but monotonously increasing time in ms
-    typedef int32_t sensor_time_t;
+    typedef uint64_t sensor_time_t;
+    /// duration of sensor data
+    typedef uint64_t sensor_duration_t;
     /// a "NO-time" marker value. Note that we don't want to use boost::optional to reduce the
     /// number of dependencies especially for mobile clients.
-    const sensor_time_t EXERCISE_TIME_NAN = INT32_MAX;
+    const sensor_time_t EXERCISE_TIME_NAN = INT64_MAX;
 
     ///
     /// Decoded, but still raw sensor data.
     ///
     struct raw_sensor_data {
+    private:
         /// the type
-        sensor_data_type type;
+        sensor_type_t m_type;
         /// the sampling rate
-        uint8_t samples_per_second;
-        /// the negative time offset
-        uint8_t time_offset;
+        uint8_t m_samples_per_second;
+        /// the sensor data timestamp
+        sensor_time_t m_end_timestamp;
+        /// the duration
+        sensor_duration_t m_reported_duration;
+        /// the device id sending the data
+        device_id_t m_device_id;
+        /// the message sequence number
+        uint8_t m_sequence_number;
         /// the decoded data
-        cv::Mat data;
+        cv::Mat m_data;
+
+        /// converts the time to the number of samples
+        inline uint time_to_samples(const sensor_time_t time) const {
+            assert(time < 60000 * 1000); // more than an hour is almost certainly programming error
+
+            return static_cast<uint>(time / (1000 / m_samples_per_second));
+        }
+
+    public:
 
         ///
-        /// Corrects the ``received_at`` by taking into account the ``time_offset``,
-        /// together with the number of samples and ``samples_per_second``.
+        /// Returns the device-reported duration
         ///
-        sensor_time_t received_at(const sensor_time_t received_at) const;
+        inline sensor_duration_t reported_duration() const { return m_reported_duration; }
 
         ///
-        /// Computes the duration in milliseconds
+        /// Returns the type
         ///
-        sensor_time_t duration() const;
+        inline sensor_type_t type() const { return m_type; }
+
+        ///
+        /// Returns the data
+        ///
+        inline const Mat &data() const { return m_data; }
+
+        ///
+        /// Returns the samples per second
+        ///
+        inline uint8_t samples_per_second() const { return m_samples_per_second; }
+
+        ///
+        /// Returns the end timestamp
+        ///
+        inline sensor_time_t end_timestamp() const { return m_end_timestamp; }
+
+        ///
+        /// Returns the start timestamp
+        ///
+        inline sensor_time_t start_timestamp() const { return m_end_timestamp - m_reported_duration; }
+
+        ///
+        /// Returns the device id
+        ///
+        inline device_id_t device_id() const { return m_device_id; }
+
+        ///
+        /// Returns the sequence number
+        ///
+        inline uint8_t sequence_number() const { return m_sequence_number; }
+
+        ///
+        /// Evaluates if this instance "is compatible with" ``that``. Compatibility means sampling rate within
+        /// some small tolerance, and same sensor data.
+        ///
+        bool matches(const raw_sensor_data &that) const;
+
+        ///
+        ///
+        ///
+        void push_back(const raw_sensor_data &that, const sensor_time_t gap_length = 0);
+
+        ///
+        /// Slices the data in this instance so that they fall between start and end
+        ///
+        raw_sensor_data slice(const sensor_time_t start, const sensor_time_t end) const;
+
+        ///
+        /// Slices the data from end
+        ///
+        raw_sensor_data slice_from_end(const sensor_duration_t duration) const;
 
         ///
         /// Constructs the raw_sensor_data, assigns the given fields.
         ///
-        raw_sensor_data(const cv::Mat &data, const sensor_data_type type, const uint8_t samples_per_second, const uint8_t time_offset);
+        raw_sensor_data(
+                const cv::Mat &data,
+                const device_id_t device_id,
+                const sensor_type_t type,
+                const uint8_t samples_per_second,
+                const uint8_t sequence_number,
+                const sensor_time_t timestamp,
+                const sensor_duration_t duration);
+
+        raw_sensor_data(const raw_sensor_data &that);
 
         ///
         /// Writes the ``obj`` to the given ``stream``
         ///
         friend std::ostream &operator<<(std::ostream &stream, const raw_sensor_data &obj) {
-            stream << "raw_sensor_data { "
-                   << "type=" << obj.type
-                   << ", time_offset=" << static_cast<int>(obj.time_offset)
-                   << ", samples_per_second=" << static_cast<int>(obj.samples_per_second)
-                   << ", duration=" << obj.duration()
+            stream << "raw_sensor_data "
+                   << "{ device_id=" << std::to_string(obj.m_device_id)
+                   << ", type=" << obj.m_type
+                   << ", timestamp=" << obj.start_timestamp() << "-" << obj.end_timestamp()
+                   << ", samples_per_second=" << static_cast<int>(obj.m_samples_per_second)
+                   << ", sequence_number=" << std::to_string(obj.m_sequence_number)
+                   << ", duration=" << obj.m_reported_duration
                    << "}";
             return stream;
+        }
+
+        friend bool operator==(const raw_sensor_data &lhs, const raw_sensor_data &rhs) {
+            bool simple =
+                    lhs.m_data.cols == rhs.m_data.cols &&
+                    lhs.m_data.rows == rhs.m_data.rows &&
+                    lhs.m_type == rhs.m_type &&
+                    lhs.m_end_timestamp == rhs.m_end_timestamp &&
+                    lhs.m_reported_duration == rhs.m_reported_duration &&
+                    lhs.m_samples_per_second == rhs.m_samples_per_second;
+            if (simple) {
+                for (int i = 0; i < lhs.m_data.cols; ++i) {
+                    auto s = sum(lhs.m_data.col(i) - rhs.m_data.col(i))[0];
+                    if (s > 0) return false;
+                }
+                return true;
+            }
+
+            return false;
         }
     };
 
@@ -80,12 +191,20 @@ namespace muvr {
             no, yes, undecidable
         };
 
+        /// ctor
+        movement_decider();
+
         ///
         /// Checks to see if there is no movement in the given ``source``.
         ///
         virtual movement_result has_movement(const raw_sensor_data& source) const;
     private:
+        /// the decision function
         movement_result has_movement(const cv::Mat &source, const int16_t threshold) const;
+    protected:
+        /// thresholds for the different devices
+        std::map<device_id_t, int16_t> m_thresholds;
+
     };
 
     ///
@@ -114,7 +233,10 @@ namespace muvr {
 
         public:
             friend std::ostream& operator<<(std::ostream &stream, const freq_power &obj) {
-                stream << "frequency = " << obj.frequency << ", power = " << obj.power;
+                stream << "freq_power "
+                       << "{ frequency=" << obj.frequency
+                       << ", power=" << obj.power
+                       << "}";
                 return stream;
             }
         };
@@ -142,7 +264,7 @@ namespace muvr {
             /// Computes whether there is enough distiction between the powers of the first and other
             /// frequencies by at least ``factor``.
             ///
-            bool is_distinct(const double factor = 100) const;
+            bool is_distinct(const double factor = 10) const;
 
             ///
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
@@ -150,8 +272,12 @@ namespace muvr {
             bool is_roughly_equal(const freq_powers& that, const uint count = 2, const double freq_tolerance = 0.2) const;
 
             friend std::ostream &operator<<(std::ostream &stream, const freq_powers &obj) {
-                for (auto &x : obj.m_items) stream << x << std::endl;
-                stream << std::endl;
+                stream << "freq_powers"
+                       << " { m_items=[";
+                for (auto &x : obj.m_items) stream << x << ",";
+                stream << "]"
+                       << ", is_distinct=" << obj.is_distinct()
+                       << "}";
                 return stream;
             }
         };
@@ -163,18 +289,13 @@ namespace muvr {
         ///
         /// The opaque structure that the clients hold
         ///
+        // TODO: Rename me to state
         struct exercise_context {
         private:
             std::vector<freq_powers> m_freq_powers;
         public:
             /// tests whether this instance diverges from the x, y, z
             bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
-#ifdef EYEBALL_DEBUG
-                for (auto &i : m_freq_powers) std::cout << i << std::endl;
-                std::cout << std::endl;
-                std::cout << "x = " << x << ", y = " << y << ", z = " << z << std::endl;
-                std::cout << std::endl;
-#endif
                 if (m_freq_powers.size() == 0) return false;
 
                 if (!m_freq_powers[0].is_roughly_equal(x)) return true;

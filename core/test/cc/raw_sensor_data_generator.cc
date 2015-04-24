@@ -2,7 +2,8 @@
 
 using namespace muvr;
 
-raw_sensor_data_generator::raw_sensor_data_generator(const sensor_data_type type): m_type(type), m_noise(0) {
+raw_sensor_data_generator::raw_sensor_data_generator(const device_id_t device_id, const sensor_type_t type):
+       m_device_id(device_id), m_type(type), m_noise(0) {
 }
 
 raw_sensor_data_generator &raw_sensor_data_generator::with_noise(const int noise) {
@@ -18,7 +19,7 @@ raw_sensor_data raw_sensor_data_generator::constant(const uint count, const Scal
         randu(noise, Scalar::all(-m_noise), Scalar::all(m_noise));
         data = data + noise;
     }
-    return raw_sensor_data(data, m_type, 100, 0);
+    return raw_sensor_data(data, m_device_id, m_type, 100, 0, 0, count * 10);
 }
 
 void raw_sensor_data_generator::sin(const uint count, uint period, const double amplitude, Mat &mat) {
@@ -37,13 +38,13 @@ raw_sensor_data raw_sensor_data_generator::sin(const uint count, const uint peri
         sin(count, period, amplitude[i], col);
     }
 
-    return raw_sensor_data(data, m_type, 100, 0);
+    return raw_sensor_data(data, m_device_id, m_type, 100, 0, 0, 10 * count * period);
 }
 
 raw_sensor_data raw_sensor_data_generator::gaussian_noise(const uint count, const int mean, const double stddev) {
     Mat data = mat(count);
     randn(data, mean, stddev);
-    return raw_sensor_data(data, m_type, 100, 0);
+    return raw_sensor_data(data, m_device_id, m_type, 100, 0, 0, count * 10);
 }
 
 Mat raw_sensor_data_generator::mat(const uint count, const boost::optional<Scalar> &constant) {
@@ -53,5 +54,7 @@ Mat raw_sensor_data_generator::mat(const uint count, const boost::optional<Scala
             if (constant) return Mat(count, 3, CV_16S, constant.get()); else return Mat(count, 3, CV_16S);
         case heart_rate:
             if (constant) return Mat(count, 1, CV_16S, constant.get()); else return Mat(count, 1, CV_16S);
+        default:
+            throw std::bad_function_call();
     }
 }
