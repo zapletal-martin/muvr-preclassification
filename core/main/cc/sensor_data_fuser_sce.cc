@@ -3,9 +3,24 @@
 
 using namespace muvr;
 
+sensor_data_fuser::sensor_context_entry::state sensor_data_fuser::sensor_context_entry::state::empty = {
+    .movement_start = EXERCISE_TIME_NAN,
+    .movement_end = EXERCISE_TIME_NAN,
+    .exercise_start = EXERCISE_TIME_NAN,
+    .exercise_end = EXERCISE_TIME_NAN
+};
+
+sensor_data_fuser::sensor_context_entry::sensor_context_entry(const sensor_context_entry &that):
+   m_state(that.m_state), m_device_id(that.m_device_id), m_sensor_type(that.m_sensor_type) {
+}
+
 sensor_data_fuser::sensor_context_entry::sensor_context_entry(const device_id_t device_id,
                                                               const sensor_type_t sensor_type):
     m_device_id(device_id), m_sensor_type(sensor_type) {
+}
+
+void sensor_data_fuser::sensor_context_entry::reset_state() {
+    m_state = state::empty;
 }
 
 bool sensor_data_fuser::sensor_context_entry::matches(const device_id_t device_id, const sensor_type_t sensor_type) const {
@@ -17,50 +32,48 @@ void sensor_data_fuser::sensor_context_entry::evaluate(const raw_sensor_data &da
     static const sensor_time_t minimum_movement_duration = 1500;
 
     if (data.reported_duration() < MIN(minimum_exercise_duration, minimum_movement_duration)) return;
+    
+    // check if the current state has been decided in the last call. if so, reset.
+    if (m_state.is_decidable()) m_state = state::empty;
 
     auto movement_data = data.slice_from_end(minimum_movement_duration);
     // first, movement checks
-    if (m_movement_start == EXERCISE_TIME_NAN) {
+    if (m_state.movement_start == EXERCISE_TIME_NAN) {
         // we're not moving ...
         if (movement_decider->has_movement(movement_data) == movement_decider::movement_result::yes) {
             // but ``data`` tells us that we have just started moving
-            m_movement_start = data.start_timestamp();
-            LOG(TRACE) << "started moving at " << m_movement_start;
+            m_state.movement_start = movement_data.start_timestamp();
+            LOG(TRACE) << "started moving at " << m_state.movement_start;
         }
     } else {
         // we're moving ...
         if (movement_decider->has_movement(movement_data) != movement_decider::movement_result::yes) {
             // but ``data`` tells us that we've stopped moving
-            LOG(TRACE) << "stopped moving at " << m_movement_start;
-            m_movement_start = EXERCISE_TIME_NAN;
+            m_state.movement_end = m_state.exercise_end = movement_data.end_timestamp();
+            LOG(TRACE) << "stopped moving at " << m_state.movement_end;
+            return;
         }
     }
 
     // then, if needed, exercise checks
-    if (m_movement_start == EXERCISE_TIME_NAN) return;
+    if (m_state.movement_start == EXERCISE_TIME_NAN) return;
     if (data.reported_duration() < minimum_exercise_duration) return;
-    //if (data.end_timestamp() - m_exercise_start < minimum_exercise_duration) return;
 
-    if (m_exercise_start == EXERCISE_TIME_NAN) {
+    if (m_state.exercise_start == EXERCISE_TIME_NAN) {
         // we're moving from m_movement_start, but not yet decided whether we're exercising...
-        uint blocks = static_cast<uint>(data.reported_duration() / minimum_exercise_duration);
-        for (int i = 1; i <= blocks; ++i) {
-            auto r = data.slice(m_movement_start, m_movement_start + i * minimum_exercise_duration);
-            assert(r.start_timestamp() == m_movement_start);
-            if (exercise_decider->has_exercise(r, m_exercise_context) == exercise_decider::exercise_result::yes) {
-                // we are exercising!
-                m_exercise_start = r.start_timestamp();
-                assert(m_exercise_start >= m_movement_start);
-                LOG(TRACE) << "started exercising at " << m_exercise_start;
-            }
-
+        auto r = data.slice_from_end(minimum_exercise_duration);
+        if (exercise_decider->has_exercise(r, m_exercise_context) == exercise_decider::exercise_result::yes) {
+            // we are exercising!
+            m_state.exercise_start = r.start_timestamp();
+            assert(m_state.exercise_start >= m_state.movement_start);
+            LOG(TRACE) << "started exercising at " << m_state.exercise_start;
         }
     } else if (data.reported_duration() > minimum_exercise_duration) {
         auto r = data.slice_from_end(minimum_exercise_duration);
         if (exercise_decider->has_exercise(r, m_exercise_context) != exercise_decider::exercise_result::yes) {
             // we're no longer exercising
-            m_exercise_start = m_movement_start = EXERCISE_TIME_NAN;
             m_exercise_context.diverged();
+            m_state.exercise_end = r.end_timestamp();
         }
     }
 }

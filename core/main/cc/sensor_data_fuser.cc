@@ -1,6 +1,5 @@
 #include "easylogging++.h"
 #include "sensor_data.h"
-#include "device_data_decoder.h"
 
 using namespace muvr;
 
@@ -10,7 +9,7 @@ sensor_data_fuser::sensor_data_fuser(): sensor_data_fuser(std::shared_ptr<moveme
 
 sensor_data_fuser::sensor_data_fuser(std::shared_ptr<movement_decider> movement_decider,
                                      std::shared_ptr<exercise_decider> exercise_decider):
-    m_sensor_context_table(movement_decider, exercise_decider ){
+    m_sensor_context_table(movement_decider, exercise_decider) {
 }
 
 sensor_data_fuser::fusion_result sensor_data_fuser::push_back(const raw_sensor_data &decoded, const sensor_location_t location, const sensor_time_t wall_time) {
