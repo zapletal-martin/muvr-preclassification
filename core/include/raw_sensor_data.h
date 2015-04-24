@@ -50,6 +50,8 @@ namespace muvr {
         sensor_duration_t m_reported_duration;
         /// the device id sending the data
         device_id_t m_device_id;
+        /// the message sequence number
+        uint8_t m_sequence_number;
         /// the decoded data
         cv::Mat m_data;
 
@@ -98,6 +100,11 @@ namespace muvr {
         inline device_id_t device_id() const { return m_device_id; }
 
         ///
+        /// Returns the sequence number
+        ///
+        inline uint8_t sequence_number() const { return m_sequence_number; }
+
+        ///
         /// Evaluates if this instance "is compatible with" ``that``. Compatibility means sampling rate within
         /// some small tolerance, and same sensor data.
         ///
@@ -126,6 +133,7 @@ namespace muvr {
                 const device_id_t device_id,
                 const sensor_type_t type,
                 const uint8_t samples_per_second,
+                const uint8_t sequence_number,
                 const sensor_time_t timestamp,
                 const sensor_duration_t duration);
 
@@ -140,6 +148,7 @@ namespace muvr {
                    << ", type=" << obj.m_type
                    << ", timestamp=" << obj.start_timestamp() << "-" << obj.end_timestamp()
                    << ", samples_per_second=" << static_cast<int>(obj.m_samples_per_second)
+                   << ", sequence_number=" << std::to_string(obj.m_sequence_number)
                    << ", duration=" << obj.m_reported_duration
                    << "}";
             return stream;

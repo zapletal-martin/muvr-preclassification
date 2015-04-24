@@ -10,7 +10,7 @@ protected:
 };
 
 TEST_F(exercise_decider_test, too_short) {
-    auto sd = raw_sensor_data_generator(pebble, accelerometer).constant(199, Scalar(1000, 1000, 1000));
+    auto sd = raw_sensor_data_generator(pebble, accelerometer).constant(50, Scalar(1000, 1000, 1000));
     exercise_decider::exercise_context ctx;
     EXPECT_EQ(exercise_decider::exercise_result::undecidable, decider.has_exercise(sd, ctx));
 }

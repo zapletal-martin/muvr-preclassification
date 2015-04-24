@@ -17,6 +17,8 @@ typedef struct __attribute__((__packed__)) {
     uint8_t  sample_size;
     /// time offset *always into the past*
     uint8_t  device_id;
+    /// the sequence counter (being uint8_t, it means that we fail to spot errors that are multiples of 256 errors apart)
+    uint8_t  sequence_number;
     /// timestamp of the last sample
     uint8_t  timestamp[8];               // equivalent of uint64_t: careful, the data is big-endian
     /// duration of the sample
