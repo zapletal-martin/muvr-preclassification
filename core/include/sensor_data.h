@@ -86,7 +86,9 @@ namespace muvr {
         public:
             typedef enum { not_moving, moving, exercising, exercise_ended } type_t;
 
-            fusion_result(): m_type(not_moving) { }
+            fusion_result(const std::vector<fused_sensor_data> &data):
+                m_type(exercise_ended), m_exercise_fused_data(data) { }
+            fusion_result(const type_t type): m_type(type) { }
             fusion_result(const fusion_result &that): m_type(that.m_type), m_exercise_fused_data(that.m_exercise_fused_data) { }
 
             void set_type(const type_t type) { m_type = type; }
@@ -228,7 +230,7 @@ namespace muvr {
                 friend state operator+(const state &lhs, const state &rhs) {
                     sensor_time_t ms = MIN(lhs.movement_start, rhs.movement_start);
                     sensor_time_t es = MIN(lhs.exercise_start, rhs.exercise_start);
-                    
+
                     sensor_time_t me = lhs.movement_end;
                     if (rhs.movement_end > me && rhs.movement_end != EXERCISE_TIME_NAN) me = rhs.movement_end;
                     sensor_time_t ee = lhs.exercise_end;
@@ -243,6 +245,7 @@ namespace muvr {
             exercise_decider::exercise_context m_exercise_context;
             state m_state = state::empty;
         public:
+            sensor_context_entry(const sensor_context_entry &that);
             sensor_context_entry(const device_id_t device_id, const sensor_type_t sensor_type);
 
             void evaluate(const raw_sensor_data &data, movement_decider *movement_decider, exercise_decider *exercise_decider);
@@ -264,14 +267,10 @@ namespace muvr {
 
             raw_sensor_data_table m_sensor_data_table;
             std::vector<sensor_context_entry> m_entries;
-
-            sensor_time_t m_movement_start = EXERCISE_TIME_NAN;
-            sensor_time_t m_exercise_start = EXERCISE_TIME_NAN;
-            sensor_data_fuser::fusion_result m_state;
-            
-            void reset_state();
         public:
             sensor_context_table(std::shared_ptr<movement_decider> movement_decider, std::shared_ptr<exercise_decider> exercise_decider);
+
+            void clear();
 
             sensor_data_fuser::fusion_result push_back(const raw_sensor_data &new_data, const sensor_location_t location, const sensor_time_t wall_time);
         };

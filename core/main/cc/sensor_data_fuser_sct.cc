@@ -8,8 +8,9 @@ sensor_data_fuser::sensor_context_table::sensor_context_table(std::shared_ptr<mo
     m_movement_decider(movement_decider), m_exercise_decider(exercise_decider) {
 }
 
-void sensor_data_fuser::sensor_context_table::reset_state() {
-    for (auto &x : m_entries) x.reset_state();
+void sensor_data_fuser::sensor_context_table::clear() {
+    m_sensor_data_table.clear();
+    m_entries.clear();
 }
 
 sensor_data_fuser::fusion_result sensor_data_fuser::sensor_context_table::push_back(const raw_sensor_data &new_data, const sensor_location_t location, const sensor_time_t wall_time) {
@@ -25,73 +26,49 @@ sensor_data_fuser::fusion_result sensor_data_fuser::sensor_context_table::push_b
         matching_entry->evaluate(fused_data, m_movement_decider.get(), m_exercise_decider.get());
     } else {
         auto entry = sensor_context_entry(fused_data.device_id(), fused_data.type());
-        m_entries.push_back(entry);
         entry.evaluate(fused_data, m_movement_decider.get(), m_exercise_decider.get());
+        m_entries.push_back(entry);
     }
 
+    // TODO: add version counter to the rows to detect sensor drop-outs
+
     // find the earliest movement and exercise starts across all devices / sensors
-    
     sensor_context_entry::state er = sensor_context_entry::state::empty;
     for (sensor_context_entry &x : m_entries) {
-        er = er + x.current_state();
+        er = x.current_state() + er;
     }
     
     if (er.is_decidable()) {
+        LOG(TRACE) << "all sensors decidable";
         if (er.has_exercise()) {
             // we have made a final decision on exercise
-            LOG(TRACE) << "all movement->exercise ended at " << fused_data.end_timestamp();
-            return fusion_result();
-            m_state.set_fused_exercise_data(m_sensor_data_table.slice(er.exercise_start, er.exercise_end));
+            LOG(TRACE) << "all exercise ended at " << fused_data.end_timestamp();
+            std::vector<fused_sensor_data> fused = m_sensor_data_table.slice(er.exercise_start, er.exercise_end);
+            clear();
+            return fusion_result(fused);
         }
+        if (er.has_movement()) {
+            // we have made a final decision on exercise
+            LOG(TRACE) << "all movement ended at " << fused_data.end_timestamp();
+            clear();
+            return fusion_result(fusion_result::not_moving);
+        }
+        throw std::runtime_error("bad state: decidable, but !has_exercise || !has_movement");
+    } else {
+        // we may be moving or exercising
+        if (er.has_exercise()) {
+            LOG(INFO) << "all sensors not decidable, but exercising";
+            return fusion_result(fusion_result::exercising);
+        }
+        if (er.has_movement()) {
+            LOG(INFO) << "all sensors not decidable, but moving";
+            m_sensor_data_table.erase_before(er.movement_start);
+            return fusion_result(fusion_result::moving);
+        }
+        // not moving nor exercising
+        LOG(TRACE) << "all sensors not decidable and not moving";
+        clear();
+        return fusion_result(fusion_result::not_moving);
     }
     
-    /*
-    if (!er.has_movement()) {
-        // nothing is moving
-        if (m_exercise_start != EXERCISE_TIME_NAN) {
-            // we had exercise block. this has now ended.
-            LOG(TRACE) << "all movement->exercise ended at " << fused_data.end_timestamp();
-
-            reset_state();
-            m_state.set_fused_exercise_data(m_sensor_data_table.slice(m_exercise_start, fused_data.end_timestamp()));
-        }
-        LOG(TRACE) << "all no-movement from all sensors; dropping all accumulated fused_data.";
-        // now that we processed all, we can drop all accumulated fused_data
-        m_movement_start = m_exercise_start = EXERCISE_TIME_NAN;
-        m_sensor_data_table.clear();
-        m_state.set_type(fusion_result::not_moving);
-        // exercising|moving -> not exercising. nothing else to be done
-        return m_state;
-    } else if (m_movement_start == EXERCISE_TIME_NAN) {
-        m_state.set_type(fusion_result::moving);
-        // something is moving and this is the first time we're seeing movement
-        LOG(TRACE) << "all movement started at " << er.movement_start;
-        m_sensor_data_table.erase_before(er.movement_start);
-        m_movement_start = er.movement_start;
-        // not exercising -> moving
-        return m_state;
-    }
-
-    if (!er.has_exercise()) {
-        // nothing is exercising (or the exercise has diverged)
-        if (m_exercise_start != EXERCISE_TIME_NAN) {
-            // we had exercise block. this has now ended.
-            LOG(TRACE) << "all exercise ended at " << fused_data.end_timestamp();
-
-            m_state.set_fused_exercise_data(m_sensor_data_table.slice(m_exercise_start, er.exercise_end));
-            m_exercise_start = m_movement_start = EXERCISE_TIME_NAN;
-            reset_state();
-            m_sensor_data_table.clear();
-        }
-    } else if (m_exercise_start == EXERCISE_TIME_NAN) {
-        // something is exercising and this is the first time we're seeing exercise
-        m_state.set_type(fusion_result::exercising);
-        LOG(TRACE) << "all exercise started at " << er.exercise_start;
-        m_sensor_data_table.erase_before(er.exercise_start);
-        m_exercise_start = er.exercise_start;
-        // moving & not exercising -> exercising
-    }
-     */
-
-    return m_state;
 }
