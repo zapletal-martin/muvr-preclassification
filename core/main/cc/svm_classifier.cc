@@ -85,6 +85,7 @@ void print(svm_node **matrix, int rows, int cols) {
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
     const int window_size = 5;
     const int step = 1;
+    const int treshold = 0.5;
 
     auto first_sensor_data = data[0];
 
@@ -92,7 +93,8 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     Mat preprocesed = preprocess_data(first_sensor_data.data);
 
     // Sliding window.
-    double prediction;
+    int count = 0;
+    double prediction = 0;
     for(int i = 0; i + window_size <= first_sensor_data.data.rows; i += step) {
 
         // Get window expected size.
@@ -110,12 +112,16 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
         // Predict label.
         prediction = svm_predict(&m_model, libsvm_feature_vector_flattened);
 
+        if(prediction > 0.5) {
+            count = count + 1;
+        }
+
         std::cout << " PRED: " << prediction << std::endl;
     }
 
-    if(prediction > 0.5) {
-        return svm_classifier::classification_result(classification_result::success, std::vector<string> { "bicep curl" }, 1, data);
+    if(count > 0) {
+        return svm_classifier::classification_result(classification_result::success, std::vector<string> { "bicep curl" }, count, data);
     } else {
-        return svm_classifier::classification_result(classification_result::failure, std::vector<string> { }, 1, data);
+        return svm_classifier::classification_result(classification_result::failure, std::vector<string> { }, 0, data);
     }
 }
