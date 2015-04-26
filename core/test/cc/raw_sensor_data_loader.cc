@@ -105,5 +105,5 @@ raw_sensor_data raw_sensor_data_loader::load(const boost::optional<device_id_t> 
         row++;
     }
 
-    return raw_sensor_data(data, device_id, m_type, 100, 0, data.rows * 10);
+    return raw_sensor_data(data, device_id, m_type, 100, 0, 0, data.rows * 10);
 }

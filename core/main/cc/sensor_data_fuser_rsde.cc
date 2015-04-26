@@ -1,3 +1,4 @@
+#include "easylogging++.h"
 #include "sensor_data.h"
 
 using namespace muvr;
@@ -10,7 +11,7 @@ sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_dat
 sensor_data_fuser::raw_sensor_data_entry::raw_sensor_data_entry(const sensor_location_t location,
                                                                 const sensor_time_t wall_time,
                                                                 const raw_sensor_data data):
-    m_location(location), m_wall_time(wall_time), m_data(data), m_last_data(nullptr) {
+    m_location(location), m_wall_time(wall_time), m_data(data), m_last_sequence_number(-1) {
 }
 
 void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &data,
@@ -18,13 +19,11 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
     assert(m_data.matches(data));
     assert(data.data().cols == m_data.data().cols);
 
-    if (m_last_data) {
-        if (*m_last_data == data) {
-            // duplicate
-            return;
-        }
+    if (data.sequence_number() == m_last_sequence_number) {
+        LOG(WARNING) << "received duplicate data";
+        return;
     }
-    m_last_data = std::unique_ptr<raw_sensor_data>(new raw_sensor_data(data));
+    m_last_sequence_number = data.sequence_number();
 
     // We don't care up to 10ms; we're not on RT OSs, anyway.
     static const sensor_time_t epsilon = 10;
@@ -35,7 +34,7 @@ void sensor_data_fuser::raw_sensor_data_entry::push_back(const raw_sensor_data &
     if (gap_length < 0) {
         // negative gap
         std::cerr << data << std::endl;
-        throw std::runtime_error("raw_sensor_data_entry::push_back(): received data " + std::to_string(gap_length) + " ms into the past.");
+        //throw std::runtime_error("raw_sensor_data_entry::push_back(): received data " + std::to_string(gap_length) + " ms into the past.");
     } else if (gap_length >= 0 && gap_length < epsilon) {
         // too small, but non-negative
         m_data.push_back(data);

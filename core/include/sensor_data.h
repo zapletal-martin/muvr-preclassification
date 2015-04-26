@@ -124,9 +124,13 @@ namespace muvr {
             /// the start time of the first sample in m_data
             sensor_time_t m_wall_time;
             /// the data (padded & continuous)
-            raw_sensor_data  m_data;
-            /// the last-received data
-            std::unique_ptr<raw_sensor_data> m_last_data;
+            raw_sensor_data m_data;
+
+            // the last-received data
+            //std::unique_ptr<raw_sensor_data> m_last_data;
+
+            /// the last sequence number
+            int m_last_sequence_number;
         public:
             raw_sensor_data_entry(const raw_sensor_data_entry &that);
 

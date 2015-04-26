@@ -7,16 +7,18 @@ raw_sensor_data::raw_sensor_data(
         const device_id_t device_id,
         const sensor_type_t type,
         const uint8_t samples_per_second,
+        const uint8_t sequence_number,
         const sensor_time_t timestamp,
         const sensor_duration_t reported_duration) :
-    m_data(data), m_device_id(device_id), m_type(type), m_samples_per_second(samples_per_second), m_end_timestamp(timestamp), m_reported_duration(reported_duration) {
+    m_data(data), m_device_id(device_id), m_type(type), m_samples_per_second(samples_per_second),
+    m_sequence_number(sequence_number), m_end_timestamp(timestamp), m_reported_duration(reported_duration) {
 
     assert(m_reported_duration == 1000 * m_data.rows / m_samples_per_second);
     assert(m_reported_duration == end_timestamp() - start_timestamp());
 }
 
 raw_sensor_data::raw_sensor_data(const raw_sensor_data &that):
-    raw_sensor_data::raw_sensor_data(that.m_data, that.m_device_id, that.m_type, that.m_samples_per_second, that.m_end_timestamp, that.m_reported_duration) {
+    raw_sensor_data::raw_sensor_data(that.m_data, that.m_device_id, that.m_type, that.m_samples_per_second, that.m_sequence_number, that.m_end_timestamp, that.m_reported_duration) {
 }
 
 bool raw_sensor_data::matches(const raw_sensor_data &that) const {
@@ -89,7 +91,7 @@ raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_t
         data = Mat(data, Range(0, expected_rows));
     }
 
-    auto x = raw_sensor_data(data, m_device_id, m_type, m_samples_per_second, end, end - start);
+    auto x = raw_sensor_data(data, m_device_id, m_type, m_samples_per_second, 0, end, end - start);
     assert(x.start_timestamp() == start);
     assert(x.end_timestamp() == end);
     return x;
