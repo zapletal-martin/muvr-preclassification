@@ -82,25 +82,6 @@ void print(svm_node **matrix, int rows, int cols) {
     }
 }
 
-///
-/// Converts matrix to a flat vector (column-major).
-///
-svm_node *to_vector(svm_node **data, int rows, int cols) {
-    svm_node *ret = new svm_node[rows * cols];
-    int i = 0;
-
-    while (i < cols) {
-        int j = 0;
-        while (j < rows) {
-            ret[i * rows + j] = data[j][i];
-            j += 1;
-        }
-        i += 1;
-    }
-
-    return ret;
-}
-
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
     const int window_size = 5;
     const int step = 1;
@@ -120,9 +101,9 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
         // Flatten matrix using column-major transformation.
         Mat feature_vector = window.clone().reshape(1, 1);
 
-        //Mat feature_vector = to_vector(window, window_size, 3);
+        // Mat feature_vector = to_vector(window, window_size, 3);
 
-        // Format data to libsvm format.
+        // Transform data to libsvm format.
         svm_node **libsvm_feature_vector = mat_to_svm_node(feature_vector);
         svm_node *libsvm_feature_vector_flattened = libsvm_feature_vector[0];
 
