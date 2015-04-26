@@ -16,7 +16,7 @@ TEST_F(svm_classifier_test, postitive_bicep_curl_classification) {
     auto factory = svm_classifier_factory();
     auto under_test = factory.build("../../../core/config/svm/svm-model-curl-features.libsvm", "../../../core/config/svm/svm-model-curl-features.scale");
 
-    auto result = under_test.classify(test_data);
+    auto result = under_test->classify(test_data);
 
     EXPECT_EQ(svm_classifier::classification_result::success, result.type());
 }

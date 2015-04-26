@@ -37,6 +37,6 @@ svm_model svm_classifier_factory::parse_model(std::string svm_lib_file_path) {
     return model;
 }
 
-svm_classifier svm_classifier_factory::build(std::string svm_lib_file_path, std::string scale_file_path) {
-    return svm_classifier(parse_model(svm_lib_file_path), parse_scale(scale_file_path));
+svm_classifier *svm_classifier_factory::build(std::string svm_lib_file_path, std::string scale_file_path) {
+    return new svm_classifier(parse_model(svm_lib_file_path), parse_scale(scale_file_path));
 }
