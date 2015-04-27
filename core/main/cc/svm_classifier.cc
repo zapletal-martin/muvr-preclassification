@@ -1,4 +1,4 @@
-#include <easylogging++.h>
+#include "easylogging++.h"
 #include "svm_classifier.h"
 
 using namespace muvr;
@@ -86,7 +86,7 @@ void print(svm_node **matrix, int rows, int cols) {
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
     const int window_size = 5;
     const int step = 1;
-    const double treshold = 0.5;
+    const double threshold = 0.5;
 
     auto first_sensor_data = data[0];
 
@@ -116,13 +116,13 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
         prediction = svm_predict(&m_model, libsvm_feature_vector_flattened);
         overall_prediction = overall_prediction + prediction;
 
-        if(prediction > 0.5) {
+        if(prediction > threshold) {
             reps = reps + 1;
         }
     }
 
     if(reps > 0) {
-        classified_exercise exercise = classified_exercise("bicep curl", reps, 1.0, 1.0, overall_prediction / reps);
+        classified_exercise exercise = classified_exercise("Bicep curl", reps, 1.0, 1.0, overall_prediction / reps);
         return svm_classifier::classification_result(classification_result::success, std::vector<classified_exercise> { exercise }, data);
     } else {
         return svm_classifier::classification_result(classification_result::failure, std::vector<classified_exercise> { }, data);
