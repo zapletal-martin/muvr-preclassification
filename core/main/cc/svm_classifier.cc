@@ -1,3 +1,4 @@
+#include <easylogging++.h>
 #include "svm_classifier.h"
 
 using namespace muvr;
@@ -66,9 +67,9 @@ Mat preprocess_data(const cv::Mat &data) {
     Mat cv_data = transform_internal_representation(even_data);
     Mat dct_data = transform_discrete_cosine(cv_data);
 
-    std::cout << "M = "<< std::endl << " "  << data << std::endl << std::endl;
-    std::cout << "Mcv = "<< std::endl << " "  << cv_data << std::endl << std::endl;
-    std::cout << "Mdct = "<< std::endl << " "  << dct_data << std::endl << std::endl;
+    LOG(TRACE) << "M = "<< std::endl << " "  << data << std::endl << std::endl;
+    LOG(TRACE) << "Mcv = "<< std::endl << " "  << cv_data << std::endl << std::endl;
+    LOG(TRACE) << "Mdct = "<< std::endl << " "  << dct_data << std::endl << std::endl;
 
     return dct_data;
 }
