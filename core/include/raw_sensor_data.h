@@ -124,6 +124,11 @@ namespace muvr {
         /// Slices the data from end
         ///
         raw_sensor_data slice_from_end(const sensor_duration_t duration) const;
+        
+        ///
+        /// Slices the data from the given ``start`` to the end
+        ///
+        raw_sensor_data slice_from_start(const sensor_time_t start) const;
 
         ///
         /// Constructs the raw_sensor_data, assigns the given fields.
@@ -269,7 +274,12 @@ namespace muvr {
             ///
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
             ///
-            bool is_roughly_equal(const freq_powers& that, const uint count = 2, const double freq_tolerance = 0.2) const;
+            bool is_roughly_equal(const freq_powers& that, const uint count, const double freq_tolerance) const;
+            
+            ///
+            /// Computes the duration of the given period
+            ///
+            sensor_duration_t period_duration(const uint8_t sampling_rate, const int index = 0) const;
 
             friend std::ostream &operator<<(std::ostream &stream, const freq_powers &obj) {
                 stream << "freq_powers"
@@ -298,9 +308,10 @@ namespace muvr {
             bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
                 if (m_freq_powers.size() == 0) return false;
 
-                if (!m_freq_powers[0].is_roughly_equal(x)) return true;
-                if (!m_freq_powers[1].is_roughly_equal(y)) return true;
-                return !m_freq_powers[2].is_roughly_equal(z);
+                if (!m_freq_powers[0].is_roughly_equal(x, 1, 0.5)) return true;
+                if (!m_freq_powers[1].is_roughly_equal(y, 1, 0.5)) return true;
+                if (!m_freq_powers[2].is_roughly_equal(z, 1, 0.5)) return true;
+                return false;
             };
 
             /// update this instance after divergence
@@ -313,6 +324,18 @@ namespace muvr {
                 m_freq_powers.push_back(x);
                 m_freq_powers.push_back(y);
                 m_freq_powers.push_back(z);
+            }
+            
+            /// << operator
+            friend std::ostream& operator<<(std::ostream& stream, const exercise_context &obj) {
+                stream << "exercise_context"
+                       << "{ freq_powers=[";
+                for (size_t i = 0; i < obj.m_freq_powers.size(); ++i) {
+                    if (i > 0) stream << ",";
+                    stream << obj.m_freq_powers[i];
+                }
+                stream << "]}";
+                return stream;
             }
         };
 

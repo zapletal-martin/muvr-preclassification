@@ -28,7 +28,7 @@ bool sensor_data_fuser::sensor_context_entry::matches(const device_id_t device_i
 }
 
 void sensor_data_fuser::sensor_context_entry::evaluate(const raw_sensor_data &data, movement_decider *movement_decider, exercise_decider *exercise_decider) {
-    static const sensor_time_t minimum_exercise_duration = 3000;
+    static const sensor_time_t minimum_exercise_duration = 4000;
     static const sensor_time_t minimum_movement_duration = 1500;
 
     if (data.reported_duration() < MIN(minimum_exercise_duration, minimum_movement_duration)) return;
@@ -61,15 +61,15 @@ void sensor_data_fuser::sensor_context_entry::evaluate(const raw_sensor_data &da
 
     if (m_state.exercise_start == EXERCISE_TIME_NAN) {
         // we're moving from m_movement_start, but not yet decided whether we're exercising...
-        auto r = data.slice_from_end(minimum_exercise_duration);
+        auto r = data.slice_from_start(m_state.movement_start);
         if (exercise_decider->has_exercise(r, m_exercise_context) == exercise_decider::exercise_result::yes) {
             // we are exercising!
             m_state.exercise_start = r.start_timestamp();
             assert(m_state.exercise_start >= m_state.movement_start);
             LOG(TRACE) << "started exercising at " << m_state.exercise_start;
         }
-    } else if (data.reported_duration() > minimum_exercise_duration) {
-        auto r = data.slice_from_end(minimum_exercise_duration);
+    } else {
+        auto r = data.slice_from_start(m_state.exercise_start);
         if (exercise_decider->has_exercise(r, m_exercise_context) != exercise_decider::exercise_result::yes) {
             // we're no longer exercising
             m_exercise_context.diverged();
