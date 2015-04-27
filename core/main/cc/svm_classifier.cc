@@ -85,7 +85,7 @@ void print(svm_node **matrix, int rows, int cols) {
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
     const int window_size = 5;
     const int step = 1;
-    const int treshold = 0.5;
+    const double treshold = 0.5;
 
     auto first_sensor_data = data[0];
 
@@ -93,8 +93,10 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     Mat preprocesed = preprocess_data(first_sensor_data.data);
 
     // Sliding window.
-    int count = 0;
+    int reps = 0;
     double prediction = 0;
+    double overall_prediction = 0;
+    std::vector<string> classified_exercises;
     for(int i = 0; i + window_size <= first_sensor_data.data.rows; i += step) {
 
         // Get window expected size.
@@ -111,17 +113,17 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
 
         // Predict label.
         prediction = svm_predict(&m_model, libsvm_feature_vector_flattened);
+        overall_prediction = overall_prediction + prediction;
 
         if(prediction > 0.5) {
-            count = count + 1;
+            reps = reps + 1;
         }
-
-        std::cout << " PRED: " << prediction << std::endl;
     }
 
-    if(count > 0) {
-        return svm_classifier::classification_result(classification_result::success, std::vector<string> { "bicep curl" }, count, data);
+    if(reps > 0) {
+        classified_exercise exercise = classified_exercise("bicep curl", reps, 1.0, 1.0, overall_prediction / reps);
+        return svm_classifier::classification_result(classification_result::success, std::vector<classified_exercise> { exercise }, data);
     } else {
-        return svm_classifier::classification_result(classification_result::failure, std::vector<string> { }, 0, data);
+        return svm_classifier::classification_result(classification_result::failure, std::vector<classified_exercise> { }, data);
     }
 }

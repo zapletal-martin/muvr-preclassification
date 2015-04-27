@@ -26,22 +26,40 @@ namespace muvr {
         };
 
         ///
+        /// Scaling data for SVM prediction.
+        ///
+        struct classified_exercise {
+        public:
+            inline std::string exercise_name() { return m_exercise_name; }
+            inline int repetitions() { return m_repetitions; }
+            inline double weight() { return m_weight; }
+            inline double intensity() { return m_intensity; }
+            inline double confidence() { return m_confidence; }
+
+            classified_exercise(std::string name, int repetitions, double weight, double intensity, double confidence): m_exercise_name(name), m_repetitions(repetitions), m_weight(weight), m_intensity(intensity), m_confidence(confidence) { }
+        private:
+            std::string m_exercise_name;
+            int m_repetitions;
+            double m_weight;
+            double m_intensity;
+            double m_confidence;
+        };
+
+        ///
         /// The result of classification.
         ///
         class classification_result {
         public:
             typedef enum { success, ambiguous, failure } classification_result_type;
 
-            classification_result(classification_result_type type, std::vector<std::string> exercises, int repetitions, std::vector<fused_sensor_data> data): m_type(type), m_exercises(exercises), m_repetitions(repetitions), m_data(data) { }
+            classification_result(classification_result_type type, std::vector<classified_exercise> exercises, std::vector<fused_sensor_data> data): m_type(type), m_exercises(exercises), m_data(data) { }
 
             inline classification_result_type type() { return m_type; }
-            inline std::vector<std::string> exercises() { return m_exercises; }
-            inline int repetitions() { return m_repetitions; }
+            inline std::vector<classified_exercise> exercises() { return m_exercises; }
             inline std::vector<fused_sensor_data> data() { return m_data; }
         private:
             classification_result_type m_type;
-            std::vector<std::string> m_exercises;
-            int m_repetitions;
+            std::vector<classified_exercise> m_exercises;
             std::vector<fused_sensor_data> m_data;
         };
 
