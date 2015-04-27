@@ -1,0 +1,17 @@
+#ifndef PRECLASSIFICATION_SVM_CLASSIFIER_FACTORY_H
+#define PRECLASSIFICATION_SVM_CLASSIFIER_FACTORY_H
+
+#include "svm_classifier.h"
+#include <string>
+
+namespace muvr {
+    class svm_classifier_factory {
+    private:
+        svm_classifier::svm_scale parse_scale(std::string scale_file_path);
+        svm_model parse_model(std::string svm_lib_file_path);
+    public:
+        svm_classifier *build(std::string svm_lib_file_path, std::string scale_file_path);
+    };
+}
+
+#endif //PRECLASSIFICATION_SVM_CLASSIFIER_FACTORY_H

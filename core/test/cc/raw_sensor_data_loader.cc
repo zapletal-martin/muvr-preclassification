@@ -82,7 +82,7 @@ raw_sensor_data raw_sensor_data_loader::load(const boost::optional<device_id_t> 
     while (std::getline(file, line)) {
         if (row == 0) {
             //             0             1            2        3        4     5     6
-            if (line == "\"end_timestamp\",\"location\",\"rate\",\"type\",\"x\",\"y\",\"z\"") version = 1;
+            if (line == "\"timestamp\",\"location\",\"rate\",\"type\",\"x\",\"y\",\"z\"") version = 1;
         } else if (data.rows < m_max_values) {
             auto tokens = tokenize(line);
             if (version == 1) {
@@ -105,5 +105,5 @@ raw_sensor_data raw_sensor_data_loader::load(const boost::optional<device_id_t> 
         row++;
     }
 
-    return raw_sensor_data(data, device_id, m_type, 100, 0, 0, read_rows * 10);
+    return raw_sensor_data(data, device_id, m_type, 100, 0, 0, data.rows * 10);
 }
