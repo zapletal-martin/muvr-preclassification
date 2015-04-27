@@ -39,6 +39,17 @@ cv::Mat transform_discrete_cosine(const cv::Mat &data) {
     return  dct_data;
 }
 
+cv::Mat transform_scale(const cv::Mat &data, const std::vector<double>& scale, const std::vector<double> &center) {
+    Mat scaled_data = data.clone();
+
+    for (int j = 0; j < data.cols; j++) {
+        double val = scaled_data.at<double>(0, j);
+        scaled_data.at<double>(0, j) = (val - scale[j]) / center[j];
+    }
+
+    return scaled_data;
+}
+
 svm_node **mat_to_svm_node(const cv::Mat& data) {
     const int rowSize = data.rows;
     const int colSize = data.cols;
@@ -91,7 +102,7 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     auto first_sensor_data = data[0];
 
     // Apply preprocessing steps to data.
-    Mat preprocesed = preprocess_data(first_sensor_data.data);
+    Mat preprocessed = preprocess_data(first_sensor_data.data);
 
     // Sliding window.
     int reps = 0;
@@ -101,12 +112,14 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     for(int i = 0; i + window_size <= first_sensor_data.data.rows; i += step) {
 
         // Get window expected size.
-        Mat window = preprocesed(cv::Range(i, i + window_size), cv::Range(0, 3));
+        Mat window = preprocessed(cv::Range(i, i + window_size), cv::Range(0, 3));
 
         // Flatten matrix using column-major transformation.
         Mat feature_vector = window.clone().reshape(1, 1);
+        LOG(TRACE) << "Feature Vector = "<< std::endl << " "  << feature_vector << std::endl << std::endl;
 
-        // Mat feature_vector = to_vector(window, window_size, 3);
+        Mat scaled_feature_vector = transform_scale(feature_vector, m_scale.scale(), m_scale.center());
+        LOG(TRACE) << "Scaled Feature Vector = "<< std::endl << " "  << scaled_feature_vector << std::endl << std::endl;
 
         // Transform data to libsvm format.
         svm_node **libsvm_feature_vector = mat_to_svm_node(feature_vector);
