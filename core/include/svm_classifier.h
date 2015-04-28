@@ -78,6 +78,11 @@ namespace muvr {
         ///
         classification_result classify(const std::vector<fused_sensor_data> &data);
 
+        ///
+        /// Preprocessing steps applied to input feature matrix
+        ///
+        cv::Mat preprocessingPipeline(const cv::Mat &data, const std::vector<double>& scale, const std::vector<double> &center);
+
     private:
         svm_scale m_scale;
         svm_model m_model;
