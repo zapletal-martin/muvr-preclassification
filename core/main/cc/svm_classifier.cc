@@ -64,6 +64,7 @@ svm_node **mat_to_svm_node(const cv::Mat& data) {
         for(int col = 0; col < colSize; ++col) {
             double tempVal = data.at<double>(row, col);
             x[row][col].value = tempVal;
+            x[row][col].index = col;
         }
 
         x[row][colSize].index = -1;
@@ -87,14 +88,12 @@ Mat initial_preprocessing(const cv::Mat &data) {
 }
 
 void print(svm_node **matrix, int rows, int cols) {
-    std::cout << "METRIKS" << std::endl;
     int i, j;
     for (i = 0; i < rows; ++i) {
         for (j = 0; j < cols; ++j)
             printf("  %d/%f  ", matrix[i][j].index, matrix[i][j].value);
         printf("\n");
     }
-    std::cout << "METRIKS OUT" << std::endl;
 }
 
 cv::Mat svm_classifier::preprocessingPipeline(const cv::Mat &data, const std::vector<double>& scale, const std::vector<double> &center) {
@@ -131,6 +130,9 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
 
         // Transform data to libsvm format.
         svm_node **libsvm_feature_vector = mat_to_svm_node(feature_vector);
+
+        print(libsvm_feature_vector, 1, 455);
+
         svm_node *libsvm_feature_vector_flattened = libsvm_feature_vector[0];
 
         // Predict label.
