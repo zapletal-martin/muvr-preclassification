@@ -5,12 +5,11 @@
 % Load the CSV, filter out relevant rows
 % To see the effect of non-exercise, remove the filtering on the .timestamp
 
-M = readtable('all_4.csv');
-rows = strcmp(M.location, 'wrist.0') & M.x ~= 0 & M.y ~= 0 & M.z ~= 0 & M.timestamp > 220; % & M.timestamp < 600;
-FM = M(rows,[5,6,7]);
-
-ads  = table2array(FM);
-time = 1:height(FM);
+ads  = x;
+ads(:,1) = smooth(ads(:,1));
+ads(:,2) = smooth(ads(:,2));
+ads(:,3) = smooth(ads(:,3));
+time = 1:length(ads);
 subplot(3, 1, 1);
 plot(time, ads);
 

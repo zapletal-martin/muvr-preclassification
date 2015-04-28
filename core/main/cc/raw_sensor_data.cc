@@ -97,6 +97,12 @@ raw_sensor_data raw_sensor_data::slice(const sensor_time_t start, const sensor_t
     return x;
 }
 
+raw_sensor_data raw_sensor_data::slice_from_start(const sensor_time_t start) const {
+    assert(start >= start_timestamp());
+    
+    return slice(start, end_timestamp());
+}
+
 raw_sensor_data raw_sensor_data::slice_from_end(const sensor_duration_t duration) const {
     assert(duration <= m_reported_duration);
     auto start = end_timestamp() - duration;

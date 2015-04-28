@@ -1,4 +1,5 @@
 #include "raw_sensor_data.h"
+#include "easylogging++.h"
 
 using namespace muvr;
 using namespace cv;
@@ -20,7 +21,12 @@ void exercise_decider::freq_powers::push_back(const freq_power& item) {
 
 bool exercise_decider::freq_powers::is_distinct(double const factor) const {
     if (m_items.size() < 2) return false;
-    return m_items[0].power > m_items[1].power * factor;
+    return true;
+//    return m_items[0].power > m_items[1].power * factor;
+}
+
+sensor_duration_t exercise_decider::freq_powers::period_duration(const uint8_t sampling_rate, const int index) const {
+    return 1000 * (m_items[index].frequency / (double)sampling_rate);
 }
 
 bool exercise_decider::freq_powers::is_roughly_equal(const freq_powers& that, const uint count, const double freq_tolerance) const {
@@ -30,10 +36,10 @@ bool exercise_decider::freq_powers::is_roughly_equal(const freq_powers& that, co
     for (int i = 0; i < count; ++i) {
         freq_power thisi = m_items[i];
         freq_power thati = that.m_items[i];
+        
+        double fr = thisi.frequency / thati.frequency;
 
-        double freq_eps = thisi.frequency * freq_tolerance;
-
-        if (std::abs(thisi.frequency - thati.frequency) > freq_eps) return false;
+        if (std::abs(1 - fr) > freq_tolerance) return false;
     }
 
     return true;
@@ -66,25 +72,30 @@ exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
     return result;
 }
 
+namespace muvr {
+    bool is_within(sensor_duration_t x, sensor_duration_t min, sensor_duration_t max) {
+        return x < max && !(x <= min);
+    }
+}
+
 exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, exercise_context &context) const {
-    if (source.reported_duration() < 1500) return undecidable;
+    if (source.reported_duration() < 4000) return undecidable;
 
     if (source.type() == accelerometer || source.type() == rotation) {
         auto pfx = fft(source.data().col(0));
         auto pfy = fft(source.data().col(1));
         auto pfz = fft(source.data().col(2));
 
-        #if 0
-        std::cout << "pfx=" << pfx << std::endl;
-        std::cout << "pfy=" << pfy << std::endl;
-        std::cout << "pfz=" << pfz << std::endl;
-        #endif
-
+        LOG(TRACE) << "pfx=" << pfx << ",pfy=" << pfy << ",pfz=" << pfz;
+       
         if (!pfx.is_distinct() || !pfy.is_distinct() || !pfz.is_distinct()) return no;
-        if (!pfx.is_roughly_equal(pfy) || !pfy.is_roughly_equal(pfz)) return no;
+        //if (!pfx.is_roughly_equal(pfy) || !pfy.is_roughly_equal(pfz)) return no;
+        
+        if (!is_within(pfx.period_duration(source.samples_per_second()), 1000, 3000)) return no;
 
         if (context.diverges(pfx, pfy, pfz)) {
             context.diverged();
+            LOG(TRACE) << "exercise_context " << context << " diverged";
             return no;
         }
         context.update(pfx, pfy, pfz);
