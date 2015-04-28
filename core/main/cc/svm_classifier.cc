@@ -25,6 +25,13 @@ cv::Mat transform_to_evenly_sized_mat(const cv::Mat &data) {
     return even_data;
 }
 
+cv::Mat transform_discrete_cosine(const cv::Mat &data) {
+    Mat dct_data;
+    dct(data, dct_data);
+
+    return  dct_data;
+}
+
 cv::Mat transform_internal_representation(const cv::Mat &data) {
     Mat cv_data;
     data.convertTo(cv_data, CV_64FC1);
@@ -32,11 +39,15 @@ cv::Mat transform_internal_representation(const cv::Mat &data) {
     return cv_data;
 }
 
-cv::Mat transform_discrete_cosine(const cv::Mat &data) {
-    Mat dct_data;
-    dct(data, dct_data);
+cv::Mat transform_scale(const cv::Mat &data, const std::vector<double>& scale, const std::vector<double> &center) {
+    Mat scaled_data = data.clone();
 
-    return  dct_data;
+    for (int j = 0; j < data.cols; j++) {
+        double val = scaled_data.at<double>(0, j);
+        scaled_data.at<double>(0, j) = (val - center[j]) / scale[j];
+    }
+
+    return scaled_data;
 }
 
 svm_node **mat_to_svm_node(const cv::Mat& data) {
@@ -53,6 +64,7 @@ svm_node **mat_to_svm_node(const cv::Mat& data) {
         for(int col = 0; col < colSize; ++col) {
             double tempVal = data.at<double>(row, col);
             x[row][col].value = tempVal;
+            x[row][col].index = col;
         }
 
         x[row][colSize].index = -1;
@@ -62,16 +74,17 @@ svm_node **mat_to_svm_node(const cv::Mat& data) {
     return x;
 }
 
-Mat preprocess_data(const cv::Mat &data) {
-    Mat even_data = transform_to_evenly_sized_mat(data);
-    Mat cv_data = transform_internal_representation(even_data);
-    Mat dct_data = transform_discrete_cosine(cv_data);
+Mat initial_preprocessing(const cv::Mat &data) {
+    Mat cv_data = transform_internal_representation(data);
+    /*Mat even_data = transform_to_evenly_sized_mat(cv_data);
+    Mat dct_data = transform_discrete_cosine(even_data);*/
 
     LOG(TRACE) << "M = "<< std::endl << " "  << data << std::endl << std::endl;
     LOG(TRACE) << "Mcv = "<< std::endl << " "  << cv_data << std::endl << std::endl;
-    LOG(TRACE) << "Mdct = "<< std::endl << " "  << dct_data << std::endl << std::endl;
+    /*LOG(TRACE) << "Meven = "<< std::endl << " "  << even_data << std::endl << std::endl;
+    LOG(TRACE) << "Mdct = "<< std::endl << " "  << dct_data << std::endl << std::endl;*/
 
-    return dct_data;
+    return cv_data;
 }
 
 void print(svm_node **matrix, int rows, int cols) {
@@ -83,38 +96,50 @@ void print(svm_node **matrix, int rows, int cols) {
     }
 }
 
+cv::Mat svm_classifier::preprocessingPipeline(const cv::Mat &data, const std::vector<double>& scale, const std::vector<double> &center) {
+    // Flatten matrix using column-major transformation.
+    Mat feature_vector =  Mat(data.t()).reshape(1, 1);
+    LOG(TRACE) << "Feature Vector = "<< std::endl << " "  << feature_vector << std::endl << std::endl;
+
+    Mat scaled_feature_vector = transform_scale(feature_vector, scale, center);
+    LOG(TRACE) << "Scaled Feature Vector = "<< std::endl << " "  << scaled_feature_vector << std::endl << std::endl;
+
+    return scaled_feature_vector;
+}
+
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
-    const int window_size = 5;
-    const int step = 1;
+    const int window_size = 150;
+    const int step = 50;
     const double threshold = 0.5;
 
     auto first_sensor_data = data[0];
 
-    // Apply preprocessing steps to data.
-    Mat preprocesed = preprocess_data(first_sensor_data.data);
+    // Apply initial preprocessing steps to data.
+    Mat preprocessed = initial_preprocessing(first_sensor_data.data);
 
     // Sliding window.
     int reps = 0;
     double prediction = 0;
     double overall_prediction = 0;
-    std::vector<string> classified_exercises;
+
     for(int i = 0; i + window_size <= first_sensor_data.data.rows; i += step) {
 
         // Get window expected size.
-        Mat window = preprocesed(cv::Range(i, i + window_size), cv::Range(0, 3));
-
-        // Flatten matrix using column-major transformation.
-        Mat feature_vector = window.clone().reshape(1, 1);
-
-        // Mat feature_vector = to_vector(window, window_size, 3);
+        Mat window = preprocessed(cv::Range(i, i + window_size), cv::Range(0, 3));
+        Mat feature_vector = preprocessingPipeline(window, m_scale.scale(), m_scale.center());
 
         // Transform data to libsvm format.
         svm_node **libsvm_feature_vector = mat_to_svm_node(feature_vector);
+
+        print(libsvm_feature_vector, 1, 455);
+
         svm_node *libsvm_feature_vector_flattened = libsvm_feature_vector[0];
 
         // Predict label.
         prediction = svm_predict(&m_model, libsvm_feature_vector_flattened);
         overall_prediction = overall_prediction + prediction;
+
+        LOG(TRACE) << "PRED: " << prediction << std::endl;
 
         if(prediction > threshold) {
             reps = reps + 1;
