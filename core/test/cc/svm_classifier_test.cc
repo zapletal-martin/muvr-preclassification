@@ -11,7 +11,7 @@ class svm_classifier_test: public testing::Test {
 };
 
 TEST_F(svm_classifier_test, postitive_bicep_curl_classification) {
-    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(574).max_values(200).load_fused();
+    auto movement_data = raw_sensor_data_loader("all_4.csv").from_type(accelerometer).drop_zeros().from_sensor("wrist.0").first_value(574).max_values(150).load_fused();
     std::vector<fused_sensor_data> test_data = { movement_data };
     auto factory = svm_classifier_factory();
     auto under_test = factory.build("../../../core/config/svm/svm-model-curl-features.libsvm", "../../../core/config/svm/svm-model-curl-features.scale");

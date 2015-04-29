@@ -64,7 +64,7 @@ svm_node **mat_to_svm_node(const cv::Mat& data) {
         for(int col = 0; col < colSize; ++col) {
             double tempVal = data.at<double>(row, col);
             x[row][col].value = tempVal;
-            x[row][col].index = col;
+            x[row][col].index = col + 1;
         }
 
         x[row][colSize].index = -1;
@@ -117,29 +117,31 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     // Apply initial preprocessing steps to data.
     Mat preprocessed = initial_preprocessing(first_sensor_data.data);
 
+    LOG(TRACE) << "Raw input data = "<< std::endl << " "  << preprocessed << std::endl << std::endl;
+
     // Sliding window.
     int reps = 0;
     double prediction = 0;
     double overall_prediction = 0;
 
     for(int i = 0; i + window_size <= first_sensor_data.data.rows; i += step) {
-
         // Get window expected size.
         Mat window = preprocessed(cv::Range(i, i + window_size), cv::Range(0, 3));
         Mat feature_vector = preprocessingPipeline(window, m_scale.scale(), m_scale.center());
 
         // Transform data to libsvm format.
         svm_node **libsvm_feature_vector = mat_to_svm_node(feature_vector);
-
-        print(libsvm_feature_vector, 1, 455);
-
         svm_node *libsvm_feature_vector_flattened = libsvm_feature_vector[0];
+
+        for (int i = 0; i < 450; ++i) {
+            std::cout << libsvm_feature_vector_flattened[i].value << ":" << libsvm_feature_vector_flattened[i].index << ", ";
+        }
 
         // Predict label.
         prediction = svm_predict(&m_model, libsvm_feature_vector_flattened);
         overall_prediction = overall_prediction + prediction;
 
-        LOG(TRACE) << "PRED: " << prediction << std::endl;
+        LOG(TRACE) << "Prediction: " << prediction << std::endl;
 
         if(prediction > threshold) {
             reps = reps + 1;
