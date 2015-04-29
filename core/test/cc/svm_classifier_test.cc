@@ -18,7 +18,7 @@ TEST_F(svm_classifier_test, postitive_bicep_curl_classification) {
 
     auto result = under_test->classify(test_data);
 
-    EXPECT_EQ(svm_classifier::classification_result::failure, result.type());
+    EXPECT_EQ(svm_classifier::classification_result::success, result.type());
 }
 
 TEST_F(svm_classifier_test, preprocessing_pipeline) {

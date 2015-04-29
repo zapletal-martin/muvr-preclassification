@@ -133,18 +133,15 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
         svm_node **libsvm_feature_vector = mat_to_svm_node(feature_vector);
         svm_node *libsvm_feature_vector_flattened = libsvm_feature_vector[0];
 
-        for (int i = 0; i < 450; ++i) {
-            std::cout << libsvm_feature_vector_flattened[i].value << ":" << libsvm_feature_vector_flattened[i].index << ", ";
-        }
-
         // Predict label.
-        prediction = svm_predict(&m_model, libsvm_feature_vector_flattened);
-        overall_prediction = overall_prediction + prediction;
+        double confidenceScores[m_model.nr_class];
+        prediction = svm_predict_probability(&m_model, libsvm_feature_vector_flattened, confidenceScores);
 
-        LOG(TRACE) << "Prediction: " << prediction << std::endl;
+        LOG(TRACE) << "Prediction: " << prediction << " with confidence: " << confidenceScores[0] << std::endl;
 
-        if(prediction > threshold) {
+        if(confidenceScores[0] > threshold) {
             reps = reps + 1;
+            overall_prediction = overall_prediction + confidenceScores[0];
         }
     }
 
