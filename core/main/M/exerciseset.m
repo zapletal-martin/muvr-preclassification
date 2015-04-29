@@ -6,9 +6,6 @@
 % To see the effect of non-exercise, remove the filtering on the .timestamp
 
 ads  = x;
-ads(:,1) = smooth(ads(:,1));
-ads(:,2) = smooth(ads(:,2));
-ads(:,3) = smooth(ads(:,3));
 time = 1:length(ads);
 subplot(3, 1, 1);
 plot(time, ads);
