@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 
 using namespace muvr;
 
@@ -20,8 +21,8 @@ svm_classifier::svm_scale svm_classifier_factory::parse_scale(std::string scale_
     while(std::getline(fin, line)) {
         std::string::size_type sz;
 
-        double scale = std::stod(line, &sz);
-        double center = std::stod(line.substr(sz));
+        double center = std::stod(line, &sz);
+        double scale = std::stod(line.substr(sz));
 
         scales.push_back(scale);
         centers.push_back(center);
