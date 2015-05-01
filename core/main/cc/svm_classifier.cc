@@ -3,7 +3,7 @@
 
 using namespace muvr;
 
-svm_classifier::svm_classifier(svm_model model, svm_scale scale): m_scale(scale), m_model(model) {
+svm_classifier::svm_classifier(std::string exercise_name, svm_model model, svm_scale scale): m_exercise_name(exercise_name), m_scale(scale), m_model(model) {
 
 }
 
@@ -108,9 +108,11 @@ cv::Mat svm_classifier::preprocessingPipeline(const cv::Mat &data, const std::ve
 }
 
 svm_classifier::classification_result svm_classifier::classify(const std::vector<fused_sensor_data> &data) {
+
+    //TODO: Parameters
     const int window_size = 150;
     const int step = 50;
-    const double threshold = 0.5;
+    const double threshold = 0.9;
 
     auto first_sensor_data = data[0];
 
@@ -137,7 +139,7 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
         double confidenceScores[m_model.nr_class];
         prediction = svm_predict_probability(&m_model, libsvm_feature_vector_flattened, confidenceScores);
 
-        LOG(TRACE) << "Prediction: " << prediction << " with confidence: " << confidenceScores[0] << std::endl;
+        LOG(TRACE) << "Prediction for " << m_exercise_name << ": " << prediction << " with confidence: " << confidenceScores[0] << std::endl;
 
         if(confidenceScores[0] > threshold) {
             reps = reps + 1;
@@ -146,7 +148,7 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     }
 
     if(reps > 0) {
-        classified_exercise exercise = classified_exercise("Bicep curl", reps, 1.0, 1.0, overall_prediction / reps);
+        classified_exercise exercise = classified_exercise(m_exercise_name, reps, 1.0, 1.0, overall_prediction / reps);
         return svm_classifier::classification_result(classification_result::success, std::vector<classified_exercise> { exercise }, data);
     } else {
         return svm_classifier::classification_result(classification_result::failure, std::vector<classified_exercise> { }, data);

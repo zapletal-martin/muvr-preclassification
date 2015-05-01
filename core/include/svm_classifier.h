@@ -66,7 +66,7 @@ namespace muvr {
         ///
         /// Constructor.
         ///
-        svm_classifier(svm_model model, svm_scale scale);
+        svm_classifier(std::string exercise_name, svm_model model, svm_scale scale);
 
         ///
         /// Destructor.
@@ -84,6 +84,7 @@ namespace muvr {
         cv::Mat preprocessingPipeline(const cv::Mat &data, const std::vector<double>& scale, const std::vector<double> &center);
 
     private:
+        std::string m_exercise_name;
         svm_scale m_scale;
         svm_model m_model;
     };
