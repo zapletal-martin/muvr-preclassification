@@ -5,6 +5,7 @@
 using namespace muvr;
 
 //TODO: Replace by implementation described in classifier_loader.h
+//TODO: Build solution that calls all classifiers and merges results (currently in ios code which it shouldn't be)
 std::vector<svm_classifier> classifier_loader::load(std::string model_data_root_path) {
     svm_classifier_factory factory = svm_classifier_factory();
 
