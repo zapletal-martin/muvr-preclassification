@@ -54,9 +54,9 @@ namespace muvr {
 
             classification_result(classification_result_type type, std::vector<classified_exercise> exercises, std::vector<fused_sensor_data> data): m_type(type), m_exercises(exercises), m_data(data) { }
 
-            inline classification_result_type type() { return m_type; }
-            inline std::vector<classified_exercise> exercises() { return m_exercises; }
-            inline std::vector<fused_sensor_data> data() { return m_data; }
+            inline classification_result_type type() const { return m_type; }
+            inline std::vector<classified_exercise> exercises() const { return m_exercises; }
+            inline std::vector<fused_sensor_data> data() const { return m_data; }
         private:
             classification_result_type m_type;
             std::vector<classified_exercise> m_exercises;

@@ -12,5 +12,5 @@ std::vector<svm_classifier> classifier_loader::load(std::string model_data_root_
     svm_classifier bicep = factory.build("Bicep curl", model_data_root_path + "/svm-model-bicep_curl-features.libsvm", model_data_root_path + "/svm-model-bicep_curl-features.scale");
     svm_classifier triceps = factory.build("Triceps pushdown", model_data_root_path + "/svm-model-triceps_pushdown-features.libsvm", model_data_root_path + "/svm-model-triceps_pushdown-features.scale");
 
-    return std::vector<svm_classifier> {triceps};
+    return std::vector<svm_classifier> { bicep, triceps };
 }
