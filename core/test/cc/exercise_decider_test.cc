@@ -22,7 +22,7 @@ TEST_F(exercise_decider_test, trivial_noexercise) {
 }
 
 TEST_F(exercise_decider_test, gaussian_noise) {
-    auto sd = raw_sensor_data_generator(pebble, accelerometer).gaussian_noise(1000, 0, 500);
+    auto sd = raw_sensor_data_generator(pebble, accelerometer).gaussian_noise(1000, 0, 0);
     exercise_decider::exercise_context ctx;
     EXPECT_EQ(exercise_decider::exercise_result::no, decider.has_exercise(sd, ctx));
 }
