@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <cmath>
 #include <vector>
 
 namespace muvr {
@@ -31,15 +32,36 @@ namespace muvr {
         std::string exercise;
         enum { resistance } tag;
         union {
+            /// resistance exercise data
             struct {
+                /// the intensity 0..1
                 double  intensity;
+                /// the weight in kg
                 double  weight;
+                /// the number of repetitions
                 uint8_t repetitions;
             } resistance_exercise;
 
             // struct { } aerobic_exercise;
             // struct { } outdoors_exercise;
         };
+
+        /// strict-ish equality
+        friend bool operator==(const planned_exercise& lhs, const planned_exercise& rhs) {
+            if (lhs.tag != rhs.tag) return false;
+            switch (lhs.tag) {
+                case resistance:
+                    auto lhse = lhs.resistance_exercise;
+                    auto rhse = rhs.resistance_exercise;
+                    static const double iepsilon = 0.1;
+                    const double wepsilon = lhse.weight * 0.1;
+                    return std::abs(lhse.intensity - rhse.intensity) < iepsilon &&
+                           std::abs(lhse.weight - rhse.weight) < wepsilon &&
+                           lhse.repetitions == rhse.repetitions;
+            }
+
+            throw std::runtime_error("bad match");
+        }
     };
 
     ///
@@ -48,6 +70,21 @@ namespace muvr {
     struct planned_rest {
         duration_t duration;    // at most
         uint8_t heart_rate;     // below
+
+        // ??? glucose_level;
+        // ??? oxygenation_level;
+        // ??? lactose_level;
+
+        /// we're resting if we're over the duration or below for HR
+        bool is_finished(const planned_rest &that) const {
+            if (heart_rate > that.heart_rate) return true; // HR dropped
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCSimplifyInspection"
+            if (duration < that.duration) return true; // exceeded duration
+#pragma clang diagnostic pop
+
+            return false;
+        }
     };
 
     ///
@@ -59,6 +96,28 @@ namespace muvr {
             planned_exercise exercise_item;
             planned_rest rest_item;
         };
+
+        exercise_plan_item(exercise_plan_item& that) {
+            tag = that.tag;
+            switch (tag) {
+                case exercise: exercise_item = that.exercise_item; break;
+                case rest: rest_item = that.rest_item; break;
+            }
+        }
+
+        enum match_result { unmatchable, matched, not_matched };
+
+        match_result matches(const planned_exercise &exercise) const {
+            if (tag == rest) return unmatchable;
+            if (exercise_item == exercise) return matched;
+            return not_matched;
+        }
+
+        match_result matches(const planned_rest &rest) const {
+            if (tag == exercise) return unmatchable;
+            if (rest_item.is_finished(rest)) return matched;
+            return not_matched;
+        }
     };
 
     ///
@@ -123,6 +182,33 @@ namespace muvr {
     /// Executing exercise plan
     ///
     class simple_exercise_plan : public exercise_plan {
+    private:
+
+        struct marked_exercise_plan_item {
+            exercise_plan_item item;
+            bool done;
+        };
+
+        std::vector<marked_exercise_plan_item> m_items;
+        std::vector<exercise_plan_deviation> m_deviations;
+        uint32_t m_current_position;
+        uint32_t m_next_position;
+
+        uint32_t m_completed_count;
+    public:
+        simple_exercise_plan(const std::vector<exercise_plan_item> items);
+
+        virtual std::vector<exercise_plan_item>& exercise(const planned_exercise exercise, const timestamp_t timestamp);
+
+        virtual std::vector<exercise_plan_item>& no_exercise(const timestamp_t timestamp);
+
+        virtual double progress() const;
+
+        virtual std::vector<exercise_plan_item>& completed() const;
+
+        virtual std::vector<exercise_plan_item>& todo() const;
+
+        virtual std::vector<exercise_plan_deviation>& deviations() const;
     };
 
     // class adaptive_exercise_plan : public exercise_plan { };
