@@ -33,9 +33,10 @@ svm_classifier::svm_scale svm_classifier_factory::parse_scale(std::string scale_
 
 svm_model svm_classifier_factory::parse_model(std::string svm_lib_file_path) {
     const char *model_file_path_c = svm_lib_file_path.c_str();
-    svm_model model = *(svm_load_model(model_file_path_c));
+    svm_model *model = svm_load_model(model_file_path_c);
+    assert(model != nullptr);
 
-    return model;
+    return *model;
 }
 
 svm_classifier svm_classifier_factory::build(std::string exercise_name, std::string svm_lib_file_path, std::string scale_file_path) {

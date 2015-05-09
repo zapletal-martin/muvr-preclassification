@@ -5,6 +5,7 @@
 #include <string>
 #include <cmath>
 #include <vector>
+#include <ostream>
 
 namespace muvr {
 
@@ -46,6 +47,13 @@ namespace muvr {
             // struct { } outdoors_exercise;
         };
 
+        planned_exercise(const std::string& exercise, const double intensity, const double weight, const uint8_t repetitions):
+            tag(resistance), exercise(exercise) {
+            resistance_exercise.repetitions = repetitions;
+            resistance_exercise.weight = weight;
+            resistance_exercise.intensity = intensity;
+        }
+
         planned_exercise(const planned_exercise& that) {
             exercise = that.exercise;
             switch (that.tag) {
@@ -57,25 +65,26 @@ namespace muvr {
             }
         }
 
+        /// ostream << operator
+        friend std::ostream& operator<<(std::ostream &stream, const planned_exercise& obj) {
+            stream << "planned_exercise "
+                   << "{ exercise=" << obj.exercise;
+            switch (obj.tag) {
+                case resistance:
+                    stream << ", tag=resistance"
+                           << ", resistance_exercise {.repetitions=" << obj.resistance_exercise.repetitions << ", .weight=" << obj.resistance_exercise.weight << ", .intensity=" << obj.resistance_exercise.intensity << "}";
+                    break;
+                default:
+                    throw std::runtime_error("Match error");
+            }
+            stream << "}";
+            return stream;
+        }
+
     };
 
     /// strict-ish equality
-    bool matches(const planned_exercise& lhs, const planned_exercise& rhs) {
-        if (lhs.tag != rhs.tag) return false;
-        switch (lhs.tag) {
-            case planned_exercise::resistance:
-                auto lhse = lhs.resistance_exercise;
-                auto rhse = rhs.resistance_exercise;
-                static const double iepsilon = 0.1;
-                const double wepsilon = lhse.weight * 0.1;
-                return std::abs(lhse.intensity - rhse.intensity) < iepsilon &&
-                       std::abs(lhse.weight - rhse.weight) < wepsilon &&
-                       lhse.repetitions == rhse.repetitions;
-        }
-
-        throw std::runtime_error("bad match");
-    }
-
+    bool matches(const planned_exercise& lhs, const planned_exercise& rhs);
 
     ///
     /// Planned rest
@@ -87,60 +96,87 @@ namespace muvr {
         // ??? glucose_level;
         // ??? oxygenation_level;
         // ??? lactose_level;
+
+        /// ostream << operator
+        friend std::ostream& operator<<(std::ostream& stream, const planned_rest& obj) {
+            stream << "planned_rest "
+                   << "{ duration=" << obj.duration
+                   << ", heart_rate=" << std::to_string(obj.heart_rate)
+                   << "}";
+            return stream;
+        }
+
     };
 
     /// we're resting if we're over the duration or below for HR
-    bool is_finished(const planned_rest &lhs, const planned_rest &rhs) {
-        if (lhs.heart_rate > rhs.heart_rate) return true; // HR dropped
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCSimplifyInspection"
-        if (lhs.duration < rhs.duration) return true; // exceeded duration
-#pragma clang diagnostic pop
-
-        return false;
-    }
+    bool is_finished(const planned_rest &lhs, const planned_rest &rhs);
 
     ///
     /// The plan item
     ///
     struct exercise_plan_item {
-        enum { exercise, rest } tag;
+        enum {
+            exercise, rest
+        } tag;
         union {
             planned_exercise exercise_item;
             planned_rest rest_item;
         };
 
+        exercise_plan_item(const planned_exercise &exercise_item) :
+                tag(exercise), exercise_item(exercise_item) {
+        }
+
+        exercise_plan_item(const planned_rest &rest_item) :
+                tag(rest), rest_item(rest_item) {
+        }
+
         exercise_plan_item(const exercise_plan_item &that) {
             tag = that.tag;
             switch (that.tag) {
-                case exercise: exercise_item = that.exercise_item; break;
-                case rest: rest_item = that.rest_item; break;
+                case exercise:
+                    exercise_item = that.exercise_item;
+                    break;
+                case rest:
+                    rest_item = that.rest_item;
+                    break;
             }
         }
 
         virtual ~exercise_plan_item() {
             switch (tag) {
-                case exercise: exercise_item.~planned_exercise(); break;
-                case rest: rest_item.~planned_rest(); break;
+                case exercise:
+                    exercise_item.~planned_exercise();
+                    break;
+                case rest:
+                    rest_item.~planned_rest();
+                    break;
             }
+        }
+
+        /// ostream << operator
+        friend std::ostream &operator<<(std::ostream &stream, const exercise_plan_item &obj) {
+            stream << "exercise_plan_item ";
+            switch (obj.tag) {
+                case exercise:
+                    stream << "{ tag=exercise, exercise_item=" << obj.exercise_item;
+                    break;
+                case rest:
+                    stream << "{ tag=exercise, rest_item=" << obj.rest_item;
+                    break;
+                default:
+                    throw std::runtime_error("Bad match");
+            }
+            stream << "}";
+            return stream;
         }
     };
 
     enum match_result { unmatchable, matched, not_matched };
 
-    match_result matches(const exercise_plan_item &item, const planned_exercise &exercise) {
-        if (item.tag == exercise_plan_item::rest) return unmatchable;
-        if (matches(item.exercise_item, exercise)) return matched;
-        return not_matched;
-    }
+    match_result matches(const exercise_plan_item &item, const planned_exercise &exercise);
 
-    match_result matches(const exercise_plan_item &item, const planned_rest &rest) {
-        if (item.tag == exercise_plan_item::exercise) return unmatchable;
-        if (is_finished(item.rest_item, rest)) return matched;
-
-        return not_matched;
-    }
-
+    match_result matches(const exercise_plan_item &item, const planned_rest &rest);
 
     ///
     /// Deviation from the plan
@@ -182,22 +218,22 @@ namespace muvr {
     class exercise_plan {
     public:
         /// submit completed exercise at the given time
-        virtual std::vector<exercise_plan_item> exercise(const planned_exercise exercise, const timestamp_t timestamp) = 0;
+        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise exercise, const timestamp_t timestamp) = 0;
 
         /// submit no exercise at the given time
-        virtual std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp) = 0;
+        virtual const std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp) = 0;
 
         /// percent completed 0..1
         virtual double progress() const = 0;
 
         /// Completed items
-        virtual std::vector<exercise_plan_item> completed() const = 0;
+        virtual const std::vector<exercise_plan_item> completed() const = 0;
 
         /// Items still to be done
-        virtual std::vector<exercise_plan_item> todo() const = 0;
+        virtual const std::vector<exercise_plan_item> todo() const = 0;
 
         /// Deviations from the plan
-        virtual std::vector<exercise_plan_deviation>& deviations() const = 0;
+        virtual const std::vector<exercise_plan_deviation>& deviations() const = 0;
     };
 
     ///
@@ -213,6 +249,15 @@ namespace muvr {
             marked_exercise_plan_item operator=(const marked_exercise_plan_item& that) {
                 return marked_exercise_plan_item { .done = that.done, .item = that.item };
             }
+
+            /// ostream << operator
+            friend std::ostream& operator<<(std::ostream &stream, const marked_exercise_plan_item &obj) {
+                stream << "marked_exercise_plan_item "
+                       << "{ done=" << std::to_string(obj.done)
+                       << ", item=" << obj.item
+                       << "}";
+                return stream;
+            }
         };
 
         std::vector<marked_exercise_plan_item> m_items;
@@ -226,17 +271,17 @@ namespace muvr {
     public:
         simple_exercise_plan(const std::vector<exercise_plan_item> items);
 
-        virtual std::vector<exercise_plan_item> exercise(const planned_exercise exercise, const timestamp_t timestamp);
+        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise exercise, const timestamp_t timestamp);
 
-        virtual std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp);
+        virtual const std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp);
 
         virtual double progress() const;
 
-        virtual std::vector<exercise_plan_item> completed() const;
+        virtual const std::vector<exercise_plan_item> completed() const;
 
-        virtual std::vector<exercise_plan_item> todo() const;
+        virtual const std::vector<exercise_plan_item> todo() const;
 
-        virtual std::vector<exercise_plan_deviation>& deviations() const;
+        virtual const std::vector<exercise_plan_deviation>& deviations() const;
     };
 
     // class adaptive_exercise_plan : public exercise_plan { };
