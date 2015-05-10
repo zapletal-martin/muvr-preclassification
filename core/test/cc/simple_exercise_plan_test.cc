@@ -30,6 +30,9 @@ TEST_F(simple_exercise_plan_test, perfect_exercise_only) {
     EXPECT_EQ(plan.completed().size(), todo.size());
 };
 
+///
+/// Tests that deviation gets spotted
+///
 TEST_F(simple_exercise_plan_test, deviation_exercise_only) {
     std::vector<exercise_plan_item> items = {bicep_curl, tricep_press, bicep_curl, tricep_press };
     simple_exercise_plan plan(items);
