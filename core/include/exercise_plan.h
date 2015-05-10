@@ -164,6 +164,11 @@ namespace muvr {
     struct exercise_plan_deviation {
         exercise_plan_item planned;
         exercise_plan_item actual;
+
+        exercise_plan_deviation(const exercise_plan_item& planned, const exercise_plan_item &actual):
+                planned(planned), actual(actual) {
+
+        }
     };
 
     ///

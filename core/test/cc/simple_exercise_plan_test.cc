@@ -30,3 +30,12 @@ TEST_F(simple_exercise_plan_test, perfect_exercise_only) {
     EXPECT_EQ(plan.completed().size(), todo.size());
 };
 
+TEST_F(simple_exercise_plan_test, deviation_exercise_only) {
+    std::vector<exercise_plan_item> items = {bicep_curl, tricep_press, bicep_curl, tricep_press };
+    simple_exercise_plan plan(items);
+
+    plan.exercise(tricep_press, 0);
+
+    EXPECT_EQ(true, matches(tricep_press, plan.deviations().front().actual.exercise_item));
+    EXPECT_EQ(true, matches(bicep_curl,   plan.deviations().front().planned.exercise_item));
+}

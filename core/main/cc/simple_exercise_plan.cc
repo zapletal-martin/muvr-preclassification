@@ -12,28 +12,41 @@ simple_exercise_plan::simple_exercise_plan(const std::vector<exercise_plan_item>
 }
 
 const std::vector<exercise_plan_item> simple_exercise_plan::exercise(const planned_exercise& exercise,
-                                                               const timestamp_t timestamp) {
+                                                                     const timestamp_t timestamp) {
+    bool deviation_reported = false;
     for (auto i = m_items.begin(); i != m_items.end(); ++i) {
         marked_exercise_plan_item &item = *i;
         if (item.done) continue;
-
-        LOG(TRACE) << "checking " << item << " against " << exercise;
 
         // this is the first "undone" item
         switch (matches(item.item, exercise)) {
             case match_result::unmatchable:
                 LOG(TRACE) << "expected rest, got exercise => rest done, moving on.";
-                // TODO: deviation
-                return this->exercise(exercise, timestamp);
+                // TODO: deviation?
+                // hopefully, the next call will result in matched exercise.
+                // that is, we only skipped rest
+                continue;
             case match_result::not_matched:
                 LOG(TRACE) << "unexpected exercise. scanning forward.";
                 // we expected exercise, but got a different one. scan forward until we find one.
-                // TODO: deviation
+                if (!deviation_reported) {
+                    m_deviations.push_back(exercise_plan_deviation(item.item.exercise_item, exercise));
+                }
+                deviation_reported = true;
                 continue;
             case match_result::matched:
                 // this is a match.
                 LOG(TRACE) << "match!";
                 item.done = true;
+
+                // if there is a rest preceding this exercise that is still undone, mark it done
+                if (i != m_items.begin()) {
+                    marked_exercise_plan_item &prev_item = *(i - 1);
+                    if (prev_item.item.tag == exercise_plan_item::rest) {
+                        prev_item.done = true;
+                    }
+                }
+
                 return filter_where_done(false);
         }
     }
