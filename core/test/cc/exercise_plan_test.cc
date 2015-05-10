@@ -10,15 +10,12 @@ class exercise_plan_test : public testing::Test {
 TEST_F(exercise_plan_test, planned_exercise) {
     planned_exercise foo("foo", 1, 1, 1);
     planned_exercise bar("bar", 1, 1, 1);
+    std::vector<planned_exercise> foos = {foo, foo, foo, foo};
     EXPECT_EQ(false, matches(foo, bar));
-
-    for (int i = 0; i < 10000; ++i) {
-        planned_exercise x(foo);
-        EXPECT_EQ(true, matches(foo, x));
-    }
+    for (const auto &x : foos) EXPECT_EQ(true, matches(foo, x));
 }
 
-/*
+
 TEST_F(exercise_plan_test, exercise_plan_item) {
     planned_exercise foo("foo", 1, 1, 1);
     exercise_plan_item fooi = foo;
@@ -33,4 +30,3 @@ TEST_F(exercise_plan_test, exercise_plan_item) {
     for (const auto &x : items2) EXPECT_EQ(matched, matches(x, foo));
 
 }
-*/

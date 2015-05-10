@@ -47,25 +47,17 @@ namespace muvr {
             // struct { } outdoors_exercise;
         };
 
+        /// empty ctor
+        planned_exercise() {
+
+        }
+
+        /// with fields
         planned_exercise(const std::string &exercise, const double intensity, const double weight, const uint8_t repetitions):
             tag(resistance), exercise(exercise) {
             resistance_exercise.repetitions = repetitions;
             resistance_exercise.weight = weight;
             resistance_exercise.intensity = intensity;
-        }
-
-        planned_exercise& operator=(const planned_exercise& that) {
-            exercise = that.exercise;
-            tag = that.tag;
-            switch (that.tag) {
-                case resistance:
-                    resistance_exercise.intensity = that.resistance_exercise.intensity;
-                    resistance_exercise.repetitions = that.resistance_exercise.repetitions;
-                    resistance_exercise.weight = that.resistance_exercise.weight;
-                    break;
-            }
-
-            return *this;
         }
 
         /// ostream << operator
@@ -118,13 +110,9 @@ namespace muvr {
     /// The plan item
     ///
     struct exercise_plan_item {
-        enum {
-            exercise, rest
-        } tag;
-        union {
-            planned_exercise exercise_item;
-            planned_rest rest_item;
-        };
+        enum { exercise, rest } tag;
+        planned_exercise exercise_item;
+        planned_rest rest_item;
 
         exercise_plan_item(const planned_exercise &exercise_item) :
                 tag(exercise), exercise_item(exercise_item) {
@@ -132,10 +120,6 @@ namespace muvr {
 
         exercise_plan_item(const planned_rest &rest_item) :
                 tag(rest), rest_item(rest_item) {
-        }
-
-        exercise_plan_item& operator=(const exercise_plan_item& that) {
-            throw std::runtime_error("x");
         }
 
         exercise_plan_item(const exercise_plan_item &that) {
@@ -146,17 +130,6 @@ namespace muvr {
                     break;
                 case rest:
                     rest_item = that.rest_item;
-                    break;
-            }
-        }
-
-        virtual ~exercise_plan_item() {
-            switch (tag) {
-                case exercise:
-                    exercise_item.~planned_exercise();
-                    break;
-                case rest:
-                    rest_item.~planned_rest();
                     break;
             }
         }

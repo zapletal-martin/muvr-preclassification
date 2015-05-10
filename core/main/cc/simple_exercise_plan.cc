@@ -7,14 +7,7 @@ using namespace muvr;
 
 simple_exercise_plan::simple_exercise_plan(const std::vector<exercise_plan_item> items):
     m_current_position(0), m_completed_count(0) {
-    for (const auto &i : items) {
-        m_items.push_back(marked_exercise_plan_item {.item = i, .done=false});
-    }
-
-//    std::transform(items.begin(), items.end(), m_items.begin(), [](const auto &x) {
-//        return marked_exercise_plan_item {.done = false, .item = x };
-//    });
-//
+    for (const auto &i : items) m_items.push_back(marked_exercise_plan_item {.item = i, .done = false});
     assert(m_items.size() > 1);
 }
 
