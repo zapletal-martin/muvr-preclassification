@@ -11,16 +11,16 @@ bool muvr::matches(const planned_exercise &lhs, const planned_exercise &rhs) {
             auto lhse = lhs.resistance_exercise;
             auto rhse = rhs.resistance_exercise;
 
-            if (lhse.repetitions > 0 && rhse.repetitions > 0) {
+            if (lhse.repetitions != UNKNOWN_REPETITIONS && rhse.repetitions != UNKNOWN_REPETITIONS) {
                 if (lhse.repetitions != rhse.repetitions) return false;
             }
 
-            if (lhse.weight > 0 && rhse.weight > 0) {
+            if (lhse.weight > UNKNOWN_WEIGHT && rhse.weight > UNKNOWN_WEIGHT) {
                 const double epsilon = lhse.weight * 0.1;
                 if (std::abs(lhse.weight - rhse.weight) > epsilon) return false;
             }
 
-            if (lhse.intensity > 0 && rhse.intensity > 0) {
+            if (lhse.intensity > UNKNOWN_INTENSITY && rhse.intensity > UNKNOWN_INTENSITY) {
                 static const double epsilon = 0.1;
                 if (std::abs(lhse.intensity - rhse.intensity) > epsilon) return false;
             }

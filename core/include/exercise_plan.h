@@ -26,6 +26,11 @@ namespace muvr {
     typedef uint64_t timestamp_t;
     typedef uint32_t duration_t;
 
+    // Nota bene that these #defines are tied to the implementation of ``matches``. Be careful when changing them.
+    #define UNKNOWN_INTENSITY -1.0
+    #define UNKNOWN_REPETITIONS 0
+    #define UNKNOWN_WEIGHT -1.0
+
     ///
     /// Planned exercise.
     ///
@@ -152,10 +157,23 @@ namespace muvr {
         }
     };
 
-    enum match_result { unmatchable, matched, not_matched };
+    enum match_result {
+        /// the values can never be matched: e.g. exercise `matches` rest
+        unmatchable,
+        /// a good match (same exercise, same parameters)
+        matched,
+        /// no match (different exercise or too different parameters)
+        not_matched
+    };
 
+    ///
+    /// Matches the ``item`` in the plan with the given ``exercise``
+    ///
     match_result matches(const exercise_plan_item &item, const planned_exercise &exercise);
 
+    ///
+    /// Matches the ``item`` in the plan with the given ``rest``
+    ///
     match_result matches(const exercise_plan_item &item, const planned_rest &rest);
 
     ///

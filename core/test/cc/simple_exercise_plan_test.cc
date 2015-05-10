@@ -7,8 +7,8 @@ using namespace muvr;
 
 class simple_exercise_plan_test : public testing::Test {
 protected:
-    const planned_exercise bicep_curl = planned_exercise("arms/bicep-curl", 0, 0, 0);
-    const planned_exercise tricep_press = planned_exercise("arms/tricep-press", 0, 0, 0);
+    const planned_exercise bicep_curl = planned_exercise("arms/bicep-curl", UNKNOWN_INTENSITY, UNKNOWN_WEIGHT, UNKNOWN_REPETITIONS);
+    const planned_exercise tricep_press = planned_exercise("arms/tricep-press", UNKNOWN_INTENSITY, UNKNOWN_WEIGHT, UNKNOWN_REPETITIONS);
 };
 
 ///
