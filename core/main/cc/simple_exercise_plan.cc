@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <experimental/optional>
-#include <easylogging++.h>
+#include "easylogging++.h"
 #include "exercise_plan.h"
 
 using namespace muvr;
