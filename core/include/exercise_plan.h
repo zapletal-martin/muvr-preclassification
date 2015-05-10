@@ -30,8 +30,8 @@ namespace muvr {
     /// Planned exercise.
     ///
     struct planned_exercise {
-        std::string exercise;
         enum { resistance } tag;
+        std::string exercise;
         union {
             /// resistance exercise data
             struct {
@@ -47,15 +47,16 @@ namespace muvr {
             // struct { } outdoors_exercise;
         };
 
-        planned_exercise(const std::string& exercise, const double intensity, const double weight, const uint8_t repetitions):
+        planned_exercise(const std::string &exercise, const double intensity, const double weight, const uint8_t repetitions):
             tag(resistance), exercise(exercise) {
             resistance_exercise.repetitions = repetitions;
             resistance_exercise.weight = weight;
             resistance_exercise.intensity = intensity;
         }
 
-        planned_exercise(const planned_exercise& that) {
+        planned_exercise& operator=(const planned_exercise& that) {
             exercise = that.exercise;
+            tag = that.tag;
             switch (that.tag) {
                 case resistance:
                     resistance_exercise.intensity = that.resistance_exercise.intensity;
@@ -63,6 +64,8 @@ namespace muvr {
                     resistance_exercise.weight = that.resistance_exercise.weight;
                     break;
             }
+
+            return *this;
         }
 
         /// ostream << operator
@@ -129,6 +132,10 @@ namespace muvr {
 
         exercise_plan_item(const planned_rest &rest_item) :
                 tag(rest), rest_item(rest_item) {
+        }
+
+        exercise_plan_item& operator=(const exercise_plan_item& that) {
+            throw std::runtime_error("x");
         }
 
         exercise_plan_item(const exercise_plan_item &that) {
@@ -218,7 +225,7 @@ namespace muvr {
     class exercise_plan {
     public:
         /// submit completed exercise at the given time
-        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise exercise, const timestamp_t timestamp) = 0;
+        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise& exercise, const timestamp_t timestamp) = 0;
 
         /// submit no exercise at the given time
         virtual const std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp) = 0;
@@ -271,7 +278,7 @@ namespace muvr {
     public:
         simple_exercise_plan(const std::vector<exercise_plan_item> items);
 
-        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise exercise, const timestamp_t timestamp);
+        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise& exercise, const timestamp_t timestamp);
 
         virtual const std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp);
 

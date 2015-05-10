@@ -18,7 +18,7 @@ simple_exercise_plan::simple_exercise_plan(const std::vector<exercise_plan_item>
     assert(m_items.size() > 1);
 }
 
-const std::vector<exercise_plan_item> simple_exercise_plan::exercise(const planned_exercise exercise,
+const std::vector<exercise_plan_item> simple_exercise_plan::exercise(const planned_exercise& exercise,
                                                                const timestamp_t timestamp) {
     for (auto i = m_items.begin(); i != m_items.end(); ++i) {
         marked_exercise_plan_item &item = *i;
