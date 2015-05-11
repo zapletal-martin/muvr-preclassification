@@ -61,7 +61,7 @@ typedef struct __attribute__((__packed__)) {
     repetitions_t repetitions;      // 1..~50,  UNK_REPETITIONS for unknown
     intensity_t   intensity;        // 1..100,  UNK_INTENSITY for unknown
     weight_t      weight;           // 1..~500, UNK_WEIGHT for unknown
-} resistance_exercise_t;
+} resistance_exercise_t;            // 29B
 
 #ifdef __cplusplus
 extern "C" {
