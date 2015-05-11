@@ -27,9 +27,9 @@ namespace muvr {
     typedef uint32_t duration_t;
 
     // Nota bene that these #defines are tied to the implementation of ``matches``. Be careful when changing them.
-    #define UNKNOWN_INTENSITY -1.0
+    #define UNKNOWN_INTENSITY 0.0
     #define UNKNOWN_REPETITIONS 0
-    #define UNKNOWN_WEIGHT -1.0
+    #define UNKNOWN_WEIGHT 0.0
 
     ///
     /// Planned exercise.
