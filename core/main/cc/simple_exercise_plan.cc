@@ -77,8 +77,13 @@ const std::experimental::optional<exercise_plan_item> simple_exercise_plan::no_e
             }
             
             if (is_finished(item.item.rest_item, rest)) {
+                // mark done and record deviation
+                m_deviations.push_back(exercise_plan_deviation(item.item.rest_item, rest));
+                item.done = true;
                 if (i + 1 != m_items.end()) m_current = (i + 1)->item;
             } else {
+                // TODO: ugly hack here
+                rest.duration = item.item.rest_item.duration - rest.duration;
                 m_current = exercise_plan_item(rest);
             }
             
@@ -94,13 +99,19 @@ const std::experimental::optional<exercise_plan_item> simple_exercise_plan::no_e
 }
 
 const std::vector<exercise_plan_item> simple_exercise_plan::completed() const {
-    auto done = filter_where_done(true);
-    if (!done.empty()) done.erase(done.begin());
-    return done;
+    return filter_where_done(true);
 }
 
 const std::vector<exercise_plan_item> simple_exercise_plan::todo() const {
-    return filter_where_done(false);
+    auto done = filter_where_done(false);
+    if (m_current && !done.empty()) {
+        // if current item matches the next exercise, drop it
+        if (m_current->tag == done.front().tag) {
+            done.erase(done.begin());
+        }
+    }
+    
+    return done;
 }
 
 const std::experimental::optional<exercise_plan_item> simple_exercise_plan::current() const {
