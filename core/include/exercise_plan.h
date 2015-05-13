@@ -6,6 +6,8 @@
 #include <cmath>
 #include <vector>
 #include <ostream>
+// Replace with the stdlib optional when available
+#include <experimental/optional>
 
 namespace muvr {
 
@@ -220,19 +222,22 @@ namespace muvr {
     ///
     class exercise_plan {
     public:
-        /// submit completed exercise at the given time
-        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise& exercise, const timestamp_t timestamp) = 0;
+        /// submit completed exercise at the given time, returning the next thing to do if available
+        virtual const std::experimental::optional<exercise_plan_item> exercise(const planned_exercise& exercise, const timestamp_t timestamp) = 0;
 
-        /// submit no exercise at the given time
-        virtual const std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp) = 0;
+        /// submit no exercise at the given time, returning the next thing to do if available
+        virtual const std::experimental::optional<exercise_plan_item> no_exercise(const timestamp_t timestamp) = 0;
 
         /// percent completed 0..1
         virtual double progress() const = 0;
 
+        /// Item currently expected to be done
+        virtual const std::experimental::optional<exercise_plan_item> current() const = 0;
+        
         /// Completed items
         virtual const std::vector<exercise_plan_item> completed() const = 0;
 
-        /// Items still to be done
+        /// Items still to be done (without the current item)
         virtual const std::vector<exercise_plan_item> todo() const = 0;
 
         /// Deviations from the plan
@@ -248,37 +253,42 @@ namespace muvr {
         struct marked_exercise_plan_item {
             exercise_plan_item item;
             bool done;
+            timestamp_t end_timestamp;
+            timestamp_t start_timestamp;
 
             marked_exercise_plan_item operator=(const marked_exercise_plan_item& that) {
-                return marked_exercise_plan_item { .done = that.done, .item = that.item };
+                return marked_exercise_plan_item { .done = that.done, .item = that.item, .end_timestamp = that.end_timestamp };
             }
 
             /// ostream << operator
             friend std::ostream& operator<<(std::ostream &stream, const marked_exercise_plan_item &obj) {
                 stream << "marked_exercise_plan_item "
                        << "{ done=" << std::to_string(obj.done)
+                       << ", end_timestamp=" << std::to_string(obj.end_timestamp)
                        << ", item=" << obj.item
                        << "}";
                 return stream;
             }
         };
 
+        /// planned steps
         std::vector<marked_exercise_plan_item> m_items;
-
-        std::vector<exercise_plan_item> filter_where_done(const bool done) const;
-
+        /// the current step that the user should complete
+        std::experimental::optional<exercise_plan_item> m_current;
+        /// the deviations from the plan
         std::vector<exercise_plan_deviation> m_deviations;
-        uint32_t m_current_position;
-
-        uint32_t m_completed_count;
+        
+        std::vector<exercise_plan_item> filter_where_done(const bool done) const;
     public:
         simple_exercise_plan(const std::vector<exercise_plan_item> items);
 
-        virtual const std::vector<exercise_plan_item> exercise(const planned_exercise& exercise, const timestamp_t timestamp);
+        virtual const std::experimental::optional<exercise_plan_item> exercise(const planned_exercise& exercise, const timestamp_t timestamp);
 
-        virtual const std::vector<exercise_plan_item> no_exercise(const timestamp_t timestamp);
+        virtual const std::experimental::optional<exercise_plan_item> no_exercise(const timestamp_t timestamp);
 
         virtual double progress() const;
+        
+        virtual const std::experimental::optional<exercise_plan_item> current() const;
 
         virtual const std::vector<exercise_plan_item> completed() const;
 
