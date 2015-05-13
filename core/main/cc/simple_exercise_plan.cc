@@ -8,6 +8,7 @@ using namespace muvr;
 simple_exercise_plan::simple_exercise_plan(const std::vector<exercise_plan_item> items) {
     for (const auto &i : items) m_items.push_back(marked_exercise_plan_item {.item = i, .done = false, .start_timestamp = 0, .end_timestamp = 0 });
     assert(m_items.size() > 1);
+    m_current = m_items.front().item;
 }
 
 const std::experimental::optional<exercise_plan_item> simple_exercise_plan::exercise(const planned_exercise& exercise,
@@ -48,7 +49,11 @@ const std::experimental::optional<exercise_plan_item> simple_exercise_plan::exer
                     }
                 }
 
-                if (i + 1 != m_items.end()) m_current = (i + 1)->item;
+                if (i + 1 != m_items.end()) {
+                    m_current = (i + 1)->item;
+                } else {
+                    m_current = std::experimental::nullopt;
+                }
                 return m_current;
         }
     }
@@ -57,6 +62,7 @@ const std::experimental::optional<exercise_plan_item> simple_exercise_plan::exer
 }
 
 const std::experimental::optional<exercise_plan_item> simple_exercise_plan::no_exercise(const timestamp_t timestamp) {
+    /*
     for (auto i = m_items.begin(); i != m_items.end(); ++i) {
         marked_exercise_plan_item &item = *i;
         if (item.done) continue;
@@ -66,24 +72,23 @@ const std::experimental::optional<exercise_plan_item> simple_exercise_plan::no_e
 
         // planned item is rest, and we're resting...
         if (item.item.tag == exercise_plan_item::rest) {
-            planned_rest rest;
+            duration_t duration = 0;
             if (item.start_timestamp != 0) {
                 // we have already started resting...
-                rest.duration = static_cast<duration_t>(timestamp - item.start_timestamp);
+                duration = static_cast<duration_t>(timestamp - item.start_timestamp);
             } else {
                 // this is the first time we're getting no-exercise
                 item.start_timestamp = timestamp;
-                rest.duration = 0;
             }
             
-            if (is_finished(item.item.rest_item, rest)) {
+            if (is_exceeded(item.item.rest_item, duration)) {
                 // mark done and record deviation
-                m_deviations.push_back(exercise_plan_deviation(item.item.rest_item, rest));
+                // m_deviations.push_back(exercise_plan_deviation(item.item.rest_item, rest));
                 item.done = true;
                 if (i + 1 != m_items.end()) m_current = (i + 1)->item;
             } else {
                 // TODO: ugly hack here
-                rest.duration = item.item.rest_item.duration - rest.duration;
+                //rest.duration = item.item.rest_item.duration - rest.duration;
                 m_current = exercise_plan_item(rest);
             }
             
@@ -94,8 +99,9 @@ const std::experimental::optional<exercise_plan_item> simple_exercise_plan::no_e
         m_current = item.item;
         return m_current;
     }
+    */
     
-    return std::experimental::nullopt;
+    return m_current;
 }
 
 const std::vector<exercise_plan_item> simple_exercise_plan::completed() const {

@@ -37,20 +37,12 @@ match_result muvr::matches(const exercise_plan_item &item, const planned_exercis
     return not_matched;
 }
 
-match_result muvr::matches(const exercise_plan_item &item, const planned_rest &rest) {
-    if (item.tag == exercise_plan_item::exercise) return unmatchable;
-    if (is_finished(item.rest_item, rest)) return matched;
-
-    return not_matched;
+/// we're resting if we're over the duration or below for HR
+bool muvr::is_finished(const planned_rest &rest, const duration_t duration) {
+    return duration > rest.minimum_duration;
 }
 
 /// we're resting if we're over the duration or below for HR
-bool muvr::is_finished(const planned_rest &lhs, const planned_rest &rhs) {
-    if (lhs.heart_rate > rhs.heart_rate) return true; // HR dropped
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCSimplifyInspection"
-    if (lhs.duration < rhs.duration) return true; // exceeded duration
-#pragma clang diagnostic pop
-
-    return false;
+bool muvr::is_exceeded(const planned_rest &rest, const duration_t duration) {
+    return duration > rest.maximum_duration;
 }

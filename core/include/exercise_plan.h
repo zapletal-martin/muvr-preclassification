@@ -92,7 +92,8 @@ namespace muvr {
     /// Planned rest
     ///
     struct planned_rest {
-        duration_t duration;    // at most
+        duration_t minimum_duration;
+        duration_t maximum_duration;
         uint8_t heart_rate;     // below
 
         // ??? glucose_level;
@@ -102,7 +103,8 @@ namespace muvr {
         /// ostream << operator
         friend std::ostream& operator<<(std::ostream& stream, const planned_rest& obj) {
             stream << "planned_rest "
-                   << "{ duration=" << obj.duration
+                   << "{ minimum_duration=" << obj.minimum_duration
+                   << ", maximum_duration=" << obj.maximum_duration
                    << ", heart_rate=" << std::to_string(obj.heart_rate)
                    << "}";
             return stream;
@@ -111,7 +113,10 @@ namespace muvr {
     };
 
     /// we're resting if we're over the duration or below for HR
-    bool is_finished(const planned_rest &lhs, const planned_rest &rhs);
+    bool is_finished(const planned_rest &rest, const duration_t duration);
+    
+    /// is exceeded
+    bool is_exceeded(const planned_rest &rest, const duration_t duration);
 
     ///
     /// The plan item
@@ -172,11 +177,6 @@ namespace muvr {
     /// Matches the ``item`` in the plan with the given ``exercise``
     ///
     match_result matches(const exercise_plan_item &item, const planned_exercise &exercise);
-
-    ///
-    /// Matches the ``item`` in the plan with the given ``rest``
-    ///
-    match_result matches(const exercise_plan_item &item, const planned_rest &rest);
 
     ///
     /// Deviation from the plan
