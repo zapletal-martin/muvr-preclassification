@@ -269,7 +269,7 @@ namespace muvr {
             /// Computes whether there is enough distiction between the powers of the first and other
             /// frequencies by at least ``factor``.
             ///
-            bool is_distinct(const double factor = 10) const;
+            bool is_distinct(const double factor) const;
 
             ///
             /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
@@ -286,7 +286,7 @@ namespace muvr {
                        << " { m_items=[";
                 for (auto &x : obj.m_items) stream << x << ",";
                 stream << "]"
-                       << ", is_distinct=" << obj.is_distinct()
+                       << ", is_distinct=" << obj.is_distinct(2)
                        << "}";
                 return stream;
             }

@@ -21,8 +21,7 @@ void exercise_decider::freq_powers::push_back(const freq_power& item) {
 
 bool exercise_decider::freq_powers::is_distinct(double const factor) const {
     if (m_items.size() < 2) return false;
-    return true;
-//    return m_items[0].power > m_items[1].power * factor;
+    return m_items[0].power > m_items[1].power * factor;
 }
 
 sensor_duration_t exercise_decider::freq_powers::period_duration(const uint8_t sampling_rate, const int index) const {
@@ -87,11 +86,24 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
         auto pfz = fft(source.data().col(2));
 
         LOG(TRACE) << "pfx=" << pfx << ",pfy=" << pfy << ",pfz=" << pfz;
-       
-        if (!pfx.is_distinct() || !pfy.is_distinct() || !pfz.is_distinct()) return no;
-        //if (!pfx.is_roughly_equal(pfy) || !pfy.is_roughly_equal(pfz)) return no;
+
+        // at least one of the periods has to be distinct enough
+        if (!pfx.is_distinct(2) && !pfy.is_distinct(2) && !pfz.is_distinct(2)) return no;
+
+        // the one that is distinct has to fit the times
+        if (pfx.is_distinct(2)) {
+            if (!is_within(pfx.period_duration(source.samples_per_second()), 800, 2000)) return no;
+        }
+        if (pfy.is_distinct(2)) {
+            if (!is_within(pfy.period_duration(source.samples_per_second()), 800, 2000)) return no;
+        }
+        if (pfz.is_distinct(2)) {
+            if (!is_within(pfz.period_duration(source.samples_per_second()), 800, 2000)) return no;
+        }
         
-        if (!is_within(pfx.period_duration(source.samples_per_second()), 1000, 3000)) return no;
+        // TODO: this needs to be configurable based on exercise type. For now, we'll take anything in
+        // 0.8 to 2 seconds.
+        if (!is_within(pfx.period_duration(source.samples_per_second()), 800, 2000)) return no;
 
         if (context.diverges(pfx, pfy, pfz)) {
             context.diverged();
