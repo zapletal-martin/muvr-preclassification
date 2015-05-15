@@ -20,10 +20,11 @@ void exercise_decider::freq_powers::push_back(const freq_power& item) {
 }
 
 double exercise_decider::freq_powers::peakiness() const {
-    if (m_items.size() < 4) return 0;
+    static const int n = 3;
+    if (m_items.size() < n) return -1;
 
-    double h = m_items[0].power - m_items[3].power;
-    auto mm = std::minmax_element(m_items.begin(), m_items.begin() + 4, [](const freq_power &l, const freq_power &r) {
+    double h = m_items[0].power - m_items[n - 1].power;
+    auto mm = std::minmax_element(m_items.begin(), m_items.begin() + n, [](const freq_power &l, const freq_power &r) {
        return l.frequency < r.frequency;
     });
     double w = mm.second->frequency - mm.first->frequency;
@@ -32,12 +33,17 @@ double exercise_decider::freq_powers::peakiness() const {
 }
 
 double exercise_decider::freq_powers::peak_frequency() const {
-    if (m_items.empty()) throw std::runtime_error("Peak frequency of empty");
+    if (m_items.empty()) throw std::runtime_error("peak_frequency() of empty");
     return m_items.front().frequency;
 }
 
+sensor_duration_t exercise_decider::freq_powers::peak_duration(const uint8_t sampling_rate) const {
+    if (m_items.empty()) throw std::runtime_error("peak_duration() of empty");
+    return 1000 / sampling_rate * m_items.front().frequency;
+}
+
 double exercise_decider::freq_powers::peak_power() const {
-    if (m_items.empty()) throw std::runtime_error("Peak power of empty");
+    if (m_items.empty()) throw std::runtime_error("peak_power() of empty");
     return m_items.front().power;
 }
 
@@ -50,9 +56,9 @@ exercise_decider::exercise_decider(): m_min_samples(200) {
 exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
     assert(source.cols == 1);
 
-    // smooth out noise
-    Mat filtered;
-    blur(source, filtered, Size(50, 50));
+//    // smooth out noise
+    Mat filtered(source);
+//    blur(source, filtered, Size(50, 50));
     filtered.convertTo(filtered, CV_32FC1);
 
     // take FFT of real numbers in filtered
@@ -60,7 +66,7 @@ exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
     dft(filtered, tmp, DFT_COMPLEX_OUTPUT);
 
     // the first row is just a sum, drop it
-    exercise_decider::freq_powers result(10, 1e+08);
+    exercise_decider::freq_powers result(10, 1e+06);
     for (int i = 1; i < tmp.rows / 2; ++i) {
         Complexf v = tmp.at<Complexf>(i, 0);
         exercise_decider::freq_power x {.frequency = (double)tmp.rows / i, .power = pow(abs(v), 2)};
@@ -76,22 +82,109 @@ namespace muvr {
     }
 }
 
-exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, state &context) {
+exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, state &state) {
     if (source.reported_duration() < 4000) return undecidable;
+    if (source.type() != accelerometer && source.type() != rotation) return undecidable;
 
-    if (source.type() == accelerometer || source.type() == rotation) {
-        auto pfx = fft(source.data().col(0));
-        auto pfy = fft(source.data().col(1));
-        auto pfz = fft(source.data().col(2));
+    std::vector<freq_powers> fps = { fft(source.data().col(0)), fft(source.data().col(1)), fft(source.data().col(2)) };
+    const double min_peakiness = 1e+8;
+
+    if (state.m_axis == -1) {
+        // need to determine the most prominent axis
+        double max_peakiness = -1;
+        int index = -1;
+        for (size_t i = 0; i < fps.size(); ++i) {
+            auto &fp = fps[i];
+            auto duration = fp.peak_duration(source.samples_per_second());
+            auto peakiness = fp.peakiness();
+            if (is_within(duration, 800, 2000) && peakiness > max_peakiness) {
+                max_peakiness = peakiness;
+                index = i;
+            }
+        }
         
-        LOG(TRACE) << "pfx=" << pfx << ",pfy=" << pfy << ",pfz=" << pfz;
+        if (max_peakiness > min_peakiness && index > -1) {
+            state.m_axis = index;
+            state.m_freq_powers = fps;
+            return yes;
+        }
+        return no;
+    } else {
+        // we already know which axis to watch
+        auto &curr_fp = fps[state.m_axis];
+        auto last_fp = state.m_freq_powers[state.m_axis];
+        
+        state.m_freq_powers = fps;
 
-        if (context.diverged(pfx, pfy, pfz)) {
+        const double frequency_epsilon = curr_fp.peak_frequency() * 0.2; // 20% drift of frequency OK
+        //const double peakiness_epsilon = curr_fp.peakiness() * 0.4; // 20% drift of peakiness
+        bool frequency_drifted = std::abs(last_fp.peak_frequency() - curr_fp.peak_frequency()) > frequency_epsilon;
+        bool peakiness_drifted = curr_fp.peakiness() < min_peakiness;
+        
+        LOG(TRACE) << "frequency_drifted=" << frequency_drifted << ", peakiness_drifted=" << peakiness_drifted;
+        
+        if (peakiness_drifted || frequency_drifted) {
+            // we have drifted
+            state.m_freq_powers.clear();
+            state.m_axis = -1;
             return no;
         }
-
         return yes;
     }
-
+    
     return undecidable;
 }
+/*
+bool diverged(const freq_powers &x, const freq_powers &y, const freq_powers &z) {
+    const std::vector<freq_powers> fps = {x, y, z};
+    if (m_axis == -1) {
+        double max_peakiness = -1;
+        size_t index = 0;
+        for (size_t i = 0; i < fps.size(); ++i) {
+            auto &fp = fps[i];
+            if (fp.peakiness() > max_peakiness) {
+                max_peakiness = fp.peakiness();
+                index = i;
+            }
+        }
+        
+        static const double min_peakiness = 1e+6;
+        if (max_peakiness > min_peakiness) {
+            
+        }
+        
+        double px = x.peakiness();
+        double py = y.peakiness();
+        double pz = z.peakiness();
+        
+        LOG(TRACE) << "px = " << px << ", py " << py << ", pz " << pz;
+        
+        if (px >= py >= pz && px > min_peakiness) {
+            m_axis = 0;
+            m_freq_powers = x;
+            return false;
+        } else if (py >= px >= pz && py > min_peakiness) {
+            m_axis = 1;
+            m_freq_powers = y;
+            return false;
+        } else if (pz >= px >= py && pz > min_peakiness) {
+            m_axis = 2;
+            m_freq_powers = z;
+            return false;
+        }
+        
+        return true;
+    } else {
+        const freq_powers& fp = fps[m_axis];
+        
+        const double epsilon = m_freq_powers->peak_frequency() / 5; // 20% drift is OK
+        if (std::abs(m_freq_powers->peak_frequency() - fp.peak_frequency()) > epsilon) {
+            // we have drifted
+            m_freq_powers = std::experimental::nullopt;
+            m_axis = -1;
+            return true;
+        }
+        return true;
+    }
+}
+*/

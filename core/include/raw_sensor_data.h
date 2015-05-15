@@ -279,6 +279,11 @@ namespace muvr {
             double peak_frequency() const;
             
             ///
+            /// Returns the duration of the most powerful element
+            ///
+            sensor_duration_t peak_duration(const uint8_t sampling_rate) const;
+            
+            ///
             /// Returns the peak power
             ///
             double peak_power() const;
@@ -300,8 +305,9 @@ namespace muvr {
         /// The opaque structure that the clients hold
         ///
         struct state {
+        friend class exercise_decider;
         private:
-            std::experimental::optional<freq_powers> m_freq_powers; // at the given m_axis
+            std::vector<freq_powers> m_freq_powers;
             int m_axis = -1;
         public:
             /// nullary ctor
@@ -311,60 +317,11 @@ namespace muvr {
             state(const state &that): m_freq_powers(that.m_freq_powers), m_axis(that.m_axis) {
 
             }
-
-            /// update this instance after divergence
-            void diverged() {
-                m_freq_powers = std::experimental::nullopt;
-                m_axis = -1;
-            }
-
-            bool diverged(const freq_powers &x, const freq_powers &y, const freq_powers &z) {
-                if (m_axis == -1) {
-                    double px = x.peakiness();
-                    double py = y.peakiness();
-                    double pz = z.peakiness();
-                    static const double min_peakiness = 1e+6;
-                    
-                    LOG(TRACE) << "px = " << px << ", py " << py << ", pz " << pz;
-                    
-                    if (px >= py >= pz && px > min_peakiness) {
-                        m_axis = 0;
-                        m_freq_powers = x;
-                        return false;
-                    } else if (py >= px >= pz && py > min_peakiness) {
-                        m_axis = 1;
-                        m_freq_powers = y;
-                        return false;
-                    } else if (pz >= px >= py && pz > min_peakiness) {
-                        m_axis = 2;
-                        m_freq_powers = z;
-                        return false;
-                    }
-
-                    return true;
-                } else {
-                    const freq_powers* fp;
-                    if (m_axis == 0) fp = &x;
-                    else if (m_axis == 1) fp = &y;
-                    else if (m_axis == 2) fp = &z;
-                    else throw std::runtime_error("Bad axis " + std::to_string(m_axis));
-
-                    const double epsilon = m_freq_powers->peak_frequency() / 5; // 20% drift is OK
-                    if (std::abs(m_freq_powers->peak_frequency() - fp->peak_frequency()) > epsilon) {
-                        // we have drifted
-                        m_freq_powers = std::experimental::nullopt;
-                        m_axis = -1;
-                        return true;
-                    }
-                    return true;
-                }
-            }
             
             /// << operator
             friend std::ostream& operator<<(std::ostream& stream, const state &obj) {
                 stream << "exercise_context"
                        << "{ axis=" << obj.m_axis;
-                if (obj.m_freq_powers) stream << ", freq_powers=" << *obj.m_freq_powers;
                 stream << "}";
                 return stream;
             }
@@ -386,7 +343,6 @@ namespace muvr {
         ///
         virtual exercise_result has_exercise(const raw_sensor_data& source, state &context);
     };
-
 
 }
 
