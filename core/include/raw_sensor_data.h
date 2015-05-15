@@ -3,7 +3,6 @@
 #include <inttypes.h>
 #include <opencv2/opencv.hpp>
 #include <experimental/optional>
-#include "easylogging++.h"
 
 using namespace cv;
 
