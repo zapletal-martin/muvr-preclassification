@@ -2,6 +2,8 @@
 #define _PRECLASSIFICATION_RAWSENSORDATA_H_
 #include <inttypes.h>
 #include <opencv2/opencv.hpp>
+#include <experimental/optional>
+#include "easylogging++.h"
 
 using namespace cv;
 
@@ -258,7 +260,7 @@ namespace muvr {
             ///
             /// Ctor, sets the maximum number items with the greatest power to record
             ///
-            freq_powers(const uint max_count);
+            freq_powers(const uint max_count, const double min_power);
 
             ///
             /// Check for the item's power, if acceptable, add
@@ -266,28 +268,26 @@ namespace muvr {
             void push_back(const freq_power& item);
 
             ///
-            /// Computes whether there is enough distiction between the powers of the first and other
-            /// frequencies by at least ``factor``.
+            /// Computes the sharpness of the frequency distribution as the ratio between
+            /// the first and the second frequency
             ///
-            bool is_distinct(const double factor) const;
+            double peakiness() const;
 
             ///
-            /// Computes whether this freq_powers roughly matches the frequencies in ``that``.
+            /// Returns the peak frequency
             ///
-            bool is_roughly_equal(const freq_powers& that, const uint count, const double freq_tolerance) const;
+            double peak_frequency() const;
             
             ///
-            /// Computes the duration of the given period
+            /// Returns the peak power
             ///
-            sensor_duration_t period_duration(const uint8_t sampling_rate, const int index = 0) const;
+            double peak_power() const;
 
             friend std::ostream &operator<<(std::ostream &stream, const freq_powers &obj) {
                 stream << "freq_powers"
                        << " { m_items=[";
                 for (auto &x : obj.m_items) stream << x << ",";
-                stream << "]"
-                       << ", is_distinct=" << obj.is_distinct(2)
-                       << "}";
+                stream << "}";
                 return stream;
             }
         };
@@ -299,49 +299,73 @@ namespace muvr {
         ///
         /// The opaque structure that the clients hold
         ///
-        // TODO: Rename me to state
-        struct exercise_context {
+        struct state {
         private:
-            std::vector<freq_powers> m_freq_powers;
+            std::experimental::optional<freq_powers> m_freq_powers; // at the given m_axis
+            int m_axis = -1;
         public:
             /// nullary ctor
-            exercise_context() { };
-            
-            exercise_context(const exercise_context &that): m_freq_powers(that.m_freq_powers) {
+            state() { };
+
+            /// copy ctor
+            state(const state &that): m_freq_powers(that.m_freq_powers), m_axis(that.m_axis) {
 
             }
-            
-            /// tests whether this instance diverges from the x, y, z
-            bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
-                if (m_freq_powers.size() == 0) return false;
-
-                if (!m_freq_powers[0].is_roughly_equal(x, 1, 0.5)) return true;
-                if (!m_freq_powers[1].is_roughly_equal(y, 1, 0.5)) return true;
-                if (!m_freq_powers[2].is_roughly_equal(z, 1, 0.5)) return true;
-                return false;
-            };
 
             /// update this instance after divergence
             void diverged() {
-                m_freq_powers.erase(m_freq_powers.begin(), m_freq_powers.end());
+                m_freq_powers = std::experimental::nullopt;
+                m_axis = -1;
             }
 
-            void update(const freq_powers &x, const freq_powers &y, const freq_powers &z) {
-                m_freq_powers.erase(m_freq_powers.begin(), m_freq_powers.end());
-                m_freq_powers.push_back(x);
-                m_freq_powers.push_back(y);
-                m_freq_powers.push_back(z);
+            bool diverged(const freq_powers &x, const freq_powers &y, const freq_powers &z) {
+                if (m_axis == -1) {
+                    double px = x.peakiness();
+                    double py = y.peakiness();
+                    double pz = z.peakiness();
+                    static const double min_peakiness = 1e+6;
+                    
+                    LOG(TRACE) << "px = " << px << ", py " << py << ", pz " << pz;
+                    
+                    if (px >= py >= pz && px > min_peakiness) {
+                        m_axis = 0;
+                        m_freq_powers = x;
+                        return false;
+                    } else if (py >= px >= pz && py > min_peakiness) {
+                        m_axis = 1;
+                        m_freq_powers = y;
+                        return false;
+                    } else if (pz >= px >= py && pz > min_peakiness) {
+                        m_axis = 2;
+                        m_freq_powers = z;
+                        return false;
+                    }
+
+                    return true;
+                } else {
+                    const freq_powers* fp;
+                    if (m_axis == 0) fp = &x;
+                    else if (m_axis == 1) fp = &y;
+                    else if (m_axis == 2) fp = &z;
+                    else throw std::runtime_error("Bad axis " + std::to_string(m_axis));
+
+                    const double epsilon = m_freq_powers->peak_frequency() / 5; // 20% drift is OK
+                    if (std::abs(m_freq_powers->peak_frequency() - fp->peak_frequency()) > epsilon) {
+                        // we have drifted
+                        m_freq_powers = std::experimental::nullopt;
+                        m_axis = -1;
+                        return true;
+                    }
+                    return true;
+                }
             }
             
             /// << operator
-            friend std::ostream& operator<<(std::ostream& stream, const exercise_context &obj) {
+            friend std::ostream& operator<<(std::ostream& stream, const state &obj) {
                 stream << "exercise_context"
-                       << "{ freq_powers=[";
-                for (size_t i = 0; i < obj.m_freq_powers.size(); ++i) {
-                    if (i > 0) stream << ",";
-                    stream << obj.m_freq_powers[i];
-                }
-                stream << "]}";
+                       << "{ axis=" << obj.m_axis;
+                if (obj.m_freq_powers) stream << ", freq_powers=" << *obj.m_freq_powers;
+                stream << "}";
                 return stream;
             }
         };
@@ -360,7 +384,7 @@ namespace muvr {
         /// Checks to see if there is movement that is typical for exercise in the
         /// given ``source``.
         ///
-        virtual exercise_result has_exercise(const raw_sensor_data& source, exercise_context &context);
+        virtual exercise_result has_exercise(const raw_sensor_data& source, state &context);
     };
 
 
