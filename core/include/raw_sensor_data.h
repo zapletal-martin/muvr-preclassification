@@ -304,6 +304,13 @@ namespace muvr {
         private:
             std::vector<freq_powers> m_freq_powers;
         public:
+            /// nullary ctor
+            exercise_context() { };
+            
+            exercise_context(const exercise_context &that): m_freq_powers(that.m_freq_powers) {
+
+            }
+            
             /// tests whether this instance diverges from the x, y, z
             bool diverges(const freq_powers &x, const freq_powers &y, const freq_powers &z) const {
                 if (m_freq_powers.size() == 0) return false;
@@ -353,7 +360,7 @@ namespace muvr {
         /// Checks to see if there is movement that is typical for exercise in the
         /// given ``source``.
         ///
-        virtual exercise_result has_exercise(const raw_sensor_data& source, exercise_context &context) const;
+        virtual exercise_result has_exercise(const raw_sensor_data& source, exercise_context &context);
     };
 
 

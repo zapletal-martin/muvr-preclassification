@@ -20,10 +20,10 @@ TEST_F(simple_exercise_plan_test, perfect_exercise_only) {
     simple_exercise_plan plan(items);
     const auto todo = plan.todo();
 
-    EXPECT_EQ(true, matches(tricep_press, plan.exercise(bicep_curl, 0).front().exercise_item));
-    EXPECT_EQ(true, matches(bicep_curl,   plan.exercise(tricep_press, 0).front().exercise_item));
-    EXPECT_EQ(true, matches(tricep_press, plan.exercise(bicep_curl, 0).front().exercise_item));
-    EXPECT_TRUE(                          plan.exercise(tricep_press, 0).empty());
+    EXPECT_EQ(true, matches(tricep_press, plan.exercise(bicep_curl, 0)->exercise_item));
+    EXPECT_EQ(true, matches(bicep_curl,   plan.exercise(tricep_press, 0)->exercise_item));
+    EXPECT_EQ(true, matches(tricep_press, plan.exercise(bicep_curl, 0)->exercise_item));
+    EXPECT_FALSE(                         plan.exercise(tricep_press, 0));
 
     EXPECT_TRUE(plan.todo().empty());
     EXPECT_TRUE(plan.deviations().empty());

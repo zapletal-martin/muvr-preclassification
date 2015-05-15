@@ -77,7 +77,7 @@ namespace muvr {
     }
 }
 
-exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, exercise_context &context) const {
+exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, exercise_context &context) {
     if (source.reported_duration() < 4000) return undecidable;
 
     if (source.type() == accelerometer || source.type() == rotation) {
