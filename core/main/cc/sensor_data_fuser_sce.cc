@@ -75,7 +75,6 @@ void sensor_data_fuser::sensor_context_entry::evaluate(const raw_sensor_data &da
         auto r = data.slice_from_start(m_state.exercise_start);
         if (exercise_decider->has_exercise(r, m_exercise_context) != exercise_decider::exercise_result::yes) {
             // we're no longer exercising
-            m_exercise_context.diverged();
             m_state.exercise_end = r.end_timestamp();
         }
     }

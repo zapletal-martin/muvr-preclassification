@@ -246,7 +246,7 @@ namespace muvr {
         private:
             device_id_t m_device_id;
             sensor_type_t m_sensor_type;
-            exercise_decider::exercise_context m_exercise_context;
+            exercise_decider::state m_exercise_context;
             state m_state = state::empty;
         public:
             sensor_context_entry(const sensor_context_entry &that);
