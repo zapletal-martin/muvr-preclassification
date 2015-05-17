@@ -93,7 +93,7 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
         // need to determine the most prominent axis
         double max_peakiness = -1;
         int index = -1;
-        for (size_t i = 0; i < fps.size(); ++i) {
+        for (int i = 0; i < fps.size(); ++i) {
             auto &fp = fps[i];
             auto duration = fp.peak_duration(source.samples_per_second());
             auto peakiness = fp.peakiness();
