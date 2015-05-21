@@ -11,7 +11,7 @@ svm_classifier::classification_result vote(const std::vector<svm_classifier::cla
     for(int i = 0; i < results.size(); ++i) {
         if(results[i].exercises().size() > 0) {
 
-            std::cout << "exercise" << results[i].exercises()[0].exercise_name() << " with confidence " << results[i].exercises()[0].confidence() << std::endl;
+            // std::cout << "exercise" << results[i].exercises()[0].exercise_name() << " with confidence " << results[i].exercises()[0].confidence() << std::endl;
             if(results[i].exercises()[0].confidence() > max_confidence) {
                 max_result = results[i];
             }

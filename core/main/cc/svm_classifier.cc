@@ -79,8 +79,8 @@ Mat initial_preprocessing(const cv::Mat &data) {
     /*Mat even_data = transform_to_evenly_sized_mat(cv_data);
     Mat dct_data = transform_discrete_cosine(even_data);*/
 
-    LOG(TRACE) << "M = "<< std::endl << " "  << data << std::endl << std::endl;
-    LOG(TRACE) << "Mcv = "<< std::endl << " "  << cv_data << std::endl << std::endl;
+    //LOG(TRACE) << "M = "<< std::endl << " "  << data << std::endl << std::endl;
+    //LOG(TRACE) << "Mcv = "<< std::endl << " "  << cv_data << std::endl << std::endl;
     /*LOG(TRACE) << "Meven = "<< std::endl << " "  << even_data << std::endl << std::endl;
     LOG(TRACE) << "Mdct = "<< std::endl << " "  << dct_data << std::endl << std::endl;*/
 
@@ -99,10 +99,10 @@ void print(svm_node **matrix, int rows, int cols) {
 cv::Mat svm_classifier::preprocessingPipeline(const cv::Mat &data, const std::vector<double>& scale, const std::vector<double> &center) {
     // Flatten matrix using column-major transformation.
     Mat feature_vector =  Mat(data.t()).reshape(1, 1);
-    LOG(TRACE) << "Feature Vector = "<< std::endl << " "  << feature_vector << std::endl << std::endl;
+    //LOG(TRACE) << "Feature Vector = "<< std::endl << " "  << feature_vector << std::endl << std::endl;
 
     Mat scaled_feature_vector = transform_scale(feature_vector, scale, center);
-    LOG(TRACE) << "Scaled Feature Vector = "<< std::endl << " "  << scaled_feature_vector << std::endl << std::endl;
+    //LOG(TRACE) << "Scaled Feature Vector = "<< std::endl << " "  << scaled_feature_vector << std::endl << std::endl;
 
     return scaled_feature_vector;
 }
@@ -119,7 +119,7 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
     // Apply initial preprocessing steps to data.
     Mat preprocessed = initial_preprocessing(first_sensor_data.data);
 
-    LOG(TRACE) << "Raw input data = "<< std::endl << " "  << preprocessed << std::endl << std::endl;
+    //LOG(TRACE) << "Raw input data = "<< std::endl << " "  << preprocessed << std::endl << std::endl;
 
     // Sliding window.
     int reps = 0;
@@ -139,7 +139,7 @@ svm_classifier::classification_result svm_classifier::classify(const std::vector
         double confidenceScores[m_model.nr_class];
         prediction = svm_predict_probability(&m_model, libsvm_feature_vector_flattened, confidenceScores);
 
-        LOG(TRACE) << "Prediction for " << m_exercise_name << ": " << prediction << " with confidence: " << confidenceScores[0] << std::endl;
+        //LOG(TRACE) << "Prediction for " << m_exercise_name << ": " << prediction << " with confidence: " << confidenceScores[0] << std::endl;
 
         if(confidenceScores[0] > threshold) {
             reps = reps + 1;
