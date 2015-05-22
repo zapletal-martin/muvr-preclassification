@@ -1,0 +1,7 @@
+SET(EXPORTER_EXECUTABLE preclassification-exporter)
+
+FILE(GLOB MainSources cc/*.cc)
+INCLUDE_DIRECTORIES(${PROJECT_ROOT_DIR}/core/include)
+
+ADD_EXECUTABLE(${EXPORTER_EXECUTABLE} ${MainSources})
+TARGET_LINK_LIBRARIES(${EXPORTER_EXECUTABLE} preclassification-core ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})

@@ -12,7 +12,7 @@ TEST_F(raw_sensor_data_test, simple_fuse) {
     auto no_movement_data = device_data_loader("pebble_lab_bicep_curl_1.dat").load();
     boost::optional<raw_sensor_data> data = boost::none;
     for (auto &i : no_movement_data) {
-        auto packet = decode_single_packet(i.data.data());
+        auto packet = decode_single_packet(i.data.data()).first;
         if (data) {
             data->push_back(packet, 0);
         } else {

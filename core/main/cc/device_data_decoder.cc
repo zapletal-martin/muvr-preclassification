@@ -3,7 +3,7 @@
 
 namespace muvr {
 
-    raw_sensor_data decode_single_packet(const uint8_t *buffer) {
+    std::pair<raw_sensor_data, size_t> decode_single_packet(const uint8_t *buffer) {
         // step 0: elementary assumptions
         assert(buffer != nullptr);
 
@@ -12,11 +12,13 @@ namespace muvr {
         if (header->samples_per_second == 0) throw std::runtime_error("header->samples_per_second == 0.");
         if (header->sample_size == 0) throw std::runtime_error("header->sample_size == 0.");
 
+        size_t payload_size = 0;
         // step 3: data
         Mat data;
         switch (header->type) {
             case accelerometer:
             case rotation: {
+                payload_size = header->count * sizeof(device_data_threed);
                 data = Mat(header->count, 3, CV_16S);
                 for (uint8_t i = 0; i < header->count; ++i) {
                     size_t offset = sizeof(device_data_header) + i * sizeof(device_data_threed);
@@ -28,6 +30,7 @@ namespace muvr {
                 break;
             }
             case heart_rate: {
+                payload_size = header->count;
                 data = Mat(header->count, 1, CV_16S);
                 for (uint8_t i = 0; i < header->count; ++i) {
                     size_t offset = sizeof(device_data_header) + i;
@@ -75,13 +78,14 @@ namespace muvr {
 
         assert(destination.rows == header->samples_per_second * duration / 1000);
 
-        return raw_sensor_data(destination,
-                               static_cast<device_id_t>(header->device_id),
-                               static_cast<sensor_type_t>(header->type),
-                               header->samples_per_second,
-                               header->sequence_number,
-                               timestamp,
-                               duration);
+        return std::pair<raw_sensor_data, size_t>(raw_sensor_data(destination,
+                                                                  static_cast<device_id_t>(header->device_id),
+                                                                  static_cast<sensor_type_t>(header->type),
+                                                                  header->samples_per_second,
+                                                                  header->sequence_number,
+                                                                  timestamp,
+                                                                  duration),
+                                                  sizeof(device_data_header) + payload_size);
     }
 
 }
