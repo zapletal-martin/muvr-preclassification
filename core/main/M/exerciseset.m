@@ -5,8 +5,8 @@
 % Load the CSV, filter out relevant rows
 % To see the effect of non-exercise, remove the filtering on the .timestamp
 
-M = readtable('/Users/janmachacek/Downloads/22-05/18.csv');
-ads  = table2array(M);
+M = readtable('/Users/janmachacek/Muvr/muvr-preclassification/training-data/jan-back-22-05/1.csv');
+ads = table2array(M(:,[5,6,7]));
 time = 1:length(ads);
 subplot(3, 1, 1);
 plot(time, ads);
@@ -14,9 +14,9 @@ plot(time, ads);
 %% No exercise by no movement 
 % Identify whether the window (with data in ``ads(:,n)``) is "no movement"
 
-[nmx, datax] = nomovement(ads(:,2));
-[nmy, datay] = nomovement(ads(:,3));
-[nmz, dataz] = nomovement(ads(:,4));
+[nmx, datax] = nomovement(ads(:,1));
+[nmy, datay] = nomovement(ads(:,2));
+[nmz, dataz] = nomovement(ads(:,3));
 subplot(3, 1, 2);
 hold on;
 plot(time,datax);
