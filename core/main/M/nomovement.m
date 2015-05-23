@@ -2,12 +2,12 @@
 %
 
 function [result, data] = nomovement(xs)
-    %windowSize = 50;
-    %b = (1/windowSize)*ones(1,windowSize);
-    %a = 1;
-    %relNums = filter(b, a, xs);
+    windowSize = 50;
+    b = (1/windowSize)*ones(1,windowSize);
+    a = 1;
+    relNums = filter(b, a, xs);
     
-    m = mean(xs);
-    data = xs - m;
+    m = mean(relNums);
+    data = relNums - m;
     result = max(data) - min(data) > 50;
 end
