@@ -1,6 +1,6 @@
-count = 5;
+range = 22:27;
 dir = '/Users/janmachacek/Muvr/muvr-preclassification/training-data/jan-back-22-05/';
-for i = 1:count
+for i = range
     fileName = strcat(strcat(dir, num2str(i)), '.csv');
     M = readtable(fileName);
     ads = table2array(M(:,[5,6,7]));
