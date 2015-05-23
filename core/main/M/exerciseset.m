@@ -5,7 +5,7 @@
 % Load the CSV, filter out relevant rows
 % To see the effect of non-exercise, remove the filtering on the .timestamp
 
-M = readtable('/Users/janmachacek/Downloads/22-05-114.csv');
+M = readtable('/Users/janmachacek/Downloads/22-05/18.csv');
 ads  = table2array(M);
 time = 1:length(ads);
 subplot(3, 1, 1);
