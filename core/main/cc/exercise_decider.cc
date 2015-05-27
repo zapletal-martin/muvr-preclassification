@@ -111,7 +111,7 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
     if (source.reported_duration() < 4000) return undecidable;
     if (source.type() != accelerometer && source.type() != rotation) return undecidable;
 
-    std::vector<freq_powers> fps = { fft(source.data().col(0)), fft(source.data().col(1)), fft(source.data().col(2)) };
+    const std::vector<freq_powers> fps = { fft(source.data().col(0)), fft(source.data().col(1)), fft(source.data().col(2)) };
     const double axis_fitness_decay = 0.4;
     const double frequency_decay = 0.3;
     const double peakiness_decay = 0.3;
@@ -120,7 +120,7 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
 
     if (state.m_axis == -1) {
         // need to determine the most prominent axis
-        auto peak = max_peak(source.samples_per_second(), fps);
+        const auto& peak = max_peak(source.samples_per_second(), fps);
         if (peak) {
             state.m_axis = peak->first;
             state.m_freq_powers = fps;
@@ -129,9 +129,9 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
         }
         return no;
     } else {
-        double current_fitness = state.m_fitness;
+        const double current_fitness = state.m_fitness;
         
-        auto peak = max_peak(source.samples_per_second(), fps);
+        const auto& peak = max_peak(source.samples_per_second(), fps);
         if (peak) {
             if (peak->first != state.m_axis) state.m_fitness -= axis_fitness_decay;
         } else {
