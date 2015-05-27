@@ -299,6 +299,8 @@ namespace muvr {
         /// compute the periodogram of the real numbers in the rows of first column in ``source``
         exercise_decider::freq_powers fft(const Mat& source) const;
 
+        /// find the maximum peak (its value and axis) in the given vector of fps
+        std::experimental::optional<std::pair<int, double>> max_peak(const uint8_t samples_per_second, const std::vector<freq_powers> fps) const;
     public:
         ///
         /// The opaque structure that the clients hold
@@ -308,6 +310,7 @@ namespace muvr {
         private:
             std::vector<freq_powers> m_freq_powers;
             int m_axis = -1;
+            double m_fitness = 0;
         public:
             /// nullary ctor
             state() { };

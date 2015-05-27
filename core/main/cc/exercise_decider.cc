@@ -82,34 +82,61 @@ namespace muvr {
     }
 }
 
+std::experimental::optional<std::pair<int, double>> exercise_decider::max_peak(const uint8_t samples_per_second, const std::vector<freq_powers> fps) const {
+    assert(fps.size() > 0);
+    const double min_peakiness = 1e+8;
+
+    double max_peakiness = -1;
+    int index = -1;
+    for (int i = 0; i < fps.size(); ++i) {
+        auto &fp = fps[i];
+        auto duration = fp.peak_duration(samples_per_second);
+        auto peakiness = fp.peakiness();
+        LOG(TRACE) << "duration=" << duration << ", peakiness=" << peakiness;
+        
+        if (is_within(duration, 1200, 2000) && peakiness > max_peakiness) {
+            max_peakiness = peakiness;
+            index = i;
+        }
+    }
+    
+    if (max_peakiness > min_peakiness && index > -1) {
+        return std::pair<int, double>(index, max_peakiness);
+    }
+
+    return std::experimental::nullopt;
+}
+
 exercise_decider::exercise_result exercise_decider::has_exercise(const raw_sensor_data &source, state &state) {
     if (source.reported_duration() < 4000) return undecidable;
     if (source.type() != accelerometer && source.type() != rotation) return undecidable;
 
     std::vector<freq_powers> fps = { fft(source.data().col(0)), fft(source.data().col(1)), fft(source.data().col(2)) };
-    const double min_peakiness = 1e+8;
+    const double axis_fitness_decay = 0.4;
+    const double frequency_decay = 0.3;
+    const double peakiness_decay = 0.3;
+    const double min_fitness_threshold = 0.3;
+    const double steady_state_nondecay = 0.4;
 
     if (state.m_axis == -1) {
         // need to determine the most prominent axis
-        double max_peakiness = -1;
-        int index = -1;
-        for (int i = 0; i < fps.size(); ++i) {
-            auto &fp = fps[i];
-            auto duration = fp.peak_duration(source.samples_per_second());
-            auto peakiness = fp.peakiness();
-            if (is_within(duration, 800, 2000) && peakiness > max_peakiness) {
-                max_peakiness = peakiness;
-                index = i;
-            }
-        }
-        
-        if (max_peakiness > min_peakiness && index > -1) {
-            state.m_axis = index;
+        auto peak = max_peak(source.samples_per_second(), fps);
+        if (peak) {
+            state.m_axis = peak->first;
             state.m_freq_powers = fps;
+            state.m_fitness = 1.0;
             return yes;
         }
         return no;
     } else {
+        double current_fitness = state.m_fitness;
+        
+        auto peak = max_peak(source.samples_per_second(), fps);
+        if (peak) {
+            if (peak->first != state.m_axis) state.m_fitness -= axis_fitness_decay;
+        } else {
+            state.m_fitness -= peakiness_decay;
+        }
         // we already know which axis to watch
         auto &curr_fp = fps[state.m_axis];
         auto last_fp = state.m_freq_powers[state.m_axis];
@@ -117,17 +144,19 @@ exercise_decider::exercise_result exercise_decider::has_exercise(const raw_senso
         state.m_freq_powers = fps;
 
         const double frequency_epsilon = curr_fp.peak_frequency() * 0.2; // 20% drift of frequency OK
-        //const double peakiness_epsilon = curr_fp.peakiness() * 0.4; // 20% drift of peakiness
-        bool frequency_drifted = std::abs(last_fp.peak_frequency() - curr_fp.peak_frequency()) > frequency_epsilon;
-        bool peakiness_drifted = curr_fp.peakiness() < min_peakiness;
+        if (std::abs(last_fp.peak_frequency() - curr_fp.peak_frequency()) > frequency_epsilon) state.m_fitness -= frequency_decay;
+
+        LOG(TRACE) << "state.m_fitness=" << state.m_fitness;
         
-        LOG(TRACE) << "frequency_drifted=" << frequency_drifted << ", peakiness_drifted=" << peakiness_drifted;
-        
-        if (peakiness_drifted || frequency_drifted) {
+        if (state.m_fitness < min_fitness_threshold) {
             // we have drifted
             state.m_freq_powers.clear();
             state.m_axis = -1;
             return no;
+        }
+        
+        if (state.m_fitness == current_fitness) {
+            state.m_fitness = MIN(1, state.m_fitness + steady_state_nondecay);
         }
         return yes;
     }
