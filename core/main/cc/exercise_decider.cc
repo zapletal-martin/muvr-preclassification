@@ -56,9 +56,7 @@ exercise_decider::exercise_decider(): m_min_samples(200) {
 exercise_decider::freq_powers exercise_decider::fft(const Mat& source) const {
     assert(source.cols == 1);
 
-//    // smooth out noise
     Mat filtered(source);
-//    blur(source, filtered, Size(50, 50));
     filtered.convertTo(filtered, CV_32FC1);
 
     // take FFT of real numbers in filtered

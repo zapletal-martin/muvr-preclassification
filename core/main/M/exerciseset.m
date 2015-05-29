@@ -3,7 +3,6 @@
 
 %% Load data
 % Load the CSV, filter out relevant rows
-% To see the effect of non-exercise, remove the filtering on the .timestamp
 
 M = readtable('/Users/janmachacek/Muvr/muvr-preclassification/training-data/jan-arms-24-05/7.csv');
 ads = table2array(M(:,[5,6,7]));
