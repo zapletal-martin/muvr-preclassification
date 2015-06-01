@@ -1,5 +1,5 @@
-range = 1:37;
-dir = '/Users/janmachacek/Muvr/muvr-preclassification/training-data/jan-shoulders-21-05/';
+range = 1:41;
+dir = '/Users/janmachacek/Muvr/muvr-preclassification/training-data/jan-core-30-05/';
 
 for i = range
     % Prepare file names
@@ -8,7 +8,7 @@ for i = range
     
     % Load the CSV
     M = readtable(fileName);
-    ads = table2array(M(:,[5,6,7]));
+    ads = table2array(M(:,[6,7,8]));
 
     % Simple smoothing
     windowSize = 50;
