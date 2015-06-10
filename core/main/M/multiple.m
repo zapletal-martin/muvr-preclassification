@@ -1,4 +1,4 @@
-range = 1:44;
+range = 41:44;
 dir = '/Users/janmachacek/Muvr/muvr-preclassification/training-data/jan-chest-06-06/';
 
 for i = range
